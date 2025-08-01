@@ -1,0 +1,3 @@
+auth:
+  secretKey: ${JWT_SECRET_KEY}
+  tokenExpiration: ${JWT_TOKEN_EXPIRATION}
