@@ -1,0 +1,26 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: suho-server-database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${RDBMS_ROOT_PASSWORD}
+      RDBMS_USERNAME: ${RDBMS_USERNAME}
+      RDBMS_PASSWORD: ${RDBMS_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - ${RDBMS_PORT}:3306
+    networks:
+      - suho-network
+    volumes:
+      - ./mysql/init.sh:/docker-entrypoint-initdb.d/init.sh
+      - ./mysql/my.cnf:/etc/my.cnf
+      - ${MYSQL_QUERY_LOG_PATH}:/var/log/mysql
+      - suho-server-database-volumes:/var/lib/mysql
+    restart: always
+
+networks:
+  suho-network:
+    external: true
+
+volumes:
+  suho-server-database-volumes:
