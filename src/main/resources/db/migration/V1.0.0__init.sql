@@ -19,4 +19,14 @@ CREATE TABLE `users`
     `created_at`  DATETIME     NOT NULL,
     `modified_at` DATETIME     NOT NULL,
     PRIMARY KEY `pk_user_id` (`id`)
-)
+);
+
+CREATE TABLE `version_info`
+(
+    `id`          BIGINT AUTO_INCREMENT NOT NULL,
+    `name`        VARCHAR(255)          NOT NULL,
+    `created_at`  DATETIME              NOT NULL,
+    `modified_at` DATETIME              NOT NULL,
+    UNIQUE KEY uq_version_info_name (name),
+    PRIMARY KEY `pk_version_info_id` (`id`)
+);

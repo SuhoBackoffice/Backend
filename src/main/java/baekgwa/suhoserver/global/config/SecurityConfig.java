@@ -101,6 +101,10 @@ public class SecurityConfig {
 				// user
 				.requestMatchers(POST, "/user/signup").permitAll()
 
+				// version
+				.requestMatchers(POST, "/version").hasRole(STAFF.name())
+				.requestMatchers(GET, "/version").permitAll()
+
 				.anyRequest().authenticated());
 
 		// ❗ 인증 Filter 추가

@@ -31,6 +31,9 @@ public enum ErrorCode {
 	DUPLICATE_LOGIN_ID(HttpStatus.BAD_REQUEST, "2000", "중복된 로그인 아이디 입니다."),
 	INVALID_USER_ID(HttpStatus.BAD_REQUEST, "2001", "탈퇴한 회원이거나, 잘못된 로그인 정보 입니다. 재로그인 해주세요."),
 
+	//Version : 3000 ~ 3999
+	DUPLICATE_VERSION_NAME(HttpStatus.BAD_REQUEST, "3000", "해당 버전이 이미 있습니다."),
+
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
 	NOT_SUPPORTED_METHOD(HttpStatus.METHOD_NOT_ALLOWED, "9002", "요청 메서드를 찾을 수 없습니다."),
