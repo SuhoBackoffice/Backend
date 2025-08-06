@@ -33,6 +33,9 @@ public enum SuccessCode {
 	CREATE_NEW_VERSION_SUCCESS(HttpStatus.CREATED, "신규 버전 생성 성공"),
 	GET_ALL_VERSION_LIST_SUCCESS(HttpStatus.OK, "버전 리스트 조회 성공"),
 
+	// Branch
+	CREATE_NEW_BRANCH_BOM_SUCCESS(HttpStatus.CREATED, "신규 분기 BOM 리스트 생성 성공"),
+
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
 

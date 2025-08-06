@@ -30,3 +30,34 @@ CREATE TABLE `version_info`
     UNIQUE KEY uq_version_info_name (name),
     PRIMARY KEY `pk_version_info_id` (`id`)
 );
+
+CREATE TABLE `branch_type`
+(
+    `id`          BIGINT AUTO_INCREMENT NOT NULL,
+    `version_id`  BIGINT                NOT NULL,
+    `code`        VARCHAR(255)          NOT NULL,
+    `version`     DATE                  NOT NULL,
+    `created_at`  DATETIME              NOT NULL,
+    `modified_at` DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_branch_type_version_id` (`version_id`),
+    CONSTRAINT `fk_branch_type_version_info` FOREIGN KEY (`version_id`) REFERENCES `version_info` (`id`)
+);
+
+CREATE TABLE `branch_bom`
+(
+    `id`                BIGINT AUTO_INCREMENT NOT NULL,
+    `branch_type_id`    BIGINT                NOT NULL,
+    `item_type`         VARCHAR(100)          NOT NULL COMMENT '품목 구분 / 사출, 가공, 구매 등',
+    `drawing_number`    VARCHAR(100)          NOT NULL COMMENT '도번',
+    `item_name`         VARCHAR(255)          NOT NULL COMMENT '품명',
+    `specification`     VARCHAR(255) COMMENT '규격',
+    `unit_quantity`     BIGINT                NOT NULL COMMENT '단위 수량',
+    `unit`              VARCHAR(30) COMMENT '단위 / EA, BOX, ROLL',
+    `supplied_material` TINYINT(1)            NOT NULL COMMENT '사급 자재 유무',
+    `created_at`        DATETIME              NOT NULL,
+    `modified_at`       DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_branch_bom_branch_type_id` (`branch_type_id`),
+    CONSTRAINT `fk_branch_bom_branch_type` FOREIGN KEY (`branch_type_id`) REFERENCES `branch_type` (`id`) ON DELETE CASCADE
+);

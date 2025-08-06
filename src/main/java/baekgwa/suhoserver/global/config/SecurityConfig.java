@@ -105,6 +105,9 @@ public class SecurityConfig {
 				.requestMatchers(POST, "/version").hasRole(STAFF.name())
 				.requestMatchers(GET, "/version").permitAll()
 
+				// Branch
+				.requestMatchers(POST, "/branch/bom/upload").hasRole(STAFF.name())
+
 				.anyRequest().authenticated());
 
 		// ❗ 인증 Filter 추가

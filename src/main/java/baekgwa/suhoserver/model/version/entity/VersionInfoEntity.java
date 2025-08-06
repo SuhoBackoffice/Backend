@@ -31,12 +31,13 @@ public class VersionInfoEntity extends TemporalEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id")
 	private Long id;
 
 	@Column(unique = true, nullable = false, columnDefinition = "버전 정보")
 	private String name;
 
-	@Builder
+	@Builder(access = AccessLevel.PRIVATE)
 	private VersionInfoEntity(String name) {
 		this.name = name;
 	}

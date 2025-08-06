@@ -24,7 +24,7 @@ public class VersionResponse {
 		private final Long id;
 		private final String name;
 
-		@Builder
+		@Builder(access = AccessLevel.PRIVATE)
 		private VersionListDto(Long id, String name) {
 			this.id = id;
 			this.name = name;

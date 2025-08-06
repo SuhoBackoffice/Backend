@@ -26,7 +26,7 @@ public class UserResponse {
 		private final String username;
 		private final String role;
 
-		@Builder
+		@Builder(access = AccessLevel.PRIVATE)
 		private UserInfoDto(Long id, String username, String role) {
 			this.id = id;
 			this.username = username;

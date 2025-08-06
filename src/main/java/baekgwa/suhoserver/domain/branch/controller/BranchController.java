@@ -1,0 +1,61 @@
+package baekgwa.suhoserver.domain.branch.controller;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import baekgwa.suhoserver.domain.branch.dto.BranchResponse;
+import baekgwa.suhoserver.domain.branch.service.BranchService;
+import baekgwa.suhoserver.global.response.BaseResponse;
+import baekgwa.suhoserver.global.response.SuccessCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * PackageName : baekgwa.suhoserver.domain.branch.controller
+ * FileName    : BranchController
+ * Author      : Baekgwa
+ * Date        : 2025-08-05
+ * Description : 
+ * =====================================================================================================================
+ * DATE          AUTHOR               NOTE
+ * ---------------------------------------------------------------------------------------------------------------------
+ * 2025-08-05     Baekgwa               Initial creation
+ */
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/branch")
+@Tag(name = "Branch Controller", description = "분기레일 컨트롤러")
+public class BranchController {
+
+	private final BranchService branchService;
+
+	@PostMapping(value = "/bom/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@Operation(summary = "분기레일 BOM 리스트 등록")
+	public BaseResponse<Void> newBranchBom(
+		@RequestParam("branchCode") String branchCode,
+		@RequestParam("versionInfoId") Long versionInfoId,
+		//todo : Project Code 같이 받아야 함, 즉 프로젝트가 생성 된 상태에서 진행 해야 됨.
+		@RequestPart("file") MultipartFile file
+	) {
+		branchService.createNewBranchBom(branchCode, versionInfoId, file);
+		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS);
+	}
+
+	@GetMapping("/bom")
+	@Operation(summary = "버전, 분기별 최신 리스트 불러오기")
+	public BaseResponse<BranchResponse.BranchInfoDto> getLatestVersionBranchBom (
+		@RequestParam("branchCode") String branchCode,
+		@RequestParam("versionInfoId") Long versionInfoId
+	) {
+		BranchResponse.BranchInfoDto branchInfoDto =
+			branchService.getLatestVersionBranchBom(branchCode, versionInfoId);
+		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, branchInfoDto);
+	}
+}

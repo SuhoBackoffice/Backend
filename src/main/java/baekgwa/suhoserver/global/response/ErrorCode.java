@@ -33,6 +33,10 @@ public enum ErrorCode {
 
 	//Version : 3000 ~ 3999
 	DUPLICATE_VERSION_NAME(HttpStatus.BAD_REQUEST, "3000", "해당 버전이 이미 있습니다."),
+	NOT_FOUND_VERSION(HttpStatus.BAD_REQUEST, "3001", "해당 버전이 존재하지 않습니다."),
+
+	// Branch : 4000 ~ 4999
+	NOT_FOUND_BRANCH_BOM(HttpStatus.BAD_REQUEST, "4000", "저장된 분기레일 BOM 정보가 없습니다. 업데이트 해주세요."),
 
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
@@ -42,6 +46,7 @@ public enum ErrorCode {
 	HANDLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "9007", "요청이 거부되었습니다."),
 	METHOD_ARGUMENT_TYPE_MISS_MATCH(HttpStatus.BAD_REQUEST, "9008", "요청 파라미터 타입 불일치. API 문서 확인해주세요."),
 	INVALID_PAGINATION_PARAMETER(HttpStatus.BAD_REQUEST, "9009", "올바르지 않은 페이지 네이션 파라미터 요청입니다."),
+	INVALID_EXCEL_PARSE_ERROR(HttpStatus.BAD_REQUEST, "9010", "올바르지 않은 Excel 데이터입니다. 관리자에게 문의해 주세요."),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "9999", "서버 내부 오류 발생했습니다");
 
 	private final HttpStatus status;
