@@ -75,7 +75,7 @@ dependencies {
     implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.10.3")
 
     // Poi
-    implementation("org.apache.poi:poi:5.4.0")
+    implementation("org.apache.poi:poi-ooxml:5.4.0")
 }
 
 tasks.named('test') {

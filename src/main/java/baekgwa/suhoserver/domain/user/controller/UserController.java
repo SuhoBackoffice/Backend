@@ -52,6 +52,6 @@ public class UserController {
 		Principal principal
 	) {
 		UserResponse.UserInfoDto userInfoDto = userService.getUserInfo(Long.parseLong(principal.getName()));
-		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, userInfoDto);
+		return BaseResponse.success(SuccessCode.GET_USER_INFO_SUCCESS, userInfoDto);
 	}
 }
