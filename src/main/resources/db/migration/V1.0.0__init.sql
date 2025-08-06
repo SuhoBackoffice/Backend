@@ -41,7 +41,8 @@ CREATE TABLE `branch_type`
     `modified_at` DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     INDEX `idx_branch_type_version_id` (`version_id`),
-    CONSTRAINT `fk_branch_type_version_info` FOREIGN KEY (`version_id`) REFERENCES `version_info` (`id`)
+    CONSTRAINT `fk_branch_type_version_info` FOREIGN KEY (`version_id`) REFERENCES `version_info` (`id`),
+    UNIQUE KEY `uk_branch_type_version_code_date` (`version_id`, `code`, `version`)
 );
 
 CREATE TABLE `branch_bom`

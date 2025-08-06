@@ -1,6 +1,8 @@
 package baekgwa.suhoserver.model.branch.type.repository;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -30,4 +32,6 @@ public interface BranchTypeRepository extends JpaRepository<BranchTypeEntity, Lo
 		@Param("code") String code,
 		Pageable pageable);
 
+	@Query("select b from BranchTypeEntity b where b.versionInfoEntity.id = :versionInfoId and b.code = :code and b.version = :version")
+	Optional<BranchTypeEntity> findBranchType(@Param("versionInfoId") Long versionInfoId, @Param("code") String code, @Param("version") LocalDate version);
 }

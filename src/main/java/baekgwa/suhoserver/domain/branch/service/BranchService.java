@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.domain.branch.service;
 
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,12 +53,22 @@ public class BranchService {
 	private final BranchBomRepository branchBomRepository;
 	private final VersionInfoRepository versionInfoRepository;
 
+	private static final List<String> DRAWING_NUMBER_KEYS = List.of("도번");
+	private static final List<String> ITEM_NAME_KEYS = List.of("품명");
+	private static final List<String> QUANTITY_KEYS = List.of("수량", "원수량", "납품수량");
+
 	@Transactional
 	public void createNewBranchBom(String branchCode, Long versionInfoId, MultipartFile file) {
 		// 1. 버전 유효성 검증 및, Entity 조회
 		VersionInfoEntity findVersionInfo = versionInfoRepository.findById(versionInfoId)
 			.orElseThrow(
 				() -> new GlobalException(ErrorCode.NOT_FOUND_VERSION));
+
+		// 1-1. BranchTypeEntity, 동일 version, 분기번호, versionDate 업로드 금지.
+		branchTypeRepository.findBranchType(findVersionInfo.getId(), branchCode, LocalDate.now())
+			.ifPresent(b -> {
+				throw new GlobalException(ErrorCode.ALREADY_UPLOADED_COMPLETE_BRANCH_BOM);
+			});
 
 		// 2. Branch Type 신규 생성 및 저장
 		BranchTypeEntity newBranchType = BranchTypeEntity.createNewBranchType(findVersionInfo, branchCode);
@@ -102,7 +113,9 @@ public class BranchService {
 		}
 
 		Map<String, Integer> headerIndexMap = extractHeaderIndexMap(rows);
-		if (headerIndexMap.isEmpty()) {
+		if (!hasAnyHeader(headerIndexMap, DRAWING_NUMBER_KEYS)
+			|| !hasAnyHeader(headerIndexMap, ITEM_NAME_KEYS)
+			|| !hasAnyHeader(headerIndexMap, QUANTITY_KEYS)) {
 			throw new GlobalException(ErrorCode.INVALID_EXCEL_PARSE_ERROR);
 		}
 
@@ -113,7 +126,6 @@ public class BranchService {
 				newBranchBomList.add(toBranchBomEntity(rowMap, savedBranchType));
 			}
 		}
-
 		if (newBranchBomList.isEmpty()) {
 			throw new GlobalException(ErrorCode.INVALID_EXCEL_PARSE_ERROR);
 		}
@@ -137,26 +149,39 @@ public class BranchService {
 	}
 
 	private boolean isDataRow(List<String> row, Map<String, Integer> headerIndexMap) {
-		// Header row 은 Data row 가 아님
 		if (row.contains("도번") || row.contains("품명"))
 			return false;
-
-		// 전부 다 비워져 있는 row 도 data 영역이 아님
 		long emptyCount = row.stream().filter(s -> s == null || s.isBlank()).count();
 		if (emptyCount == row.size())
 			return false;
 
-		// 도번, 품명, 수량은 필수로 해당 인덱스 값이 비워져 있다면 data row 로 판명하지 않음
-		List<String> requiredCols = List.of("도번", "품명", "수량");
-		for (String col : requiredCols) {
-			Integer idx = headerIndexMap.get(col);
-			if (idx == null || idx >= row.size())
-				return false;
-			String val = row.get(idx);
-			if (val == null || val.isBlank())
-				return false;
+		// 필수 컬럼 중 실제 값이 들어있는 컬럼이 모두 존재해야 함
+		if (!hasAnyValidValue(row, headerIndexMap, DRAWING_NUMBER_KEYS))
+			return false;
+		if (!hasAnyValidValue(row, headerIndexMap, ITEM_NAME_KEYS))
+			return false;
+
+		return hasAnyValidValue(row, headerIndexMap, QUANTITY_KEYS);
+	}
+
+	private boolean hasAnyHeader(Map<String, Integer> headerIndexMap, List<String> candidates) {
+		for (String key : candidates) {
+			if (headerIndexMap.containsKey(key))
+				return true;
 		}
-		return true;
+		return false;
+	}
+
+	private boolean hasAnyValidValue(List<String> row, Map<String, Integer> headerIndexMap, List<String> candidates) {
+		for (String col : candidates) {
+			Integer idx = headerIndexMap.get(col);
+			if (idx != null && idx < row.size()) {
+				String val = row.get(idx);
+				if (val != null && !val.isBlank())
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private Map<String, String> toRowMap(List<String> row, Map<String, Integer> headerIndexMap) {
@@ -164,19 +189,33 @@ public class BranchService {
 		for (Map.Entry<String, Integer> entry : headerIndexMap.entrySet()) {
 			String key = entry.getKey();
 			Integer index = entry.getValue();
-			rowMap.put(key, row.get(index));
+			rowMap.put(key, index < row.size() ? row.get(index) : "");
 		}
 		return rowMap;
 	}
 
+	private String getHeaderValue(Map<String, String> rowMap, List<String> candidates) {
+		for (String key : candidates) {
+			String value = rowMap.get(key);
+			if (value != null && !value.isBlank())
+				return value;
+		}
+		return null;
+	}
+
 	private BranchBomEntity toBranchBomEntity(Map<String, String> rowMap, BranchTypeEntity savedBranchType) {
 		String itemType = rowMap.get("품목구분");
-		String drawingNumber = rowMap.get("도번");
-		String itemName = rowMap.get("품명");
-		String specification = rowMap.get("규격");
-		Long unitQuantity = Long.parseLong(rowMap.get("수량"));
-		String unit = rowMap.get("단위");
-		Boolean suppliedMaterial = rowMap.get("비고").contains("사급");
+		String drawingNumber = getHeaderValue(rowMap, DRAWING_NUMBER_KEYS);
+		String itemName = getHeaderValue(rowMap, ITEM_NAME_KEYS);
+		String quantityStr = getHeaderValue(rowMap, QUANTITY_KEYS);
+		if (drawingNumber == null || itemName == null || quantityStr == null)
+			throw new GlobalException(ErrorCode.INVALID_EXCEL_PARSE_ERROR);
+
+		Long unitQuantity = Long.parseLong(quantityStr);
+		String specification = rowMap.getOrDefault("규격", "");
+		String unit = rowMap.getOrDefault("단위", "");
+		Boolean suppliedMaterial = rowMap.getOrDefault("비고", "").contains("사급");
+
 		return BranchBomEntity.builder()
 			.itemType(itemType)
 			.drawingNumber(drawingNumber)
@@ -195,15 +234,10 @@ public class BranchService {
 			pkg = OPCPackage.open(file.getInputStream());
 			XSSFReader xssfReader = new XSSFReader(pkg);
 
-			// 첫 번째 시트 가져오기
 			InputStream sheetStream = xssfReader.getSheetsData().next();
-
-			// 공통 문자열 테이블 가져오기
 			SharedStrings sst = xssfReader.getSharedStringsTable();
 			SharedStringsTable sstTable = (SharedStringsTable)sst;
 
-			// 파서 및
-			// 보안 옵션 적용
 			SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
 			saxParserFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
 			saxParserFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
@@ -214,7 +248,6 @@ public class BranchService {
 			SheetParserHandler handler = new SheetParserHandler(sstTable);
 			parser.setContentHandler(handler);
 
-			// 파싱 후, handler return
 			parser.parse(new InputSource(sheetStream));
 
 			return handler;

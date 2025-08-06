@@ -37,6 +37,7 @@ public enum ErrorCode {
 
 	// Branch : 4000 ~ 4999
 	NOT_FOUND_BRANCH_BOM(HttpStatus.BAD_REQUEST, "4000", "저장된 분기레일 BOM 정보가 없습니다. 업데이트 해주세요."),
+	ALREADY_UPLOADED_COMPLETE_BRANCH_BOM(HttpStatus.BAD_REQUEST, "4001", "오늘 해당 분기레일 정보를 이미 업데이트 하였습니다. 관리자에게 문의 해주세요"),
 
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
