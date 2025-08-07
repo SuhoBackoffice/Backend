@@ -95,4 +95,13 @@ public class BranchResponse {
 				.build();
 		}
 	}
+
+	@Getter
+	public static class PostNewBranchBom {
+		private final Long branchId;
+
+		public PostNewBranchBom(Long branchId) {
+			this.branchId = branchId;
+		}
+	}
 }

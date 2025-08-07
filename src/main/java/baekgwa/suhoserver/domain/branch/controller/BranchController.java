@@ -38,19 +38,19 @@ public class BranchController {
 
 	@PostMapping(value = "/bom/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "분기레일 BOM 리스트 등록")
-	public BaseResponse<Void> newBranchBom(
+	public BaseResponse<BranchResponse.PostNewBranchBom> newBranchBom(
 		@RequestParam("branchCode") String branchCode,
 		@RequestParam("versionInfoId") Long versionInfoId,
-		//todo : Project Code 같이 받아야 함, 즉 프로젝트가 생성 된 상태에서 진행 해야 됨.
 		@RequestPart("file") MultipartFile file
 	) {
-		branchService.createNewBranchBom(branchCode, versionInfoId, file);
-		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS);
+		BranchResponse.PostNewBranchBom postNewBranchBom =
+			branchService.createNewBranchBom(branchCode, versionInfoId, file);
+		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, postNewBranchBom);
 	}
 
-	@GetMapping("/bom")
+	@GetMapping("/bom/latest")
 	@Operation(summary = "버전, 분기별 최신 리스트 불러오기")
-	public BaseResponse<BranchResponse.BranchInfoDto> getLatestVersionBranchBom (
+	public BaseResponse<BranchResponse.BranchInfoDto> getLatestVersionBranchBom(
 		@RequestParam("branchCode") String branchCode,
 		@RequestParam("versionInfoId") Long versionInfoId
 	) {

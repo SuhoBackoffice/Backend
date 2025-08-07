@@ -1,7 +1,7 @@
 package baekgwa.suhoserver.domain.authentication.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,13 +22,9 @@ public class AuthRequest {
 	@Getter
 	@NoArgsConstructor(access = AccessLevel.PROTECTED)
 	public static class LoginDto {
+		@NotBlank(message = "로그인 아이디는 필수 입니다.")
 		private String loginId;
+		@NotBlank(message = "비밀번호는 필수 입니다.")
 		private String password;
-
-		@Builder(access = AccessLevel.PRIVATE)
-		private LoginDto(String loginId, String password) {
-			this.loginId = loginId;
-			this.password = password;
-		}
 	}
 }

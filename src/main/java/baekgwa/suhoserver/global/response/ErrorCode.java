@@ -38,6 +38,12 @@ public enum ErrorCode {
 	// Branch : 4000 ~ 4999
 	NOT_FOUND_BRANCH_BOM(HttpStatus.BAD_REQUEST, "4000", "저장된 분기레일 BOM 정보가 없습니다. 업데이트 해주세요."),
 	ALREADY_UPLOADED_COMPLETE_BRANCH_BOM(HttpStatus.BAD_REQUEST, "4001", "오늘 해당 분기레일 정보를 이미 업데이트 하였습니다. 관리자에게 문의 해주세요"),
+	NOT_FOUND_BRANCH_TYPE(HttpStatus.BAD_REQUEST, "4002", "해당 분기레일 정보를 찾을 수 없습니다."),
+
+	// Project : 5000 ~ 5999
+	PROJECT_END_AFTER_START_ERROR(HttpStatus.BAD_REQUEST, "5000", "종료일이 시작일보다 빠를수 없습니다."),
+	NOT_FOUND_PROJECT(HttpStatus.BAD_REQUEST, "5001", "해당 프로젝트를 찾을 수 없습니다."),
+	INVALID_VERSION_BRANCH(HttpStatus.BAD_REQUEST, "5002", "프로젝트 버전과, 해당 분기레일의 버전이 일치하지 않습니다."),
 
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),

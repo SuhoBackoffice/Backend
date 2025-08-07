@@ -62,3 +62,36 @@ CREATE TABLE `branch_bom`
     INDEX `idx_branch_bom_branch_type_id` (`branch_type_id`),
     CONSTRAINT `fk_branch_bom_branch_type` FOREIGN KEY (`branch_type_id`) REFERENCES `branch_type` (`id`) ON DELETE CASCADE
 );
+
+CREATE TABLE `project`
+(
+    `id`          BIGINT AUTO_INCREMENT NOT NULL,
+    `version_id`  BIGINT                NOT NULL,
+    `region`      VARCHAR(255)          NOT NULL,
+    `name`        VARCHAR(255)          NOT NULL,
+    `start_date`  DATE,
+    `end_date`    DATE,
+    `created_at`  DATETIME              NOT NULL,
+    `modified_at` DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_project_version_id` (`version_id`),
+    CONSTRAINT `fk_project_version_info` FOREIGN KEY (`version_id`) REFERENCES `version_info` (`id`)
+);
+
+CREATE TABLE `project_branch`
+(
+    `id`                 BIGINT AUTO_INCREMENT NOT NULL,
+    `project_id`         BIGINT                NOT NULL,
+    `branch_type_id`     BIGINT                NOT NULL,
+    `target_quantity`    BIGINT                NOT NULL,
+    `completed_quantity` BIGINT                NOT NULL,
+    `created_at`         DATETIME              NOT NULL,
+    `modified_at`        DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_project_branch_project_id` (`project_id`),
+    INDEX `idx_project_branch_branch_type_id` (`branch_type_id`),
+    CONSTRAINT `fk_project_branch_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
+    CONSTRAINT `fk_project_branch_branch_type` FOREIGN KEY (`branch_type_id`) REFERENCES `branch_type` (`id`),
+    CONSTRAINT `ck_project_branch_target_quantity_nonnegative` CHECK (`target_quantity` >= 0),
+    CONSTRAINT `ck_project_branch_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0)
+);

@@ -40,7 +40,7 @@ public class UserController {
 	@PostMapping("/signup")
 	@Operation(summary = "회원 가입")
 	public BaseResponse<Void> login(
-		@Valid @RequestBody UserRequest.SignupDto signupDto
+		@RequestBody @Valid UserRequest.SignupDto signupDto
 	) {
 		userService.signup(signupDto);
 		return BaseResponse.success(SuccessCode.SIGNUP_SUCCESS);
