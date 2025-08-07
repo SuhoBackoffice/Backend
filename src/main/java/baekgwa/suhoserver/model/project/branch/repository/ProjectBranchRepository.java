@@ -1,0 +1,23 @@
+package baekgwa.suhoserver.model.project.branch.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+
+/**
+ * PackageName : baekgwa.suhoserver.model.project.branch.repository
+ * FileName    : ProjectBranchRepository
+ * Author      : Baekgwa
+ * Date        : 2025-08-07
+ * Description : 
+ * =====================================================================================================================
+ * DATE          AUTHOR               NOTE
+ * ---------------------------------------------------------------------------------------------------------------------
+ * 2025-08-07     Baekgwa               Initial creation
+ */
+public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEntity, Long> {
+	List<ProjectBranchEntity> findByProject(ProjectEntity project);
+}

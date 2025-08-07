@@ -110,6 +110,7 @@ public class SecurityConfig {
 
 				// Project
 				.requestMatchers(POST, "/project/new").hasRole(STAFF.name())
+				.requestMatchers(POST, "/project/{projectId}/branch").hasRole(STAFF.name())
 
 				.anyRequest().authenticated());
 

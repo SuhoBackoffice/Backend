@@ -47,26 +47,32 @@ public class ProjectEntity extends TemporalEntity {
 	@Column(name = "region", nullable = false)
 	private String region;
 
-	@Column(name = "startDate")
+	@Column(name = "name", nullable = false)
+	private String name;
+
+	@Column(name = "start_date")
 	private LocalDate startDate;
 
-	@Column(name = "endDate")
+	@Column(name = "end_date")
 	private LocalDate endDate;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private ProjectEntity(VersionInfoEntity versionInfoEntity, String region, LocalDate startDate, LocalDate endDate) {
+	private ProjectEntity(VersionInfoEntity versionInfoEntity, String region, String name, LocalDate startDate,
+		LocalDate endDate) {
 		this.versionInfoEntity = versionInfoEntity;
 		this.region = region;
+		this.name = name;
 		this.startDate = startDate;
 		this.endDate = endDate;
 	}
 
-	public static ProjectEntity createNewProject(VersionInfoEntity versionInfoEntity, String region,
+	public static ProjectEntity createNewProject(VersionInfoEntity versionInfoEntity, String name, String region,
 		LocalDate startDate, LocalDate endDate) {
 		return ProjectEntity
 			.builder()
 			.versionInfoEntity(versionInfoEntity)
 			.region(region)
+			.name(name)
 			.startDate(startDate)
 			.endDate(endDate)
 			.build();

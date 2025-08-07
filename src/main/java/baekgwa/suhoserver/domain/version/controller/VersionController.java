@@ -15,6 +15,7 @@ import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -39,7 +40,7 @@ public class VersionController {
 	@PostMapping
 	@Operation(summary = "신규 버전 추가")
 	public BaseResponse<Void> createNewVersion(
-		@RequestBody VersionRequest.NewVersionDto newVersionDto
+		@RequestBody @Valid VersionRequest.NewVersionDto newVersionDto
 	) {
 		versionService.createNewVersion(newVersionDto);
 		return BaseResponse.success(SuccessCode.CREATE_NEW_VERSION_SUCCESS);

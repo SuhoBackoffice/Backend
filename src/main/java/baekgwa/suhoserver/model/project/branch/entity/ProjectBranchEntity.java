@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -46,8 +47,27 @@ public class ProjectBranchEntity {
 	private BranchTypeEntity branchType;
 
 	@Column(name = "target_quantity", nullable = false)
-	private Long targetQuantity;
+	private Long totalQuantity;
 
 	@Column(name = "completed_quantity", nullable = false)
 	private Long completedQuantity;
+
+	@Builder(access = AccessLevel.PRIVATE)
+	private ProjectBranchEntity(ProjectEntity project, BranchTypeEntity branchType, Long totalQuantity,
+		Long completedQuantity) {
+		this.project = project;
+		this.branchType = branchType;
+		this.totalQuantity = totalQuantity;
+		this.completedQuantity = completedQuantity;
+	}
+
+	public static ProjectBranchEntity createNewProjectBranch(ProjectEntity project, BranchTypeEntity branchType,
+		Long totalQuantity) {
+		return ProjectBranchEntity.builder()
+			.project(project)
+			.branchType(branchType)
+			.totalQuantity(totalQuantity)
+			.completedQuantity(0L)
+			.build();
+	}
 }

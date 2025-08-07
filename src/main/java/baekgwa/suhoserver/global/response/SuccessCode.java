@@ -38,6 +38,8 @@ public enum SuccessCode {
 
 	// Project
 	CREATE_NEW_PROJECT_SUCCESS(HttpStatus.CREATED, "신규 프로젝트 생성 완료"),
+	REGISTER_PROJECT_BRANCH_SUCCESS(HttpStatus.CREATED, "프로젝트 분기 정보 등록 완료"),
+	GET_PROJECT_INFORMATION_SUCCESS(HttpStatus.CREATED, "프로젝트 정보 조회 성공"),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
