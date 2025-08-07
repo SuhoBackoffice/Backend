@@ -58,7 +58,7 @@ public class BranchService {
 	private static final List<String> QUANTITY_KEYS = List.of("수량", "원수량", "납품수량");
 
 	@Transactional
-	public void createNewBranchBom(String branchCode, Long versionInfoId, MultipartFile file) {
+	public BranchResponse.PostNewBranchBom createNewBranchBom(String branchCode, Long versionInfoId, MultipartFile file) {
 		// 1. 버전 유효성 검증 및, Entity 조회
 		VersionInfoEntity findVersionInfo = versionInfoRepository.findById(versionInfoId)
 			.orElseThrow(
@@ -82,6 +82,8 @@ public class BranchService {
 
 		// 5. 저장
 		branchBomRepository.saveAll(newBranchBomList);
+
+		return new BranchResponse.PostNewBranchBom(savedBranchType.getId());
 	}
 
 	@Transactional(readOnly = true)
