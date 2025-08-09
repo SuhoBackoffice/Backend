@@ -95,3 +95,32 @@ CREATE TABLE `project_branch`
     CONSTRAINT `ck_project_branch_target_quantity_nonnegative` CHECK (`target_quantity` >= 0),
     CONSTRAINT `ck_project_branch_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0)
 );
+
+CREATE TABLE `straight_type`
+(
+    `id`           BIGINT AUTO_INCREMENT NOT NULL,
+    `type`         VARCHAR(255)          NOT NULL,
+    `is_loop_rail` TINYINT(1)            NOT NULL,
+    `created_at`         DATETIME              NOT NULL,
+    `modified_at`        DATETIME              NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `project_straight`
+(
+    `id`                 BIGINT AUTO_INCREMENT NOT NULL,
+    `project_id`         BIGINT                NOT NULL,
+    `straight_type_id`   BIGINT                NOT NULL,
+    `target_quantity`    BIGINT                NOT NULL,
+    `completed_quantity` BIGINT                NOT NULL,
+    `is_loop_rail`       TINYINT(1)            NOT NULL,
+    `created_at`         DATETIME              NOT NULL,
+    `modified_at`        DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `idx_project_straight_project_id` (`project_id`),
+    INDEX `idx_project_straight_straight_type_id` (`straight_type_id`),
+    CONSTRAINT `fk_project_straight_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
+    CONSTRAINT `fk_project_straight_straight_type` FOREIGN KEY (`straight_type_id`) REFERENCES `straight_type` (`id`),
+    CONSTRAINT `ck_project_straight_target_quantity_nonnegative` CHECK (`target_quantity` >= 0),
+    CONSTRAINT `ck_project_straight_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0)
+);
