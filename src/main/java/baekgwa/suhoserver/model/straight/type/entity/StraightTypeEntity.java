@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,4 +39,14 @@ public class StraightTypeEntity extends TemporalEntity {
 
 	@Column(name = "is_loop_rail", nullable = false)
 	private Boolean isLoopRail;
+
+	@Builder(access = AccessLevel.PRIVATE)
+	private StraightTypeEntity(String type, Boolean isLoopRail) {
+		this.type = type;
+		this.isLoopRail = isLoopRail;
+	}
+
+	public static StraightTypeEntity createNewStraightType(String type, Boolean isLoopRail) {
+		return StraightTypeEntity.builder().type(type).isLoopRail(isLoopRail).build();
+	}
 }

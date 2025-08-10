@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
+import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
@@ -18,6 +19,10 @@ import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
+import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
+import baekgwa.suhoserver.model.straight.type.repository.StraightTypeRepository;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.version.repository.VersionInfoRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +45,9 @@ public class ProjectService {
 	private final ProjectRepository projectRepository;
 	private final ProjectBranchRepository projectBranchRepository;
 	private final BranchTypeRepository branchTypeRepository;
+	private final StraightTypeRepository straightTypeRepository;
 	private final VersionInfoRepository versionInfoRepository;
+	private final ProjectStraightRepository projectStraightRepository;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -121,5 +128,40 @@ public class ProjectService {
 		// todo: 3. Project 의 Strategy 정보 조회
 
 		return ProjectResponse.ProjectInfo.of(findProject, branchInfoList);
+	}
+
+	@Transactional
+	public void registerProjectStraight(
+		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
+		Long projectId,
+		RailKind railKind
+	) {
+		// 1. 프로젝트 정보 조회
+		ProjectEntity findProject = projectRepository.findById(projectId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
+
+		// 2. straightTypeId 으로, 필요한 StraightType List 조회
+		List<Long> straightTypeIdList = postProjectStraightInfoList.stream()
+			.map(ProjectRequest.PostProjectStraightInfo::getStraightTypeId)
+			.distinct()
+			.toList();
+		List<StraightTypeEntity> findStraightTypeList = straightTypeRepository.findAllById(straightTypeIdList);
+
+		// 2-1. id 기반으로, 검색 가능하도록 Map 으로 convert
+		Map<Long, StraightTypeEntity> findStraightTypeMap = findStraightTypeList
+			.stream().collect(Collectors.toMap(StraightTypeEntity::getId, Function.identity()));
+
+		// 3. ProjectStraightEntity List 생성 및 저장
+		List<ProjectStraightEntity> projectStraightList = postProjectStraightInfoList.stream().map(
+				dto -> {
+					StraightTypeEntity findStraightType = findStraightTypeMap.get(dto.getStraightTypeId());
+					if (findStraightType == null) {
+						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
+					}
+					return ProjectStraightEntity
+						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind);
+				})
+			.toList();
+		projectStraightRepository.saveAll(projectStraightList);
 	}
 }

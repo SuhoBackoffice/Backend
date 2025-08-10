@@ -46,4 +46,13 @@ public class ProjectRequest {
 		@Min(value = 1L, message = "생산 수량은 최소 1개 입니다.")
 		private Long quantity;
 	}
+
+	@Getter
+	@NoArgsConstructor(access = AccessLevel.PROTECTED)
+	public static class PostProjectStraightInfo {
+		@NotNull(message = "레일 타입은 필수 입니다.")
+		private Long straightTypeId;
+		@Min(value = 1L, message = "생산 수량은 최소 1개 입니다.")
+		private Long totalQuantity;
+	}
 }

@@ -1,5 +1,6 @@
 package baekgwa.suhoserver.model.project.straight.entity;
 
+import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
@@ -13,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -46,7 +48,7 @@ public class ProjectStraightEntity extends TemporalEntity {
 	@JoinColumn(name = "straight_type_id", nullable = false)
 	private StraightTypeEntity straightType;
 
-	@Column(name = "target_quantity", nullable = false)
+	@Column(name = "total_quantity", nullable = false)
 	private Long totalQuantity;
 
 	@Column(name = "completed_quantity", nullable = false)
@@ -54,4 +56,25 @@ public class ProjectStraightEntity extends TemporalEntity {
 
 	@Column(name = "is_loop_rail", nullable = false)
 	private Boolean isLoopRail;
+
+	@Builder
+	private ProjectStraightEntity(ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity,
+		Long completedQuantity, Boolean isLoopRail) {
+		this.project = project;
+		this.straightType = straightType;
+		this.totalQuantity = totalQuantity;
+		this.completedQuantity = completedQuantity;
+		this.isLoopRail = isLoopRail;
+	}
+
+	public static ProjectStraightEntity createNewStraight(ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, RailKind railKind) {
+		return ProjectStraightEntity
+			.builder()
+			.project(project)
+			.straightType(straightType)
+			.totalQuantity(totalQuantity)
+			.completedQuantity(0L)
+			.isLoopRail(railKind.isLoop())
+			.build();
+	}
 }
