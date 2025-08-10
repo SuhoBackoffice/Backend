@@ -57,17 +57,24 @@ public class ProjectStraightEntity extends TemporalEntity {
 	@Column(name = "is_loop_rail", nullable = false)
 	private Boolean isLoopRail;
 
+	@Column(name = "length", nullable = false)
+	private Long length;
+
 	@Builder
 	private ProjectStraightEntity(ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity,
-		Long completedQuantity, Boolean isLoopRail) {
+		Long completedQuantity, Boolean isLoopRail, Long length
+	) {
 		this.project = project;
 		this.straightType = straightType;
 		this.totalQuantity = totalQuantity;
 		this.completedQuantity = completedQuantity;
 		this.isLoopRail = isLoopRail;
+		this.length = length;
 	}
 
-	public static ProjectStraightEntity createNewStraight(ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, RailKind railKind) {
+	public static ProjectStraightEntity createNewStraight(
+		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, RailKind railKind, Long length
+	) {
 		return ProjectStraightEntity
 			.builder()
 			.project(project)
@@ -75,6 +82,7 @@ public class ProjectStraightEntity extends TemporalEntity {
 			.totalQuantity(totalQuantity)
 			.completedQuantity(0L)
 			.isLoopRail(railKind.isLoop())
+			.length(length)
 			.build();
 	}
 }

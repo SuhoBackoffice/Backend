@@ -50,6 +50,8 @@ public class ProjectRequest {
 	@Getter
 	@NoArgsConstructor(access = AccessLevel.PROTECTED)
 	public static class PostProjectStraightInfo {
+		@Min(value = 300L, message = "레일 길이는 최소 300 부터입니다.")
+		private Long length;
 		@NotNull(message = "레일 타입은 필수 입니다.")
 		private Long straightTypeId;
 		@Min(value = 1L, message = "생산 수량은 최소 1개 입니다.")

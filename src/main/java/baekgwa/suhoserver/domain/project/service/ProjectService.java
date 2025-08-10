@@ -159,7 +159,7 @@ public class ProjectService {
 						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
 					}
 					return ProjectStraightEntity
-						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind);
+						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind, dto.getLength());
 				})
 			.toList();
 		projectStraightRepository.saveAll(projectStraightList);
