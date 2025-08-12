@@ -1,5 +1,7 @@
 package baekgwa.suhoserver.domain.project.service;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -25,6 +27,7 @@ import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.straight.type.repository.StraightTypeRepository;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.version.repository.VersionInfoRepository;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -48,6 +51,12 @@ public class ProjectService {
 	private final StraightTypeRepository straightTypeRepository;
 	private final VersionInfoRepository versionInfoRepository;
 	private final ProjectStraightRepository projectStraightRepository;
+
+	private static final BigDecimal LITZ_WIRE_MAX = BigDecimal.valueOf(1800L);
+	private static final BigDecimal OFFSET_215    = BigDecimal.valueOf(215L);
+	private static final BigDecimal TH_1200       = BigDecimal.valueOf(1200L);
+	private static final BigDecimal TH_2400       = BigDecimal.valueOf(2400L);
+	private static final BigDecimal TH_3600       = BigDecimal.valueOf(3600L);
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -125,9 +134,18 @@ public class ProjectService {
 			.map(ProjectResponse.BranchInfo::of)
 			.toList();
 
-		// todo: 3. Project 의 Strategy 정보 조회
+		// 3. Project 의 Straight 정보 조회
+		List<ProjectStraightEntity> findProjectStraightList = projectStraightRepository.findByProject(findProject);
+		List<ProjectResponse.StraightInfo> straightInfoList = findProjectStraightList.stream()
+			.map(data -> {
+				Long holePosition = calcHolePosition(data);
+				ProjectResponse.LitzInfo litzInfo;
+				litzInfo = generateLitzInfoList(data, holePosition);
+				return ProjectResponse.StraightInfo.of(data, litzInfo, holePosition);
+			})
+			.toList();
 
-		return ProjectResponse.ProjectInfo.of(findProject, branchInfoList);
+		return ProjectResponse.ProjectInfo.of(findProject, branchInfoList, straightInfoList);
 	}
 
 	@Transactional
@@ -159,9 +177,192 @@ public class ProjectService {
 						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
 					}
 					return ProjectStraightEntity
-						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind, dto.getLength());
+						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind,
+							dto.getLength());
 				})
 			.toList();
 		projectStraightRepository.saveAll(projectStraightList);
+	}
+
+	private @NotNull Long calcHolePosition(ProjectStraightEntity projectStraight) {
+		// 1. 루프레일이 아닌 경우
+		if (Boolean.FALSE.equals(projectStraight.getIsLoopRail())) {
+			return 0L;
+		}
+
+		// 2. 데이터 추출
+		String type = projectStraight.getStraightType().getType().substring(0, 1).toUpperCase();
+		BigDecimal loopLitzWire = projectStraight.getProject().getVersionInfoEntity().getLoopLitzWire();
+		Long length = projectStraight.getLength();
+
+		// 3. 가공 위치 계산
+		return switch (type) {
+			case "C" -> length / 2; // Center: 길이의 절반
+			case "E" -> length - loopLitzWire.longValue(); // End: length - loopLitzWire
+			case "S" -> length - 215 - loopLitzWire.longValue(); // Side: length - 215 - loopLitzWire
+			default -> 0L;
+		};
+	}
+
+	private @NotNull ProjectResponse.LitzInfo generateLitzInfoList(
+		ProjectStraightEntity projectStraight, Long holePosition
+	) {
+		// OffsetType 및 LoopType 추출
+		String rawType = projectStraight.getStraightType().getType().toUpperCase();
+		boolean loop = Boolean.TRUE.equals(projectStraight.getIsLoopRail());
+
+		String offsetType;
+		String loopType;
+		if (loop) {
+			if (rawType.length() >= 2) {
+				// "CA" -> "A", "EC" -> "C"
+				loopType = rawType.substring(0, 1);
+				offsetType = rawType.substring(1, 2);
+			} else {
+				throw new GlobalException(ErrorCode.INVALID_LOOP_RAIL_TYPE_DATA);
+			}
+		} else {
+			loopType = null;
+			offsetType = rawType;
+		}
+
+		// 1. baseLitzWire 계산
+		long length = projectStraight.getLength();
+		BigDecimal loopLitzWire = projectStraight.getProject().getVersionInfoEntity().getLoopLitzWire();
+		Map<Integer, BigDecimal> baseLitzWireMap = Boolean.FALSE.equals(projectStraight.getIsLoopRail())
+			? baseLitzWireSupporter(length)
+			: baseLoopLitzWireSupporter(length, loopType, loopLitzWire);
+
+		// 2. 타입에 따라 offset 되어야 할 번호 확인
+		Map<LitzWireAnchor, Integer> anchorMap = pickAnchors(baseLitzWireMap);
+
+		switch (offsetType) {
+			case "B" -> dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LU));
+			case "C" -> dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LD));
+			case "D" -> {
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LU));
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.RU));
+			}
+			case "E" -> {
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LU));
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.RD));
+			}
+			case "F" -> {
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LD));
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.RU));
+			}
+			case "G" -> {
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LU));
+				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LD));
+			}
+			case "A" -> { /* no-op */ }
+			default  -> { /* 변경 없음 */ }
+		}
+
+		return ProjectResponse.LitzInfo.from(baseLitzWireMap);
+	}
+
+	private Map<LitzWireAnchor, Integer> pickAnchors(Map<Integer, BigDecimal> baseLitzWire) {
+		int ru;
+		if (present(baseLitzWire, 5)) {
+			ru = 5;
+		} else if (present(baseLitzWire, 3)) {
+			ru = 3;
+		} else {
+			ru = 1;
+		}
+
+		int rd;
+		if (present(baseLitzWire, 6)) {
+			rd = 6;
+		} else if (present(baseLitzWire, 4)) {
+			rd = 4;
+		} else {
+			rd = 2;
+		}
+
+		return Map.of(
+			LitzWireAnchor.LU, 1,
+			LitzWireAnchor.LD, 2,
+			LitzWireAnchor.RU, ru,
+			LitzWireAnchor.RD, rd
+		);
+	}
+
+	private boolean present(Map<Integer, BigDecimal> m, int idx) {
+		return m.getOrDefault(idx, BigDecimal.ZERO).compareTo(BigDecimal.ZERO) > 0;
+	}
+
+	private Map<Integer, BigDecimal> baseLoopLitzWireSupporter(
+		Long length, String loopType, BigDecimal loopLitzWire
+	) {
+		BigDecimal len  = BigDecimal.valueOf(length);
+		BigDecimal loop = loopLitzWire; // scale=1 가정
+		Map<Integer, BigDecimal> m = new HashMap<>();
+
+		switch (loopType) {
+			case "C" -> {
+				BigDecimal perSide = len.subtract(loop.multiply(BigDecimal.valueOf(2L)))
+					.divide(BigDecimal.valueOf(2L), 1, java.math.RoundingMode.HALF_UP);
+				perSide = perSide.max(BigDecimal.ZERO);
+				m.put(1, perSide); m.put(2, perSide);
+				m.put(3, perSide); m.put(4, perSide);
+			}
+			case "E" -> {
+				BigDecimal leftBase =
+					(len.compareTo(LITZ_WIRE_MAX) <= 0) ? len
+						: (len.compareTo(TH_2400)     <= 0) ? TH_1200
+						: LITZ_WIRE_MAX;
+				BigDecimal remaining = len.subtract(leftBase).max(BigDecimal.ZERO);
+				BigDecimal right = remaining.subtract(loop.multiply(BigDecimal.valueOf(2L))).max(BigDecimal.ZERO);
+				m.put(1, leftBase); m.put(2, leftBase);
+				if (right.signum() > 0) { m.put(3, right); m.put(4, right); }
+			}
+			case "S" -> {
+				BigDecimal leftBase = len.min(LITZ_WIRE_MAX);
+				BigDecimal remaining = len.subtract(leftBase);
+				BigDecimal deduct = loop.multiply(BigDecimal.valueOf(2L)).add(OFFSET_215);
+
+				if (remaining.signum() > 0) {
+					BigDecimal right = remaining.subtract(deduct).max(BigDecimal.ZERO);
+					m.put(1, leftBase); m.put(2, leftBase);
+					m.put(3, right);    m.put(4, right);
+					m.put(5, OFFSET_215); m.put(6, OFFSET_215);
+				} else {
+					BigDecimal left = leftBase.subtract(deduct).max(BigDecimal.ZERO);
+					m.put(1, left); m.put(2, left);
+					m.put(3, OFFSET_215); m.put(4, OFFSET_215);
+				}
+			}
+			default -> {
+				return baseLitzWireSupporter(length);
+			}
+		}
+		return m;
+	}
+
+	private Map<Integer, BigDecimal> baseLitzWireSupporter(long length) {
+		BigDecimal len = BigDecimal.valueOf(length);
+		Map<Integer, BigDecimal> m = new HashMap<>();
+
+		if (len.compareTo(LITZ_WIRE_MAX) <= 0) {
+			m.put(1, len); m.put(2, len);
+		} else if (len.compareTo(TH_2400) <= 0) {
+			BigDecimal rest = len.subtract(TH_1200);
+			m.put(1, TH_1200); m.put(2, TH_1200);
+			m.put(3, rest);    m.put(4, rest);
+		} else { // <= 3600
+			BigDecimal rest = len.subtract(LITZ_WIRE_MAX);
+			m.put(1, LITZ_WIRE_MAX); m.put(2, LITZ_WIRE_MAX);
+			m.put(3, rest);          m.put(4, rest);
+		}
+		return m;
+	}
+
+	// litzWire 차감 진행
+	private void dec(Map<Integer, BigDecimal> m, int idx) {
+		BigDecimal v = m.getOrDefault(idx, BigDecimal.ZERO);
+		v = v.subtract(OFFSET_215).max(BigDecimal.ZERO);
+		m.put(idx, v);
 	}
 }

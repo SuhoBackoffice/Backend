@@ -1,5 +1,7 @@
 package baekgwa.suhoserver.model.version.entity;
 
+import java.math.BigDecimal;
+
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,15 +39,20 @@ public class VersionInfoEntity extends TemporalEntity {
 	@Column(unique = true, nullable = false, columnDefinition = "버전 정보")
 	private String name;
 
+	@Column(name = "loop_litz_wire", nullable = false, precision = 4, scale = 1)
+	private BigDecimal loopLitzWire;
+
 	@Builder(access = AccessLevel.PRIVATE)
-	private VersionInfoEntity(String name) {
+	private VersionInfoEntity(String name, BigDecimal loopLitzWire) {
 		this.name = name;
+		this.loopLitzWire = loopLitzWire;
 	}
 
-	public static VersionInfoEntity of(String name) {
+	public static VersionInfoEntity of(String name, BigDecimal loopLitzWire) {
 		return VersionInfoEntity
 			.builder()
 			.name(name)
+			.loopLitzWire(loopLitzWire)
 			.build();
 	}
 }

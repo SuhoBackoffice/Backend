@@ -23,12 +23,14 @@ CREATE TABLE `users`
 
 CREATE TABLE `version_info`
 (
-    `id`          BIGINT AUTO_INCREMENT NOT NULL,
-    `name`        VARCHAR(255)          NOT NULL,
-    `created_at`  DATETIME              NOT NULL,
-    `modified_at` DATETIME              NOT NULL,
+    `id`             BIGINT AUTO_INCREMENT NOT NULL,
+    `name`           VARCHAR(255)          NOT NULL,
+    `loop_litz_wire` DECIMAL(4, 1)      NOT NULL,
+    `created_at`     DATETIME              NOT NULL,
+    `modified_at`    DATETIME              NOT NULL,
     UNIQUE KEY uq_version_info_name (name),
-    PRIMARY KEY `pk_version_info_id` (`id`)
+    PRIMARY KEY `pk_version_info_id` (`id`),
+    CONSTRAINT `ck_version_info_loop_litz_wire_over_150` CHECK (`loop_litz_wire` >= 150.0)
 );
 
 CREATE TABLE `branch_type`
@@ -103,7 +105,8 @@ CREATE TABLE `straight_type`
     `is_loop_rail` TINYINT(1)            NOT NULL,
     `created_at`   DATETIME              NOT NULL,
     `modified_at`  DATETIME              NOT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_straight_type_type` (`type`)
 );
 
 CREATE TABLE `project_straight`
@@ -124,5 +127,5 @@ CREATE TABLE `project_straight`
     CONSTRAINT `fk_project_straight_straight_type` FOREIGN KEY (`straight_type_id`) REFERENCES `straight_type` (`id`),
     CONSTRAINT `ck_project_straight_target_quantity_nonnegative` CHECK (`total_quantity` >= 0),
     CONSTRAINT `ck_project_straight_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0),
-    CONSTRAINT `ck_project_straight_length_over_300` CHECK (`completed_quantity` >= 300)
+    CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300)
 );
