@@ -36,9 +36,15 @@ public enum SuccessCode {
 	// Branch
 	CREATE_NEW_BRANCH_BOM_SUCCESS(HttpStatus.CREATED, "신규 분기 BOM 리스트 생성 성공"),
 
+	// Straight
+	CREATE_NEW_STRAIGHT_TYPE_SUCCESS(HttpStatus.CREATED, "신규 직선레일 타입 추가 완료"),
+	GET_ALL_STRAIGHT_TYPE_LIST_SUCCESS(HttpStatus.OK, "직선 레일 타입 조회 성공"),
+	GET_ALL_LOOP_STRAIGHT_TYPE_LIST_SUCCESS(HttpStatus.OK, "루프/직선 레일 타입 조회 성공"),
+
 	// Project
 	CREATE_NEW_PROJECT_SUCCESS(HttpStatus.CREATED, "신규 프로젝트 생성 완료"),
 	REGISTER_PROJECT_BRANCH_SUCCESS(HttpStatus.CREATED, "프로젝트 분기 정보 등록 완료"),
+	REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS(HttpStatus.CREATED, "프로젝트 직선레일 정보 등록 완료"),
 	GET_PROJECT_INFORMATION_SUCCESS(HttpStatus.CREATED, "프로젝트 정보 조회 성공"),
 
 	// Common

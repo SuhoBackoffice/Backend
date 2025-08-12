@@ -45,6 +45,11 @@ public enum ErrorCode {
 	NOT_FOUND_PROJECT(HttpStatus.BAD_REQUEST, "5001", "해당 프로젝트를 찾을 수 없습니다."),
 	INVALID_VERSION_BRANCH(HttpStatus.BAD_REQUEST, "5002", "프로젝트 버전과, 해당 분기레일의 버전이 일치하지 않습니다."),
 
+	// Straight : 6000 ~ 69999
+	DUPLICATE_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),
+	NOT_FOUND_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6001", "레일 타입 정보를 찾을 수 없습니다."),
+	INVALID_LOOP_RAIL_TYPE_DATA(HttpStatus.BAD_REQUEST, "6002", "루프 레일에 일반 레일 타입이 들어가있습니다."),
+
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
 	NOT_SUPPORTED_METHOD(HttpStatus.METHOD_NOT_ALLOWED, "9002", "요청 메서드를 찾을 수 없습니다."),

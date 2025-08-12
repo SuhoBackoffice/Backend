@@ -1,6 +1,4 @@
-package baekgwa.suhoserver.model.version.entity;
-
-import java.math.BigDecimal;
+package baekgwa.suhoserver.model.straight.type.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import jakarta.persistence.Column;
@@ -15,44 +13,40 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * PackageName : baekgwa.suhoserver.model.version
- * FileName    : VersionInfoEntity
+ * PackageName : baekgwa.suhoserver.model.straight.type.entity
+ * FileName    : StraightTypeEntity
  * Author      : Baekgwa
- * Date        : 2025-08-05
+ * Date        : 2025-08-09
  * Description : 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
- * 2025-08-05     Baekgwa               Initial creation
+ * 2025-08-09     Baekgwa               Initial creation
  */
 @Entity
 @Getter
-@Table(name = "version_info")
+@Table(name = "straight_type")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class VersionInfoEntity extends TemporalEntity {
+public class StraightTypeEntity extends TemporalEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name = "id", nullable = false)
 	private Long id;
 
-	@Column(unique = true, nullable = false, columnDefinition = "버전 정보")
-	private String name;
+	@Column(name = "type", nullable = false)
+	private String type;
 
-	@Column(name = "loop_litz_wire", nullable = false, precision = 4, scale = 1)
-	private BigDecimal loopLitzWire;
+	@Column(name = "is_loop_rail", nullable = false)
+	private Boolean isLoopRail;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private VersionInfoEntity(String name, BigDecimal loopLitzWire) {
-		this.name = name;
-		this.loopLitzWire = loopLitzWire;
+	private StraightTypeEntity(String type, Boolean isLoopRail) {
+		this.type = type;
+		this.isLoopRail = isLoopRail;
 	}
 
-	public static VersionInfoEntity of(String name, BigDecimal loopLitzWire) {
-		return VersionInfoEntity
-			.builder()
-			.name(name)
-			.loopLitzWire(loopLitzWire)
-			.build();
+	public static StraightTypeEntity createNewStraightType(String type, Boolean isLoopRail) {
+		return StraightTypeEntity.builder().type(type).isLoopRail(isLoopRail).build();
 	}
 }

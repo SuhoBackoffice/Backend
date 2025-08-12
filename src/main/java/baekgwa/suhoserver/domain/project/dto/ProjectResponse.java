@@ -1,10 +1,13 @@
 package baekgwa.suhoserver.domain.project.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,20 +44,22 @@ public class ProjectResponse {
 		private final LocalDate startDate;
 		private final LocalDate endDate;
 		private final List<BranchInfo> branchInfoList;
-		//todo : 직선 레일 정보
+		private final List<StraightInfo> straightInfoList;
 
 		@Builder(access = AccessLevel.PRIVATE)
 		private ProjectInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate,
-			List<BranchInfo> branchInfoList) {
+			List<BranchInfo> branchInfoList, List<StraightInfo> straightInfoList) {
 			this.version = version;
 			this.region = region;
 			this.name = name;
 			this.startDate = startDate;
 			this.endDate = endDate;
 			this.branchInfoList = branchInfoList;
+			this.straightInfoList = straightInfoList;
 		}
 
-		public static ProjectInfo of(ProjectEntity project, List<BranchInfo> branchInfoList) {
+		public static ProjectInfo of(ProjectEntity project, List<BranchInfo> branchInfoList,
+			List<StraightInfo> straightInfoList) {
 			return ProjectInfo
 				.builder()
 				.version(project.getVersionInfoEntity().getName())
@@ -63,6 +68,7 @@ public class ProjectResponse {
 				.startDate(project.getStartDate())
 				.endDate(project.getEndDate())
 				.branchInfoList(branchInfoList)
+				.straightInfoList(straightInfoList)
 				.build();
 		}
 	}
@@ -89,6 +95,74 @@ public class ProjectResponse {
 				.branchVersion(projectBranch.getBranchType().getVersion())
 				.totalQuantity(projectBranch.getTotalQuantity())
 				.completedQuantity(projectBranch.getCompletedQuantity())
+				.build();
+		}
+	}
+
+	@Getter
+	public static class StraightInfo {
+		private final Long id;
+		private final Long length;
+		private final Boolean isLoopRail;
+		private final String straightType;
+		private final Long totalQuantity;
+		private final LitzInfo litzInfo;
+		private final Long holePosition; //가공위치
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private StraightInfo(Long id, Long length, Boolean isLoopRail, String straightType, Long totalQuantity,
+			LitzInfo litzInfo, Long holePosition) {
+			this.id = id;
+			this.length = length;
+			this.isLoopRail = isLoopRail;
+			this.straightType = straightType;
+			this.totalQuantity = totalQuantity;
+			this.litzInfo = litzInfo;
+			this.holePosition = holePosition;
+		}
+
+		public static StraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo, Long holePosition) {
+			return StraightInfo
+				.builder()
+				.id(projectStraight.getId())
+				.length(projectStraight.getLength())
+				.isLoopRail(projectStraight.getIsLoopRail())
+				.straightType(projectStraight.getStraightType().getType())
+				.totalQuantity(projectStraight.getTotalQuantity())
+				.litzInfo(litzInfo)
+				.holePosition(holePosition)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class LitzInfo {
+		private final BigDecimal litz1;
+		private final BigDecimal litz2;
+		private final BigDecimal litz3;
+		private final BigDecimal litz4;
+		private final BigDecimal litz5;
+		private final BigDecimal litz6;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private LitzInfo(BigDecimal litz1, BigDecimal litz2, BigDecimal litz3, BigDecimal litz4, BigDecimal litz5, BigDecimal litz6) {
+			this.litz1 = litz1;
+			this.litz2 = litz2;
+			this.litz3 = litz3;
+			this.litz4 = litz4;
+			this.litz5 = litz5;
+			this.litz6 = litz6;
+		}
+
+		public static LitzInfo from(Map<Integer, BigDecimal> baseLitzWireMap) {
+			return LitzInfo
+				.builder()
+				.litz1(baseLitzWireMap.getOrDefault(1, BigDecimal.ZERO))
+				.litz2(baseLitzWireMap.getOrDefault(2, BigDecimal.ZERO))
+				.litz3(baseLitzWireMap.getOrDefault(3, BigDecimal.ZERO))
+				.litz4(baseLitzWireMap.getOrDefault(4, BigDecimal.ZERO))
+				.litz5(baseLitzWireMap.getOrDefault(5, BigDecimal.ZERO))
+				.litz6(baseLitzWireMap.getOrDefault(6, BigDecimal.ZERO))
 				.build();
 		}
 	}

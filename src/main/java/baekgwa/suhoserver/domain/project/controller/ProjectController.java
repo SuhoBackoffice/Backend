@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectService;
+import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -56,7 +57,29 @@ public class ProjectController {
 		ProjectResponse.NewProjectDto newProjectDto =
 			projectService.registerProjectBranch(postProjectBranchInfoList, projectId);
 
-		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, newProjectDto);
+		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_BRANCH_SUCCESS, newProjectDto);
+	}
+
+	@PostMapping("/{projectId}/normal-straight")
+	@Operation(summary = "프로젝트 직선 레일 정보 등록")
+	public BaseResponse<Void> registerProjectStraight(
+		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
+		@PathVariable("projectId") Long projectId
+	) {
+		projectService.registerProjectStraight(postProjectStraightInfoList, projectId, RailKind.NORMAL);
+
+		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
+	}
+
+	@PostMapping("/{projectId}/loop-straight")
+	@Operation(summary = "프로젝트 루프 레일 정보 등록")
+	public BaseResponse<Void> registerProjectLoopStraight(
+		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
+		@PathVariable("projectId") Long projectId
+	) {
+		projectService.registerProjectStraight(postProjectStraightInfoList, projectId, RailKind.LOOP);
+
+		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
 	}
 
 	@GetMapping("/{projectId}")

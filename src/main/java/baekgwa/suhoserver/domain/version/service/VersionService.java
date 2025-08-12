@@ -38,7 +38,7 @@ public class VersionService {
 		}
 
 		// 2. 새로운 Entity 생성
-		VersionInfoEntity newVersion = VersionInfoEntity.of(newVersionDto.getVersionName());
+		VersionInfoEntity newVersion = VersionInfoEntity.of(newVersionDto.getVersionName(), newVersionDto.getLoopLitzWire());
 
 		// 3. 저장
 		versionInfoRepository.save(newVersion);
