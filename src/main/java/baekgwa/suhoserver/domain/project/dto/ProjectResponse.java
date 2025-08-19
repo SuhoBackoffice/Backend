@@ -37,7 +37,7 @@ public class ProjectResponse {
 	}
 
 	@Getter
-	public static class ProjectInfo {
+	public static class ProjectDetailInfo {
 		private final String version;
 		private final String region;
 		private final String name;
@@ -47,7 +47,7 @@ public class ProjectResponse {
 		private final List<StraightInfo> straightInfoList;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate,
+		private ProjectDetailInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate,
 			List<BranchInfo> branchInfoList, List<StraightInfo> straightInfoList) {
 			this.version = version;
 			this.region = region;
@@ -58,9 +58,9 @@ public class ProjectResponse {
 			this.straightInfoList = straightInfoList;
 		}
 
-		public static ProjectInfo of(ProjectEntity project, List<BranchInfo> branchInfoList,
+		public static ProjectDetailInfo of(ProjectEntity project, List<BranchInfo> branchInfoList,
 			List<StraightInfo> straightInfoList) {
-			return ProjectInfo
+			return ProjectDetailInfo
 				.builder()
 				.version(project.getVersionInfoEntity().getName())
 				.region(project.getRegion())

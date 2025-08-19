@@ -84,10 +84,10 @@ public class ProjectController {
 
 	@GetMapping("/{projectId}")
 	@Operation(summary = "프로젝트 정보 조회")
-	public BaseResponse<ProjectResponse.ProjectInfo> getProjectInfo (
+	public BaseResponse<ProjectResponse.ProjectDetailInfo> getProjectInfo (
 		@PathVariable("projectId") Long projectId
 	) {
-		ProjectResponse.ProjectInfo projectInfo = projectService.getProjectInfo(projectId);
-		return BaseResponse.success(SuccessCode.GET_PROJECT_INFORMATION_SUCCESS, projectInfo);
+		ProjectResponse.ProjectDetailInfo projectDetailInfo = projectService.getProjectInfo(projectId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_INFORMATION_SUCCESS, projectDetailInfo);
 	}
 }

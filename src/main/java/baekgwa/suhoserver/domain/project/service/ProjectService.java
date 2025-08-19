@@ -123,7 +123,7 @@ public class ProjectService {
 	}
 
 	@Transactional(readOnly = true)
-	public ProjectResponse.ProjectInfo getProjectInfo(Long projectId) {
+	public ProjectResponse.ProjectDetailInfo getProjectInfo(Long projectId) {
 		// 1. Project 유효성 검증 및 Data 조회
 		ProjectEntity findProject = projectRepository.findById(projectId).orElseThrow(
 			() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
@@ -145,7 +145,7 @@ public class ProjectService {
 			})
 			.toList();
 
-		return ProjectResponse.ProjectInfo.of(findProject, branchInfoList, straightInfoList);
+		return ProjectResponse.ProjectDetailInfo.of(findProject, branchInfoList, straightInfoList);
 	}
 
 	@Transactional
