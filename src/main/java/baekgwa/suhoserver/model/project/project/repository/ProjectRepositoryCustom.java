@@ -1,19 +1,22 @@
 package baekgwa.suhoserver.model.project.project.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
 
-import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
+import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 
 /**
  * PackageName : baekgwa.suhoserver.model.project.project.repository
- * FileName    : ProjectRepository
+ * FileName    : ProjectRepositoryCustom
  * Author      : Baekgwa
- * Date        : 2025-08-07
+ * Date        : 2025-08-19
  * Description : 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
- * 2025-08-07     Baekgwa               Initial creation
+ * 2025-08-19     Baekgwa               Initial creation
  */
-public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>, ProjectRepositoryCustom {
+public interface ProjectRepositoryCustom {
+
+	Page<ProjectResponse.ProjectInfo> searchProjectList(ProjectRequest.GetProjectInfo dto);
 }
