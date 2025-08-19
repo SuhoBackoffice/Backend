@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
+import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.branch.type.repository.BranchTypeRepository;
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
@@ -53,10 +55,10 @@ public class ProjectService {
 	private final ProjectStraightRepository projectStraightRepository;
 
 	private static final BigDecimal LITZ_WIRE_MAX = BigDecimal.valueOf(1800L);
-	private static final BigDecimal OFFSET_215    = BigDecimal.valueOf(215L);
-	private static final BigDecimal TH_1200       = BigDecimal.valueOf(1200L);
-	private static final BigDecimal TH_2400       = BigDecimal.valueOf(2400L);
-	private static final BigDecimal TH_3600       = BigDecimal.valueOf(3600L);
+	private static final BigDecimal OFFSET_215 = BigDecimal.valueOf(215L);
+	private static final BigDecimal TH_1200 = BigDecimal.valueOf(1200L);
+	private static final BigDecimal TH_2400 = BigDecimal.valueOf(2400L);
+	private static final BigDecimal TH_3600 = BigDecimal.valueOf(3600L);
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -123,7 +125,7 @@ public class ProjectService {
 	}
 
 	@Transactional(readOnly = true)
-	public ProjectResponse.ProjectInfo getProjectInfo(Long projectId) {
+	public ProjectResponse.ProjectDetailInfo getProjectInfo(Long projectId) {
 		// 1. Project 유효성 검증 및 Data 조회
 		ProjectEntity findProject = projectRepository.findById(projectId).orElseThrow(
 			() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
@@ -145,7 +147,7 @@ public class ProjectService {
 			})
 			.toList();
 
-		return ProjectResponse.ProjectInfo.of(findProject, branchInfoList, straightInfoList);
+		return ProjectResponse.ProjectDetailInfo.of(findProject, branchInfoList, straightInfoList);
 	}
 
 	@Transactional
@@ -182,6 +184,32 @@ public class ProjectService {
 				})
 			.toList();
 		projectStraightRepository.saveAll(projectStraightList);
+	}
+
+	@Transactional(readOnly = true)
+	public PageResponse<ProjectResponse.ProjectInfo> getProjectInfoList(ProjectRequest.GetProjectInfo dto) {
+
+		// 1. 페이지네이션 파라미터 유효성 검증
+		if (dto.getPage() < 0 || dto.getSize() < 1) {
+			throw new GlobalException(ErrorCode.INVALID_PAGINATION_PARAMETER);
+		}
+
+		// 1-1. StartDate, EndDate 검증
+		if (dto.getStartDate() != null &&
+			dto.getEndDate() != null &&
+			!dto.getEndDate().isAfter(dto.getStartDate())) {
+			throw new GlobalException(ErrorCode.PROJECT_END_AFTER_START_ERROR);
+		}
+
+		// 2. version 유효성 검증
+		if (dto.getVersionId() != null && !versionInfoRepository.existsById(dto.getVersionId())) {
+			throw new GlobalException(ErrorCode.NOT_FOUND_VERSION);
+		}
+
+		// 3. list 조회
+		Page<ProjectResponse.ProjectInfo> findData = projectRepository.searchProjectList(dto);
+
+		return PageResponse.of(findData);
 	}
 
 	private @NotNull Long calcHolePosition(ProjectStraightEntity projectStraight) {
@@ -256,7 +284,7 @@ public class ProjectService {
 				dec(baseLitzWireMap, anchorMap.get(LitzWireAnchor.LD));
 			}
 			case "A" -> { /* no-op */ }
-			default  -> { /* 변경 없음 */ }
+			default -> { /* 변경 없음 */ }
 		}
 
 		return ProjectResponse.LitzInfo.from(baseLitzWireMap);
@@ -296,7 +324,7 @@ public class ProjectService {
 	private Map<Integer, BigDecimal> baseLoopLitzWireSupporter(
 		Long length, String loopType, BigDecimal loopLitzWire
 	) {
-		BigDecimal len  = BigDecimal.valueOf(length);
+		BigDecimal len = BigDecimal.valueOf(length);
 		BigDecimal loop = loopLitzWire; // scale=1 가정
 		Map<Integer, BigDecimal> m = new HashMap<>();
 
@@ -305,18 +333,24 @@ public class ProjectService {
 				BigDecimal perSide = len.subtract(loop.multiply(BigDecimal.valueOf(2L)))
 					.divide(BigDecimal.valueOf(2L), 1, java.math.RoundingMode.HALF_UP);
 				perSide = perSide.max(BigDecimal.ZERO);
-				m.put(1, perSide); m.put(2, perSide);
-				m.put(3, perSide); m.put(4, perSide);
+				m.put(1, perSide);
+				m.put(2, perSide);
+				m.put(3, perSide);
+				m.put(4, perSide);
 			}
 			case "E" -> {
 				BigDecimal leftBase =
 					(len.compareTo(LITZ_WIRE_MAX) <= 0) ? len
-						: (len.compareTo(TH_2400)     <= 0) ? TH_1200
+						: (len.compareTo(TH_2400) <= 0) ? TH_1200
 						: LITZ_WIRE_MAX;
 				BigDecimal remaining = len.subtract(leftBase).max(BigDecimal.ZERO);
 				BigDecimal right = remaining.subtract(loop.multiply(BigDecimal.valueOf(2L))).max(BigDecimal.ZERO);
-				m.put(1, leftBase); m.put(2, leftBase);
-				if (right.signum() > 0) { m.put(3, right); m.put(4, right); }
+				m.put(1, leftBase);
+				m.put(2, leftBase);
+				if (right.signum() > 0) {
+					m.put(3, right);
+					m.put(4, right);
+				}
 			}
 			case "S" -> {
 				BigDecimal leftBase = len.min(LITZ_WIRE_MAX);
@@ -325,13 +359,18 @@ public class ProjectService {
 
 				if (remaining.signum() > 0) {
 					BigDecimal right = remaining.subtract(deduct).max(BigDecimal.ZERO);
-					m.put(1, leftBase); m.put(2, leftBase);
-					m.put(3, right);    m.put(4, right);
-					m.put(5, OFFSET_215); m.put(6, OFFSET_215);
+					m.put(1, leftBase);
+					m.put(2, leftBase);
+					m.put(3, right);
+					m.put(4, right);
+					m.put(5, OFFSET_215);
+					m.put(6, OFFSET_215);
 				} else {
 					BigDecimal left = leftBase.subtract(deduct).max(BigDecimal.ZERO);
-					m.put(1, left); m.put(2, left);
-					m.put(3, OFFSET_215); m.put(4, OFFSET_215);
+					m.put(1, left);
+					m.put(2, left);
+					m.put(3, OFFSET_215);
+					m.put(4, OFFSET_215);
 				}
 			}
 			default -> {
@@ -346,15 +385,20 @@ public class ProjectService {
 		Map<Integer, BigDecimal> m = new HashMap<>();
 
 		if (len.compareTo(LITZ_WIRE_MAX) <= 0) {
-			m.put(1, len); m.put(2, len);
+			m.put(1, len);
+			m.put(2, len);
 		} else if (len.compareTo(TH_2400) <= 0) {
 			BigDecimal rest = len.subtract(TH_1200);
-			m.put(1, TH_1200); m.put(2, TH_1200);
-			m.put(3, rest);    m.put(4, rest);
+			m.put(1, TH_1200);
+			m.put(2, TH_1200);
+			m.put(3, rest);
+			m.put(4, rest);
 		} else { // <= 3600
 			BigDecimal rest = len.subtract(LITZ_WIRE_MAX);
-			m.put(1, LITZ_WIRE_MAX); m.put(2, LITZ_WIRE_MAX);
-			m.put(3, rest);          m.put(4, rest);
+			m.put(1, LITZ_WIRE_MAX);
+			m.put(2, LITZ_WIRE_MAX);
+			m.put(3, rest);
+			m.put(4, rest);
 		}
 		return m;
 	}

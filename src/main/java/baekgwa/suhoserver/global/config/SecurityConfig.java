@@ -91,8 +91,8 @@ public class SecurityConfig {
 
 				//사용자 Role 별 계층형 권한 확인용 api
 				.requestMatchers(GET, "/auth/admin").hasRole(ADMIN.name())
-				.requestMatchers(GET,"/auth/staff").hasRole(STAFF.name())
-				.requestMatchers(GET,"/auth/login").authenticated()
+				.requestMatchers(GET, "/auth/staff").hasRole(STAFF.name())
+				.requestMatchers(GET, "/auth/login").authenticated()
 
 				// authentication
 				.requestMatchers(POST, "/auth/login").permitAll()
@@ -113,6 +113,8 @@ public class SecurityConfig {
 				.requestMatchers(POST, "/project/{projectId}/branch").hasRole(STAFF.name())
 				.requestMatchers(POST, "/project/{projectId}/normal-straight").hasRole(STAFF.name())
 				.requestMatchers(POST, "/project/{projectId}/loop-straight").hasRole(STAFF.name())
+				.requestMatchers(GET, "/project").permitAll()
+				.requestMatchers(GET, "/project/sort-type").permitAll()
 
 				// Straight
 				.requestMatchers(POST, "/straight/type").hasRole(STAFF.name())

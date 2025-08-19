@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
@@ -37,7 +38,7 @@ public class ProjectResponse {
 	}
 
 	@Getter
-	public static class ProjectInfo {
+	public static class ProjectDetailInfo {
 		private final String version;
 		private final String region;
 		private final String name;
@@ -47,7 +48,7 @@ public class ProjectResponse {
 		private final List<StraightInfo> straightInfoList;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate,
+		private ProjectDetailInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate,
 			List<BranchInfo> branchInfoList, List<StraightInfo> straightInfoList) {
 			this.version = version;
 			this.region = region;
@@ -58,9 +59,9 @@ public class ProjectResponse {
 			this.straightInfoList = straightInfoList;
 		}
 
-		public static ProjectInfo of(ProjectEntity project, List<BranchInfo> branchInfoList,
+		public static ProjectDetailInfo of(ProjectEntity project, List<BranchInfo> branchInfoList,
 			List<StraightInfo> straightInfoList) {
-			return ProjectInfo
+			return ProjectDetailInfo
 				.builder()
 				.version(project.getVersionInfoEntity().getName())
 				.region(project.getRegion())
@@ -145,7 +146,8 @@ public class ProjectResponse {
 		private final BigDecimal litz6;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private LitzInfo(BigDecimal litz1, BigDecimal litz2, BigDecimal litz3, BigDecimal litz4, BigDecimal litz5, BigDecimal litz6) {
+		private LitzInfo(BigDecimal litz1, BigDecimal litz2, BigDecimal litz3, BigDecimal litz4, BigDecimal litz5,
+			BigDecimal litz6) {
 			this.litz1 = litz1;
 			this.litz2 = litz2;
 			this.litz3 = litz3;
@@ -164,6 +166,50 @@ public class ProjectResponse {
 				.litz5(baseLitzWireMap.getOrDefault(5, BigDecimal.ZERO))
 				.litz6(baseLitzWireMap.getOrDefault(6, BigDecimal.ZERO))
 				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectInfo {
+		private final String version;
+		private final String region;
+		private final String name;
+		private final LocalDate startDate;
+		private final LocalDate endDate;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+			this.version = version;
+			this.region = region;
+			this.name = name;
+			this.startDate = startDate;
+			this.endDate = endDate;
+		}
+
+		public static ProjectInfo of(ProjectEntity project) {
+			return ProjectInfo
+				.builder()
+				.version(project.getVersionInfoEntity().getName())
+				.region(project.getRegion())
+				.name(project.getName())
+				.startDate(project.getStartDate())
+				.endDate(project.getEndDate())
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectSearchSort {
+		private final String id;
+		private final String name;
+
+		private ProjectSearchSort(String id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public static ProjectSearchSort of(ProjectSort sort) {
+			return new ProjectSearchSort(sort.name(), sort.getDescription());
 		}
 	}
 }
