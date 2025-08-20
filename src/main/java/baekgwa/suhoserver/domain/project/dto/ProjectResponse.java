@@ -171,6 +171,7 @@ public class ProjectResponse {
 
 	@Getter
 	public static class ProjectInfo {
+		private final Long id;
 		private final String version;
 		private final String region;
 		private final String name;
@@ -178,7 +179,8 @@ public class ProjectResponse {
 		private final LocalDate endDate;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+		private ProjectInfo(Long id, String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+			this.id = id;
 			this.version = version;
 			this.region = region;
 			this.name = name;
@@ -189,6 +191,7 @@ public class ProjectResponse {
 		public static ProjectInfo of(ProjectEntity project) {
 			return ProjectInfo
 				.builder()
+				.id(project.getId())
 				.version(project.getVersionInfoEntity().getName())
 				.region(project.getRegion())
 				.name(project.getName())
