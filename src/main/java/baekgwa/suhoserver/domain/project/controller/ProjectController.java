@@ -96,6 +96,25 @@ public class ProjectController {
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_INFORMATION_SUCCESS, projectDetailInfo);
 	}
 
+	@GetMapping("/{projectId}/branch")
+	@Operation(summary = "프로젝트 분기레일 정보 조회")
+	public BaseResponse<List<ProjectResponse.ProjectBranchInfo>> getProjectBranchInfo(
+		@PathVariable("projectId") Long projectId
+	) {
+		List<ProjectResponse.ProjectBranchInfo> projectBranchInfoList = projectService.getProjectBranchInfo(projectId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS, projectBranchInfoList);
+	}
+
+	@GetMapping("/{projectId}/straight")
+	@Operation(summary = "프로젝트 직선레일 정보 조회")
+	public BaseResponse<List<ProjectResponse.ProjectStraightInfo>> getProjectStraightInfo(
+		@PathVariable("projectId") Long projectId
+	) {
+		List<ProjectResponse.ProjectStraightInfo> projectStraightInfoList =
+			projectService.getProjectStraightInfo(projectId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, projectStraightInfoList);
+	}
+
 	@GetMapping
 	@Operation(summary = "프로젝트 리스트 조회")
 	public BaseResponse<PageResponse<ProjectResponse.ProjectInfo>> getProjectList(

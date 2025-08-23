@@ -2,7 +2,6 @@ package baekgwa.suhoserver.domain.project.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
@@ -44,23 +43,17 @@ public class ProjectResponse {
 		private final String name;
 		private final LocalDate startDate;
 		private final LocalDate endDate;
-		private final List<BranchInfo> branchInfoList;
-		private final List<StraightInfo> straightInfoList;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectDetailInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate,
-			List<BranchInfo> branchInfoList, List<StraightInfo> straightInfoList) {
+		private ProjectDetailInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate) {
 			this.version = version;
 			this.region = region;
 			this.name = name;
 			this.startDate = startDate;
 			this.endDate = endDate;
-			this.branchInfoList = branchInfoList;
-			this.straightInfoList = straightInfoList;
 		}
 
-		public static ProjectDetailInfo of(ProjectEntity project, List<BranchInfo> branchInfoList,
-			List<StraightInfo> straightInfoList) {
+		public static ProjectDetailInfo of(ProjectEntity project) {
 			return ProjectDetailInfo
 				.builder()
 				.version(project.getVersionInfoEntity().getName())
@@ -68,30 +61,31 @@ public class ProjectResponse {
 				.name(project.getName())
 				.startDate(project.getStartDate())
 				.endDate(project.getEndDate())
-				.branchInfoList(branchInfoList)
-				.straightInfoList(straightInfoList)
 				.build();
 		}
 	}
 
 	@Getter
-	public static class BranchInfo {
+	public static class ProjectBranchInfo {
+		private final Long branchRailId;
 		private final String branchCode;
 		private final LocalDate branchVersion;
 		private final Long totalQuantity;
 		private final Long completedQuantity;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private BranchInfo(String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity) {
+		private ProjectBranchInfo(Long branchRailId, String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity) {
+			this.branchRailId = branchRailId;
 			this.branchCode = branchCode;
 			this.branchVersion = branchVersion;
 			this.totalQuantity = totalQuantity;
 			this.completedQuantity = completedQuantity;
 		}
 
-		public static BranchInfo of(ProjectBranchEntity projectBranch) {
-			return BranchInfo
+		public static ProjectBranchInfo of(ProjectBranchEntity projectBranch) {
+			return ProjectBranchInfo
 				.builder()
+				.branchRailId(projectBranch.getId())
 				.branchCode(projectBranch.getBranchType().getCode())
 				.branchVersion(projectBranch.getBranchType().getVersion())
 				.totalQuantity(projectBranch.getTotalQuantity())
@@ -101,8 +95,8 @@ public class ProjectResponse {
 	}
 
 	@Getter
-	public static class StraightInfo {
-		private final Long id;
+	public static class ProjectStraightInfo {
+		private final Long straightRailId;
 		private final Long length;
 		private final Boolean isLoopRail;
 		private final String straightType;
@@ -111,9 +105,9 @@ public class ProjectResponse {
 		private final Long holePosition; //가공위치
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private StraightInfo(Long id, Long length, Boolean isLoopRail, String straightType, Long totalQuantity,
+		private ProjectStraightInfo(Long straightRailId, Long length, Boolean isLoopRail, String straightType, Long totalQuantity,
 			LitzInfo litzInfo, Long holePosition) {
-			this.id = id;
+			this.straightRailId = straightRailId;
 			this.length = length;
 			this.isLoopRail = isLoopRail;
 			this.straightType = straightType;
@@ -122,10 +116,10 @@ public class ProjectResponse {
 			this.holePosition = holePosition;
 		}
 
-		public static StraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo, Long holePosition) {
-			return StraightInfo
+		public static ProjectStraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo, Long holePosition) {
+			return ProjectStraightInfo
 				.builder()
-				.id(projectStraight.getId())
+				.straightRailId(projectStraight.getId())
 				.length(projectStraight.getLength())
 				.isLoopRail(projectStraight.getIsLoopRail())
 				.straightType(projectStraight.getStraightType().getType())
