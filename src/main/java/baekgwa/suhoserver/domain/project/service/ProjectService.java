@@ -130,24 +130,39 @@ public class ProjectService {
 		ProjectEntity findProject = projectRepository.findById(projectId).orElseThrow(
 			() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
 
-		// 2. Project 의 Branch 정보 조회
-		List<ProjectBranchEntity> findProjectBranchList = projectBranchRepository.findByProject(findProject);
-		List<ProjectResponse.BranchInfo> branchInfoList = findProjectBranchList.stream()
-			.map(ProjectResponse.BranchInfo::of)
-			.toList();
+		// 2. dto 변환 후 반환
+		return ProjectResponse.ProjectDetailInfo.of(findProject);
+	}
 
-		// 3. Project 의 Straight 정보 조회
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.ProjectBranchInfo> getProjectBranchInfo(Long projectId) {
+		// 1. Project 유효성 검증 및 Data 조회
+		ProjectEntity findProject = projectRepository.findById(projectId).orElseThrow(
+			() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
+
+		// 2. Project 의 Branch 정보 조회 및 응답
+		List<ProjectBranchEntity> findProjectBranchList = projectBranchRepository.findByProject(findProject);
+		return findProjectBranchList.stream()
+			.map(ProjectResponse.ProjectBranchInfo::of)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.ProjectStraightInfo> getProjectStraightInfo(Long projectId) {
+		// 1. Project 유효성 검증 및 Data 조회
+		ProjectEntity findProject = projectRepository.findById(projectId).orElseThrow(
+			() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
+
+		// 2. Project 의 Straight 정보 조회
 		List<ProjectStraightEntity> findProjectStraightList = projectStraightRepository.findByProject(findProject);
-		List<ProjectResponse.StraightInfo> straightInfoList = findProjectStraightList.stream()
+		return findProjectStraightList.stream()
 			.map(data -> {
 				Long holePosition = calcHolePosition(data);
 				ProjectResponse.LitzInfo litzInfo;
 				litzInfo = generateLitzInfoList(data, holePosition);
-				return ProjectResponse.StraightInfo.of(data, litzInfo, holePosition);
+				return ProjectResponse.ProjectStraightInfo.of(data, litzInfo, holePosition);
 			})
 			.toList();
-
-		return ProjectResponse.ProjectDetailInfo.of(findProject, branchInfoList, straightInfoList);
 	}
 
 	@Transactional

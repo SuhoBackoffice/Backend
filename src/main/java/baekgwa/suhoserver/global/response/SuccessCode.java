@@ -48,6 +48,8 @@ public enum SuccessCode {
 	GET_PROJECT_DETAIL_INFORMATION_SUCCESS(HttpStatus.OK, "프로젝트 상세 정보 조회 성공"),
 	GET_PROJECT_INFORMATION_SUCCESS(HttpStatus.OK, "프로젝트 정보 조회 성공"),
 	GET_PROJECT_SEARCH_SORT_SUCCESS(HttpStatus.OK, "프로젝트 정렬 조건 조회/패칭 성공"),
+	GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 상세 정보 조회 성공"),
+	GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 상세 정보 조회 성공"),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
