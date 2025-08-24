@@ -1,6 +1,5 @@
 package baekgwa.suhoserver.model.project.straight.entity;
 
-import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
@@ -73,7 +72,7 @@ public class ProjectStraightEntity extends TemporalEntity {
 	}
 
 	public static ProjectStraightEntity createNewStraight(
-		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, RailKind railKind, Long length
+		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length
 	) {
 		return ProjectStraightEntity
 			.builder()
@@ -81,7 +80,7 @@ public class ProjectStraightEntity extends TemporalEntity {
 			.straightType(straightType)
 			.totalQuantity(totalQuantity)
 			.completedQuantity(0L)
-			.isLoopRail(railKind.isLoop())
+			.isLoopRail(isLoopRail)
 			.length(length)
 			.build();
 	}

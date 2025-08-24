@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
-import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
@@ -167,9 +166,7 @@ public class ProjectService {
 
 	@Transactional
 	public void registerProjectStraight(
-		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
-		Long projectId,
-		RailKind railKind
+		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId
 	) {
 		// 1. 프로젝트 정보 조회
 		ProjectEntity findProject = projectRepository.findById(projectId)
@@ -193,8 +190,15 @@ public class ProjectService {
 					if (findStraightType == null) {
 						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
 					}
+					if (findStraightType.getIsLoopRail() != dto.isLoopRail()) {
+						if(dto.isLoopRail()) {
+							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_LOOP_TYPE);
+						} else {
+							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_NORMAL_TYPE);
+						}
+					}
 					return ProjectStraightEntity
-						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind,
+						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), dto.isLoopRail(),
 							dto.getLength());
 				})
 			.toList();

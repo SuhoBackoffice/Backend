@@ -49,6 +49,8 @@ public enum ErrorCode {
 	DUPLICATE_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),
 	NOT_FOUND_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6001", "레일 타입 정보를 찾을 수 없습니다."),
 	INVALID_LOOP_RAIL_TYPE_DATA(HttpStatus.BAD_REQUEST, "6002", "루프 레일에 일반 레일 타입이 들어가있습니다."),
+	NOT_MATCH_STRAIGHT_LOOP_TYPE(HttpStatus.BAD_REQUEST, "6003", "일부 데이터가 일반 레일인데, 루프 레일 타입으로 지정되었습니다."),
+	NOT_MATCH_STRAIGHT_NORMAL_TYPE(HttpStatus.BAD_REQUEST, "6003", "일부 데이터가 루프 레일인데, 일반 레일 타입으로 지정되었습니다."),
 
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
