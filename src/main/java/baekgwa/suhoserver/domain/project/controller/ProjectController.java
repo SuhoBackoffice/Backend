@@ -16,7 +16,6 @@ import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectService;
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
-import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
@@ -65,24 +64,13 @@ public class ProjectController {
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_BRANCH_SUCCESS, newProjectDto);
 	}
 
-	@PostMapping("/{projectId}/normal-straight")
+	@PostMapping("/{projectId}/straight")
 	@Operation(summary = "프로젝트 직선 레일 정보 등록")
 	public BaseResponse<Void> registerProjectStraight(
 		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
 		@PathVariable("projectId") Long projectId
 	) {
-		projectService.registerProjectStraight(postProjectStraightInfoList, projectId, RailKind.NORMAL);
-
-		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
-	}
-
-	@PostMapping("/{projectId}/loop-straight")
-	@Operation(summary = "프로젝트 루프 레일 정보 등록")
-	public BaseResponse<Void> registerProjectLoopStraight(
-		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
-		@PathVariable("projectId") Long projectId
-	) {
-		projectService.registerProjectStraight(postProjectStraightInfoList, projectId, RailKind.LOOP);
+		projectService.registerProjectStraight(postProjectStraightInfoList, projectId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
 	}

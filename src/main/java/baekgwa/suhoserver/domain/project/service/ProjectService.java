@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
-import baekgwa.suhoserver.domain.project.type.RailKind;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
@@ -167,9 +167,7 @@ public class ProjectService {
 
 	@Transactional
 	public void registerProjectStraight(
-		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
-		Long projectId,
-		RailKind railKind
+		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId
 	) {
 		// 1. 프로젝트 정보 조회
 		ProjectEntity findProject = projectRepository.findById(projectId)
@@ -193,8 +191,15 @@ public class ProjectService {
 					if (findStraightType == null) {
 						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
 					}
+					if (!Objects.equals(findStraightType.getIsLoopRail(), dto.getIsLoopRail())) {
+						if (Boolean.TRUE.equals(dto.getIsLoopRail())) {
+							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_LOOP_TYPE);
+						} else {
+							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_NORMAL_TYPE);
+						}
+					}
 					return ProjectStraightEntity
-						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), railKind,
+						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), dto.getIsLoopRail(),
 							dto.getLength());
 				})
 			.toList();
@@ -354,10 +359,14 @@ public class ProjectService {
 				m.put(4, perSide);
 			}
 			case "E" -> {
-				BigDecimal leftBase =
-					(len.compareTo(LITZ_WIRE_MAX) <= 0) ? len
-						: (len.compareTo(TH_2400) <= 0) ? TH_1200
-						: LITZ_WIRE_MAX;
+				BigDecimal leftBase;
+				if (len.compareTo(LITZ_WIRE_MAX) <= 0) {
+					leftBase = len;
+				} else if (len.compareTo(TH_2400) <= 0) {
+					leftBase = TH_1200;
+				} else {
+					leftBase = LITZ_WIRE_MAX;
+				}
 				BigDecimal remaining = len.subtract(leftBase).max(BigDecimal.ZERO);
 				BigDecimal right = remaining.subtract(loop.multiply(BigDecimal.valueOf(2L))).max(BigDecimal.ZERO);
 				m.put(1, leftBase);
