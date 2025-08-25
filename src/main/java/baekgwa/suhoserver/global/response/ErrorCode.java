@@ -44,6 +44,9 @@ public enum ErrorCode {
 	PROJECT_END_AFTER_START_ERROR(HttpStatus.BAD_REQUEST, "5000", "종료일이 시작일보다 빠를수 없습니다."),
 	NOT_FOUND_PROJECT(HttpStatus.BAD_REQUEST, "5001", "해당 프로젝트를 찾을 수 없습니다."),
 	INVALID_VERSION_BRANCH(HttpStatus.BAD_REQUEST, "5002", "프로젝트 버전과, 해당 분기레일의 버전이 일치하지 않습니다."),
+	ALREADY_EXIST_PROJECT_STRAIGHT_DATA(HttpStatus.BAD_REQUEST, "5003",
+		"이미 동일한 길이와 버전이 해당 프로젝트에 등록되어 있습니다. 변경이 필요하다면 수정/삭제 기능을 사용해 주세요."),
+	INVALID_PROJECT_STRAIGHT_REGISTER_DATA_DUPLICATION(HttpStatus.BAD_REQUEST, "5004", "입력한 [길이, 타입]이 동일한 레일이 있습니다. 확인해주세요. EX) 2400 A 타입 1개, 2400 A 타입 2개 추가 등록 요청"),
 
 	// Straight : 6000 ~ 69999
 	DUPLICATE_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),

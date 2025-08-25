@@ -127,5 +127,6 @@ CREATE TABLE `project_straight`
     CONSTRAINT `fk_project_straight_straight_type` FOREIGN KEY (`straight_type_id`) REFERENCES `straight_type` (`id`),
     CONSTRAINT `ck_project_straight_target_quantity_nonnegative` CHECK (`total_quantity` >= 0),
     CONSTRAINT `ck_project_straight_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0),
-    CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300)
+    CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300),
+    UNIQUE KEY `uk_project_straight_project_id_straight_type_id_length` (`project_id`, `straight_type_id`, `length`)
 );
