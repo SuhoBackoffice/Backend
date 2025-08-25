@@ -223,6 +223,14 @@ public class ProjectService {
 		return PageResponse.of(findData);
 	}
 
+	@Transactional
+	public void deleteProjectStraight(Long projectStraightId) {
+		if(!projectStraightRepository.existsById(projectStraightId)) {
+			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT);
+		}
+		projectStraightRepository.deleteById(projectStraightId);
+	}
+
 	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {
 		// 1. 루프레일이 아닌 경우
 		if (Boolean.FALSE.equals(projectStraight.getIsLoopRail())) {
