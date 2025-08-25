@@ -2,9 +2,11 @@ package baekgwa.suhoserver.domain.project.service;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -157,9 +159,9 @@ public class ProjectService {
 		List<ProjectStraightEntity> findProjectStraightList = projectStraightRepository.findByProject(findProject);
 		return findProjectStraightList.stream()
 			.map(data -> {
-				Long holePosition = calcHolePosition(data);
+				BigDecimal holePosition = calcHolePosition(data);
 				ProjectResponse.LitzInfo litzInfo;
-				litzInfo = generateLitzInfoList(data, holePosition);
+				litzInfo = generateLitzInfoList(data);
 				return ProjectResponse.ProjectStraightInfo.of(data, litzInfo, holePosition);
 			})
 			.toList();
@@ -173,36 +175,25 @@ public class ProjectService {
 		ProjectEntity findProject = projectRepository.findById(projectId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
 
-		// 2. straightTypeId 으로, 필요한 StraightType List 조회
+		// 2. 입력 데이터 중복 및 기타 데이터 중복 검증.
+		validateDuplicationStraight(postProjectStraightInfoList, findProject);
+
+		// 3. straightTypeId 으로, 필요한 StraightType List 조회
 		List<Long> straightTypeIdList = postProjectStraightInfoList.stream()
 			.map(ProjectRequest.PostProjectStraightInfo::getStraightTypeId)
 			.distinct()
 			.toList();
 		List<StraightTypeEntity> findStraightTypeList = straightTypeRepository.findAllById(straightTypeIdList);
 
-		// 2-1. id 기반으로, 검색 가능하도록 Map 으로 convert
-		Map<Long, StraightTypeEntity> findStraightTypeMap = findStraightTypeList
-			.stream().collect(Collectors.toMap(StraightTypeEntity::getId, Function.identity()));
+		// 3-1. id 기반으로, 검색 가능하도록 Map 으로 convert
+		Map<Long, StraightTypeEntity> findStraightTypeMap =
+			findStraightTypeList.stream().collect(Collectors.toMap(StraightTypeEntity::getId, Function.identity()));
 
-		// 3. ProjectStraightEntity List 생성 및 저장
-		List<ProjectStraightEntity> projectStraightList = postProjectStraightInfoList.stream().map(
-				dto -> {
-					StraightTypeEntity findStraightType = findStraightTypeMap.get(dto.getStraightTypeId());
-					if (findStraightType == null) {
-						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
-					}
-					if (!Objects.equals(findStraightType.getIsLoopRail(), dto.getIsLoopRail())) {
-						if (Boolean.TRUE.equals(dto.getIsLoopRail())) {
-							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_LOOP_TYPE);
-						} else {
-							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_NORMAL_TYPE);
-						}
-					}
-					return ProjectStraightEntity
-						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), dto.getIsLoopRail(),
-							dto.getLength());
-				})
-			.toList();
+		// 4. ProjectStraightEntity List 생성 및 저장
+		List<ProjectStraightEntity> projectStraightList =
+			getProjectStraightList(postProjectStraightInfoList, findStraightTypeMap, findProject);
+
+		// 5. 저장 및 반환
 		projectStraightRepository.saveAll(projectStraightList);
 	}
 
@@ -232,10 +223,10 @@ public class ProjectService {
 		return PageResponse.of(findData);
 	}
 
-	private @NotNull Long calcHolePosition(ProjectStraightEntity projectStraight) {
+	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {
 		// 1. 루프레일이 아닌 경우
 		if (Boolean.FALSE.equals(projectStraight.getIsLoopRail())) {
-			return 0L;
+			return BigDecimal.ZERO;
 		}
 
 		// 2. 데이터 추출
@@ -245,16 +236,18 @@ public class ProjectService {
 
 		// 3. 가공 위치 계산
 		return switch (type) {
-			case "C" -> length / 2; // Center: 길이의 절반
-			case "E" -> length - loopLitzWire.longValue(); // End: length - loopLitzWire
-			case "S" -> length - 215 - loopLitzWire.longValue(); // Side: length - 215 - loopLitzWire
-			default -> 0L;
+			case "C" -> BigDecimal.valueOf(length)
+				.divide(BigDecimal.valueOf(2));
+			case "E" -> BigDecimal.valueOf(length)
+				.subtract(loopLitzWire); // End: length - loopLitzWire
+			case "S" -> BigDecimal.valueOf(length)
+				.subtract(BigDecimal.valueOf(215))
+				.subtract(loopLitzWire); // ✅ Side: length - 215 - loopLitzWire
+			default -> BigDecimal.ZERO;
 		};
 	}
 
-	private @NotNull ProjectResponse.LitzInfo generateLitzInfoList(
-		ProjectStraightEntity projectStraight, Long holePosition
-	) {
+	private @NotNull ProjectResponse.LitzInfo generateLitzInfoList(ProjectStraightEntity projectStraight) {
 		// OffsetType 및 LoopType 추출
 		String rawType = projectStraight.getStraightType().getType().toUpperCase();
 		boolean loop = Boolean.TRUE.equals(projectStraight.getIsLoopRail());
@@ -432,5 +425,56 @@ public class ProjectService {
 		BigDecimal v = m.getOrDefault(idx, BigDecimal.ZERO);
 		v = v.subtract(OFFSET_215).max(BigDecimal.ZERO);
 		m.put(idx, v);
+	}
+
+	private static List<ProjectStraightEntity> getProjectStraightList(
+		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
+		Map<Long, StraightTypeEntity> findStraightTypeMap, ProjectEntity findProject) {
+		return postProjectStraightInfoList.stream().map(
+				dto -> {
+					StraightTypeEntity findStraightType = findStraightTypeMap.get(dto.getStraightTypeId());
+					if (findStraightType == null) {
+						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
+					}
+					if (!Objects.equals(findStraightType.getIsLoopRail(), dto.getIsLoopRail())) {
+						if (Boolean.TRUE.equals(dto.getIsLoopRail())) {
+							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_LOOP_TYPE);
+						} else {
+							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_NORMAL_TYPE);
+						}
+					}
+					return ProjectStraightEntity
+						.createNewStraight(findProject, findStraightType, dto.getTotalQuantity(), dto.getIsLoopRail(),
+							dto.getLength());
+				})
+			.toList();
+	}
+
+	private void validateDuplicationStraight(List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
+		ProjectEntity findProject) {
+
+		// 1-0. 요청 내부 중복 차단용 record
+		record StraightKey(Long length, Long straightTypeId) {
+		}
+
+		Set<StraightKey> requestKeySet = new HashSet<>();
+		for (ProjectRequest.PostProjectStraightInfo dto : postProjectStraightInfoList) {
+			StraightKey key = new StraightKey(dto.getLength(), dto.getStraightTypeId());
+			if (!requestKeySet.add(key)) {
+				throw new GlobalException(ErrorCode.INVALID_PROJECT_STRAIGHT_REGISTER_DATA_DUPLICATION);
+			}
+		}
+
+		// 1-1. DB 중복 차단: 해당 프로젝트의 기존 (length, straightTypeId)와 교집합 확인
+		List<ProjectStraightEntity> existing = projectStraightRepository.findByProject(findProject);
+		Set<StraightKey> existingKeySet = existing.stream()
+			.map(e -> new StraightKey(e.getLength(), e.getStraightType().getId()))
+			.collect(Collectors.toSet());
+
+		for (StraightKey k : requestKeySet) {
+			if (existingKeySet.contains(k)) {
+				throw new GlobalException(ErrorCode.ALREADY_EXIST_PROJECT_STRAIGHT_DATA);
+			}
+		}
 	}
 }
