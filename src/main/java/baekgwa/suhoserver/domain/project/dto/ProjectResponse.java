@@ -102,11 +102,11 @@ public class ProjectResponse {
 		private final String straightType;
 		private final Long totalQuantity;
 		private final LitzInfo litzInfo;
-		private final Long holePosition; //가공위치
+		private final BigDecimal holePosition; //가공위치
 
 		@Builder(access = AccessLevel.PRIVATE)
 		private ProjectStraightInfo(Long straightRailId, Long length, Boolean isLoopRail, String straightType, Long totalQuantity,
-			LitzInfo litzInfo, Long holePosition) {
+			LitzInfo litzInfo, BigDecimal holePosition) {
 			this.straightRailId = straightRailId;
 			this.length = length;
 			this.isLoopRail = isLoopRail;
@@ -116,7 +116,7 @@ public class ProjectResponse {
 			this.holePosition = holePosition;
 		}
 
-		public static ProjectStraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo, Long holePosition) {
+		public static ProjectStraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo, BigDecimal holePosition) {
 			return ProjectStraightInfo
 				.builder()
 				.straightRailId(projectStraight.getId())

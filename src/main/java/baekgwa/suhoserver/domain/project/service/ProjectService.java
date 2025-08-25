@@ -159,9 +159,9 @@ public class ProjectService {
 		List<ProjectStraightEntity> findProjectStraightList = projectStraightRepository.findByProject(findProject);
 		return findProjectStraightList.stream()
 			.map(data -> {
-				Long holePosition = calcHolePosition(data);
+				BigDecimal holePosition = calcHolePosition(data);
 				ProjectResponse.LitzInfo litzInfo;
-				litzInfo = generateLitzInfoList(data, holePosition);
+				litzInfo = generateLitzInfoList(data);
 				return ProjectResponse.ProjectStraightInfo.of(data, litzInfo, holePosition);
 			})
 			.toList();
@@ -223,10 +223,10 @@ public class ProjectService {
 		return PageResponse.of(findData);
 	}
 
-	private @NotNull Long calcHolePosition(ProjectStraightEntity projectStraight) {
+	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {
 		// 1. 루프레일이 아닌 경우
 		if (Boolean.FALSE.equals(projectStraight.getIsLoopRail())) {
-			return 0L;
+			return BigDecimal.ZERO;
 		}
 
 		// 2. 데이터 추출
@@ -236,16 +236,18 @@ public class ProjectService {
 
 		// 3. 가공 위치 계산
 		return switch (type) {
-			case "C" -> length / 2; // Center: 길이의 절반
-			case "E" -> length - loopLitzWire.longValue(); // End: length - loopLitzWire
-			case "S" -> length - 215 - loopLitzWire.longValue(); // Side: length - 215 - loopLitzWire
-			default -> 0L;
+			case "C" -> BigDecimal.valueOf(length)
+				.divide(BigDecimal.valueOf(2));
+			case "E" -> BigDecimal.valueOf(length)
+				.subtract(loopLitzWire); // End: length - loopLitzWire
+			case "S" -> BigDecimal.valueOf(length)
+				.subtract(BigDecimal.valueOf(215))
+				.subtract(loopLitzWire); // ✅ Side: length - 215 - loopLitzWire
+			default -> BigDecimal.ZERO;
 		};
 	}
 
-	private @NotNull ProjectResponse.LitzInfo generateLitzInfoList(
-		ProjectStraightEntity projectStraight, Long holePosition
-	) {
+	private @NotNull ProjectResponse.LitzInfo generateLitzInfoList(ProjectStraightEntity projectStraight) {
 		// OffsetType 및 LoopType 추출
 		String rawType = projectStraight.getStraightType().getType().toUpperCase();
 		boolean loop = Boolean.TRUE.equals(projectStraight.getIsLoopRail());
