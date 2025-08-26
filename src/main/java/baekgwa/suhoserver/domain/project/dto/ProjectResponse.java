@@ -67,29 +67,32 @@ public class ProjectResponse {
 
 	@Getter
 	public static class ProjectBranchInfo {
-		private final Long branchRailId;
+		private final Long projectBranchId;
 		private final String branchCode;
 		private final LocalDate branchVersion;
 		private final Long totalQuantity;
 		private final Long completedQuantity;
+		private final Long branchTypeId;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectBranchInfo(Long branchRailId, String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity) {
-			this.branchRailId = branchRailId;
+		private ProjectBranchInfo(Long projectBranchId, String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity, Long branchTypeId) {
+			this.projectBranchId = projectBranchId;
 			this.branchCode = branchCode;
 			this.branchVersion = branchVersion;
 			this.totalQuantity = totalQuantity;
 			this.completedQuantity = completedQuantity;
+			this.branchTypeId = branchTypeId;
 		}
 
 		public static ProjectBranchInfo of(ProjectBranchEntity projectBranch) {
 			return ProjectBranchInfo
 				.builder()
-				.branchRailId(projectBranch.getId())
+				.projectBranchId(projectBranch.getId())
 				.branchCode(projectBranch.getBranchType().getCode())
 				.branchVersion(projectBranch.getBranchType().getVersion())
 				.totalQuantity(projectBranch.getTotalQuantity())
 				.completedQuantity(projectBranch.getCompletedQuantity())
+				.branchTypeId(projectBranch.getBranchType().getId())
 				.build();
 		}
 	}
