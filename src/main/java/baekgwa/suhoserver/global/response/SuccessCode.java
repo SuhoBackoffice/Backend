@@ -34,7 +34,10 @@ public enum SuccessCode {
 	GET_ALL_VERSION_LIST_SUCCESS(HttpStatus.OK, "버전 리스트 조회 성공"),
 
 	// Branch
-	CREATE_NEW_BRANCH_BOM_SUCCESS(HttpStatus.CREATED, "신규 분기 BOM 리스트 생성 성공"),
+	CREATE_NEW_BRANCH_BOM_SUCCESS(HttpStatus.CREATED, "분기 BOM 리스트 추가 성공"),
+	GET_LATEST_BRANCH_BOM_SUCCESS(HttpStatus.OK, "해당 버전 최신 분기 레일 조회 성공"),
+	GET_BRANCH_BOM_SUCCESS(HttpStatus.OK, "분기레일 BOM 리스트 조회 성공"),
+
 
 	// Straight
 	CREATE_NEW_STRAIGHT_TYPE_SUCCESS(HttpStatus.CREATED, "신규 직선레일 타입 추가 완료"),

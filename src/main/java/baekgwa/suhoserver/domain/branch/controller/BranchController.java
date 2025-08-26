@@ -1,7 +1,10 @@
 package baekgwa.suhoserver.domain.branch.controller;
 
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,7 +48,7 @@ public class BranchController {
 	) {
 		BranchResponse.PostNewBranchBom postNewBranchBom =
 			branchService.createNewBranchBom(branchCode, versionInfoId, file);
-		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, postNewBranchBom);
+		return BaseResponse.success(SuccessCode.CREATE_NEW_BRANCH_BOM_SUCCESS, postNewBranchBom);
 	}
 
 	@GetMapping("/bom/latest")
@@ -56,6 +59,15 @@ public class BranchController {
 	) {
 		BranchResponse.BranchInfoDto branchInfoDto =
 			branchService.getLatestVersionBranchBom(branchCode, versionInfoId);
-		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, branchInfoDto);
+		return BaseResponse.success(SuccessCode.GET_LATEST_BRANCH_BOM_SUCCESS, branchInfoDto);
+	}
+
+	@GetMapping("/bom/{branchTypeId}")
+	@Operation(summary = "분기레일 BOM 조회")
+	public BaseResponse<List<BranchResponse.BranchDetailInfoDto>> getBranchBomList(
+		@PathVariable("branchTypeId") Long branchTypeId
+	) {
+		List<BranchResponse.BranchDetailInfoDto> branchBomList = branchService.getBranchBomList(branchTypeId);
+		return BaseResponse.success(SuccessCode.GET_BRANCH_BOM_SUCCESS, branchBomList);
 	}
 }
