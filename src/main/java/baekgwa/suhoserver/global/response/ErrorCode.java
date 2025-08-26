@@ -47,6 +47,7 @@ public enum ErrorCode {
 	ALREADY_EXIST_PROJECT_STRAIGHT_DATA(HttpStatus.BAD_REQUEST, "5003",
 		"이미 동일한 길이와 버전이 해당 프로젝트에 등록되어 있습니다. 변경이 필요하다면 수정/삭제 기능을 사용해 주세요."),
 	INVALID_PROJECT_STRAIGHT_REGISTER_DATA_DUPLICATION(HttpStatus.BAD_REQUEST, "5004", "입력한 [길이, 타입]이 동일한 레일이 있습니다. 확인해주세요. EX) 2400 A 타입 1개, 2400 A 타입 2개 추가 등록 요청"),
+	NOT_EXIST_PROJECT_STRAIGHT(HttpStatus.BAD_REQUEST, "5005", "삭제되었거나, 없는 레일 입니다. 확인해주세요."),
 
 	// Straight : 6000 ~ 69999
 	DUPLICATE_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),
@@ -54,6 +55,7 @@ public enum ErrorCode {
 	INVALID_LOOP_RAIL_TYPE_DATA(HttpStatus.BAD_REQUEST, "6002", "루프 레일에 일반 레일 타입이 들어가있습니다."),
 	NOT_MATCH_STRAIGHT_LOOP_TYPE(HttpStatus.BAD_REQUEST, "6003", "일부 데이터가 일반 레일인데, 루프 레일 타입으로 지정되었습니다."),
 	NOT_MATCH_STRAIGHT_NORMAL_TYPE(HttpStatus.BAD_REQUEST, "6003", "일부 데이터가 루프 레일인데, 일반 레일 타입으로 지정되었습니다."),
+	NOT_EXIST_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6004", "존재하지 않는 직선레일 타입 입니다."),
 
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),

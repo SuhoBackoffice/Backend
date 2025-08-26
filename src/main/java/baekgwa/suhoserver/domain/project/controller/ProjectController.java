@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -132,5 +134,24 @@ public class ProjectController {
 			.toList();
 
 		return BaseResponse.success(SuccessCode.GET_PROJECT_SEARCH_SORT_SUCCESS, result);
+	}
+
+	@DeleteMapping("/straight/{projectStraightId}")
+	@Operation(summary = "프로젝트의 직선레일 삭제")
+	public BaseResponse<Void> deleteProjectStraight(
+		@PathVariable("projectStraightId") Long projectStraightId
+	) {
+		projectService.deleteProjectStraight(projectStraightId);
+		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
+	}
+
+	@PatchMapping("/straight/{projectStraightId}")
+	@Operation(summary = "프로젝트의 직선레일 정보 수정")
+	public BaseResponse<Void> patchProjectStraight(
+		@PathVariable("projectStraightId") Long projectStraightId,
+		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
+	) {
+		projectService.patchProjectStraight(projectStraightId, patchProjectStraightDto);
+		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
 	}
 }

@@ -84,4 +84,12 @@ public class ProjectStraightEntity extends TemporalEntity {
 			.length(length)
 			.build();
 	}
+
+	/**
+	 * 프로젝트 직선레일 정보 업데이트용 편의 메서드
+	 * - 현재, 수량만 변경 가능하도록 구성.
+	 */
+	public void patchProjectStraight(Long totalQuantity) {
+		this.totalQuantity = totalQuantity;
+	}
 }

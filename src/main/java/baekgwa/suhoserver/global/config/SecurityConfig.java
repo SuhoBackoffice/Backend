@@ -114,6 +114,8 @@ public class SecurityConfig {
 				.requestMatchers(POST, "/project/{projectId}/straight").hasRole(STAFF.name())
 				.requestMatchers(GET, "/project").permitAll()
 				.requestMatchers(GET, "/project/sort-type").permitAll()
+				.requestMatchers(PATCH, "/project/straight/{projectStraightId}").hasRole(STAFF.name())
+				.requestMatchers(DELETE, "/project/straight/{projectStraightId}").hasRole(STAFF.name())
 
 				// Straight
 				.requestMatchers(POST, "/straight/type").hasRole(STAFF.name())

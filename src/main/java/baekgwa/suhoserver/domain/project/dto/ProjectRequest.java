@@ -81,4 +81,11 @@ public class ProjectRequest {
 			this.sort = sort;
 		}
 	}
+
+	@Getter
+	@NoArgsConstructor(access = AccessLevel.PROTECTED)
+	public static class PatchProjectStraightDto {
+		@Min(value = 1L, message = "생산 수량은 최소 1개 입니다.")
+		private Long totalQuantity;
+	}
 }

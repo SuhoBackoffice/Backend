@@ -223,6 +223,25 @@ public class ProjectService {
 		return PageResponse.of(findData);
 	}
 
+	@Transactional
+	public void deleteProjectStraight(Long projectStraightId) {
+		if(!projectStraightRepository.existsById(projectStraightId)) {
+			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT);
+		}
+		projectStraightRepository.deleteById(projectStraightId);
+	}
+
+	@Transactional
+	public void patchProjectStraight(Long projectStraightId,
+		ProjectRequest.PatchProjectStraightDto dto) {
+		// 1. projectStraight Entity 조회
+		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
+
+		// 2. 업데이트 처리
+		findProjectStraight.patchProjectStraight(dto.getTotalQuantity());
+	}
+
 	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {
 		// 1. 루프레일이 아닌 경우
 		if (Boolean.FALSE.equals(projectStraight.getIsLoopRail())) {
