@@ -98,10 +98,10 @@ public class BranchResponse {
 
 	@Getter
 	public static class PostNewBranchBom {
-		private final Long branchId;
+		private final Long branchTypeId;
 
-		public PostNewBranchBom(Long branchId) {
-			this.branchId = branchId;
+		public PostNewBranchBom(Long branchTypeId) {
+			this.branchTypeId = branchTypeId;
 		}
 	}
 }
