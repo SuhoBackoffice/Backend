@@ -38,6 +38,7 @@ public class ProjectResponse {
 
 	@Getter
 	public static class ProjectDetailInfo {
+		private final Long versionInfoId;
 		private final String version;
 		private final String region;
 		private final String name;
@@ -45,7 +46,8 @@ public class ProjectResponse {
 		private final LocalDate endDate;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectDetailInfo(String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+		private ProjectDetailInfo(Long versionInfoId, String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+			this.versionInfoId = versionInfoId;
 			this.version = version;
 			this.region = region;
 			this.name = name;
@@ -56,6 +58,7 @@ public class ProjectResponse {
 		public static ProjectDetailInfo of(ProjectEntity project) {
 			return ProjectDetailInfo
 				.builder()
+				.versionInfoId(project.getVersionInfoEntity().getId())
 				.version(project.getVersionInfoEntity().getName())
 				.region(project.getRegion())
 				.name(project.getName())
@@ -67,29 +70,32 @@ public class ProjectResponse {
 
 	@Getter
 	public static class ProjectBranchInfo {
-		private final Long branchRailId;
+		private final Long projectBranchId;
 		private final String branchCode;
 		private final LocalDate branchVersion;
 		private final Long totalQuantity;
 		private final Long completedQuantity;
+		private final Long branchTypeId;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectBranchInfo(Long branchRailId, String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity) {
-			this.branchRailId = branchRailId;
+		private ProjectBranchInfo(Long projectBranchId, String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity, Long branchTypeId) {
+			this.projectBranchId = projectBranchId;
 			this.branchCode = branchCode;
 			this.branchVersion = branchVersion;
 			this.totalQuantity = totalQuantity;
 			this.completedQuantity = completedQuantity;
+			this.branchTypeId = branchTypeId;
 		}
 
 		public static ProjectBranchInfo of(ProjectBranchEntity projectBranch) {
 			return ProjectBranchInfo
 				.builder()
-				.branchRailId(projectBranch.getId())
+				.projectBranchId(projectBranch.getId())
 				.branchCode(projectBranch.getBranchType().getCode())
 				.branchVersion(projectBranch.getBranchType().getVersion())
 				.totalQuantity(projectBranch.getTotalQuantity())
 				.completedQuantity(projectBranch.getCompletedQuantity())
+				.branchTypeId(projectBranch.getBranchType().getId())
 				.build();
 		}
 	}

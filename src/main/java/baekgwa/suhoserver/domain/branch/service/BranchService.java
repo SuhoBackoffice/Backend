@@ -58,7 +58,8 @@ public class BranchService {
 	private static final List<String> QUANTITY_KEYS = List.of("수량", "원수량", "납품수량");
 
 	@Transactional
-	public BranchResponse.PostNewBranchBom createNewBranchBom(String branchCode, Long versionInfoId, MultipartFile file) {
+	public BranchResponse.PostNewBranchBom createNewBranchBom(String branchCode, Long versionInfoId,
+		MultipartFile file) {
 		// 1. 버전 유효성 검증 및, Entity 조회
 		VersionInfoEntity findVersionInfo = versionInfoRepository.findById(versionInfoId)
 			.orElseThrow(
@@ -106,6 +107,24 @@ public class BranchService {
 		List<BranchResponse.BranchDetailInfoDto> branchDetailInfoDtoList =
 			findBranchBomList.stream().map(BranchResponse.BranchDetailInfoDto::of).toList();
 		return BranchResponse.BranchInfoDto.from(findBranchType, branchDetailInfoDtoList);
+	}
+
+	@Transactional(readOnly = true)
+	public List<BranchResponse.BranchDetailInfoDto> getBranchBomList(Long branchTypeId) {
+		// 1. branchType Entity 조회
+		BranchTypeEntity findBranchType = branchTypeRepository.findById(branchTypeId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_BRANCH_TYPE));
+
+		// 2. 분기레일 BOM Entity List 조회
+		List<BranchBomEntity> findBranchBomList = branchBomRepository.findByBranchTypeEntity(findBranchType);
+
+		// 2-1. 만약, 찾은 bom list 가 하나도 없으면 잘못등록됨.
+		if (findBranchBomList.isEmpty()) {
+			throw new GlobalException(ErrorCode.NOT_FOUND_BRANCH_BOM);
+		}
+
+		// 3. 찾은 BranchBomEntity 로, 응답 객체 생성
+		return findBranchBomList.stream().map(BranchResponse.BranchDetailInfoDto::of).toList();
 	}
 
 	private List<BranchBomEntity> convertToBranchBomList(SheetParserHandler handler, BranchTypeEntity savedBranchType) {
