@@ -85,7 +85,7 @@ CREATE TABLE `project_branch`
     `id`                 BIGINT AUTO_INCREMENT NOT NULL,
     `project_id`         BIGINT                NOT NULL,
     `branch_type_id`     BIGINT                NOT NULL,
-    `target_quantity`    BIGINT                NOT NULL,
+    `total_quantity`    BIGINT                NOT NULL,
     `completed_quantity` BIGINT                NOT NULL,
     `created_at`         DATETIME              NOT NULL,
     `modified_at`        DATETIME              NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE `project_branch`
     INDEX `idx_project_branch_branch_type_id` (`branch_type_id`),
     CONSTRAINT `fk_project_branch_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
     CONSTRAINT `fk_project_branch_branch_type` FOREIGN KEY (`branch_type_id`) REFERENCES `branch_type` (`id`),
-    CONSTRAINT `ck_project_branch_target_quantity_nonnegative` CHECK (`target_quantity` >= 0),
+    CONSTRAINT `ck_project_branch_total_quantity_nonnegative` CHECK (`total_quantity` >= 0),
     CONSTRAINT `ck_project_branch_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0)
 );
 
@@ -125,7 +125,7 @@ CREATE TABLE `project_straight`
     INDEX `idx_project_straight_straight_type_id` (`straight_type_id`),
     CONSTRAINT `fk_project_straight_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
     CONSTRAINT `fk_project_straight_straight_type` FOREIGN KEY (`straight_type_id`) REFERENCES `straight_type` (`id`),
-    CONSTRAINT `ck_project_straight_target_quantity_nonnegative` CHECK (`total_quantity` >= 0),
+    CONSTRAINT `ck_project_straight_total_quantity_nonnegative` CHECK (`total_quantity` >= 0),
     CONSTRAINT `ck_project_straight_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0),
     CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300),
     UNIQUE KEY `uk_project_straight_project_id_straight_type_id_length` (`project_id`, `straight_type_id`, `length`)
