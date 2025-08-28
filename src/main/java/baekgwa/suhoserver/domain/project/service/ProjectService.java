@@ -232,6 +232,14 @@ public class ProjectService {
 	}
 
 	@Transactional
+	public void deleteProjectBranch(Long projectBranchId) {
+		if(!projectBranchRepository.existsById(projectBranchId)) {
+			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH);
+		}
+		projectBranchRepository.deleteById(projectBranchId);
+	}
+
+	@Transactional
 	public void patchProjectStraight(Long projectStraightId,
 		ProjectRequest.PatchProjectStraightDto dto) {
 		// 1. projectStraight Entity 조회

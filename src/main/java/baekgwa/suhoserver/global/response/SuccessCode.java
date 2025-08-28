@@ -55,6 +55,7 @@ public enum SuccessCode {
 	GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 상세 정보 조회 성공"),
 	DELETE_PROJECT_STRAIGHT_SUCCESS(HttpStatus.OK, "프로젝트 직선레일 삭제 완료"),
 	PATCH_PROJECT_STRAIGHT_SUCCESS(HttpStatus.OK, "프로젝트 직선레일 수정 완료"),
+	DELETE_PROJECT_BRANCH_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 삭제 완료"),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
