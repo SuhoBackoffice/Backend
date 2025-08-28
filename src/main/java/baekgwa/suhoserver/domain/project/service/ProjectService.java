@@ -99,11 +99,16 @@ public class ProjectService {
 			.toList();
 		List<BranchTypeEntity> findBranchTypeList = branchTypeRepository.findAllById(branchIdList);
 
-		// 2-1. 추가 검증. 찾아온 branchType 이 id List 보다 작으면, 잘못된 id가 입력된 경우. (없는 것)
+		// 2-1. 현재 프로젝트의 모든 분기 레일 정보를 불러와서, 이미 있는 분기 레일을 또 추가하려는 건 아닌지 검증.
+		List<Long> findBranchTypeIdList = findBranchTypeList.stream().map(BranchTypeEntity::getId).toList();
+		List<String> existBranchCode = projectBranchRepository.findAllByBranchTypeIdIn(findBranchTypeIdList)
+			.stream().map(data -> data.getBranchType().getCode()).toList();
+
+		// 2-2. 추가 검증. 찾아온 branchType 이 id List 보다 작으면, 잘못된 id가 입력된 경우. (없는 것)
 		if (branchIdList.size() > findBranchTypeList.size())
 			throw new GlobalException(ErrorCode.NOT_FOUND_BRANCH_TYPE);
 
-		// 2-2. branch 정보 stream 으로 map 처리
+		// 2-3. branch 정보 stream 으로 map 처리
 		Map<Long, BranchTypeEntity> findBranchTypeMap = findBranchTypeList.stream()
 			.collect(Collectors.toMap(BranchTypeEntity::getId, Function.identity()));
 
@@ -116,6 +121,9 @@ public class ProjectService {
 				}
 				if (!findProject.getVersionInfoEntity().getId().equals(branchType.getVersionInfoEntity().getId())) {
 					throw new GlobalException(ErrorCode.INVALID_VERSION_BRANCH);
+				}
+				if(existBranchCode.contains(branchType.getCode())) {
+					throw new GlobalException(ErrorCode.ALREADY_EXIST_PROJECT_BRANCH_DATA);
 				}
 				return ProjectBranchEntity.createNewProjectBranch(findProject, branchType, dto.getQuantity());
 			}).toList();
@@ -225,21 +233,38 @@ public class ProjectService {
 
 	@Transactional
 	public void deleteProjectStraight(Long projectStraightId) {
-		if(!projectStraightRepository.existsById(projectStraightId)) {
+		if (!projectStraightRepository.existsById(projectStraightId)) {
 			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT);
 		}
 		projectStraightRepository.deleteById(projectStraightId);
 	}
 
 	@Transactional
-	public void patchProjectStraight(Long projectStraightId,
-		ProjectRequest.PatchProjectStraightDto dto) {
+	public void deleteProjectBranch(Long projectBranchId) {
+		if (!projectBranchRepository.existsById(projectBranchId)) {
+			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH);
+		}
+		projectBranchRepository.deleteById(projectBranchId);
+	}
+
+	@Transactional
+	public void patchProjectStraight(Long projectStraightId, ProjectRequest.PatchProjectStraightDto dto) {
 		// 1. projectStraight Entity 조회
 		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
 
 		// 2. 업데이트 처리
 		findProjectStraight.patchProjectStraight(dto.getTotalQuantity());
+	}
+
+	@Transactional
+	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto dto) {
+		// 1. projectBranch Entity 조회
+		ProjectBranchEntity findProjectBranch = projectBranchRepository.findById(projectBranchId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
+
+		// 2. 업데이트 처리
+		findProjectBranch.patchProjectBranch(dto.getTotalQuantity());
 	}
 
 	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {

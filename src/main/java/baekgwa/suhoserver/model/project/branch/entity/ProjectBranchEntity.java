@@ -47,7 +47,7 @@ public class ProjectBranchEntity extends TemporalEntity {
 	@JoinColumn(name = "branch_type_id", nullable = false)
 	private BranchTypeEntity branchType;
 
-	@Column(name = "target_quantity", nullable = false)
+	@Column(name = "total_quantity", nullable = false)
 	private Long totalQuantity;
 
 	@Column(name = "completed_quantity", nullable = false)
@@ -70,5 +70,9 @@ public class ProjectBranchEntity extends TemporalEntity {
 			.totalQuantity(totalQuantity)
 			.completedQuantity(0L)
 			.build();
+	}
+
+	public void patchProjectBranch(Long totalQuantity) {
+		this.totalQuantity = totalQuantity;
 	}
 }

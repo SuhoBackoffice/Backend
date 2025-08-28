@@ -20,4 +20,6 @@ import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
  */
 public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEntity, Long> {
 	List<ProjectBranchEntity> findByProject(ProjectEntity project);
+
+	List<ProjectBranchEntity> findAllByBranchTypeIdIn(List<Long> findBranchTypeIdList);
 }
