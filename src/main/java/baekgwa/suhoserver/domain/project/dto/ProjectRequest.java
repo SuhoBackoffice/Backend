@@ -88,4 +88,11 @@ public class ProjectRequest {
 		@Min(value = 1L, message = "생산 수량은 최소 1개 입니다.")
 		private Long totalQuantity;
 	}
+
+	@Getter
+	@NoArgsConstructor(access = AccessLevel.PROTECTED)
+	public static class PatchProjectBranchDto {
+		@Min(value = 1L, message = "생산 수량은 최소 1개 입니다.")
+		private Long totalQuantity;
+	}
 }

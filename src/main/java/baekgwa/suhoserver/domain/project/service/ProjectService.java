@@ -225,7 +225,7 @@ public class ProjectService {
 
 	@Transactional
 	public void deleteProjectStraight(Long projectStraightId) {
-		if(!projectStraightRepository.existsById(projectStraightId)) {
+		if (!projectStraightRepository.existsById(projectStraightId)) {
 			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT);
 		}
 		projectStraightRepository.deleteById(projectStraightId);
@@ -233,21 +233,30 @@ public class ProjectService {
 
 	@Transactional
 	public void deleteProjectBranch(Long projectBranchId) {
-		if(!projectBranchRepository.existsById(projectBranchId)) {
+		if (!projectBranchRepository.existsById(projectBranchId)) {
 			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH);
 		}
 		projectBranchRepository.deleteById(projectBranchId);
 	}
 
 	@Transactional
-	public void patchProjectStraight(Long projectStraightId,
-		ProjectRequest.PatchProjectStraightDto dto) {
+	public void patchProjectStraight(Long projectStraightId, ProjectRequest.PatchProjectStraightDto dto) {
 		// 1. projectStraight Entity 조회
 		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
 
 		// 2. 업데이트 처리
 		findProjectStraight.patchProjectStraight(dto.getTotalQuantity());
+	}
+
+	@Transactional
+	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto dto) {
+		// 1. projectBranch Entity 조회
+		ProjectBranchEntity findProjectBranch = projectBranchRepository.findById(projectBranchId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
+
+		// 2. 업데이트 처리
+		findProjectBranch.patchProjectBranch(dto.getTotalQuantity());
 	}
 
 	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {

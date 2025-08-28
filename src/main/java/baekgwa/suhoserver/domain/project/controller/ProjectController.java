@@ -163,4 +163,14 @@ public class ProjectController {
 		projectService.deleteProjectBranch(projectBranchId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
+
+	@PatchMapping("/branch/{projectBranchId}")
+	@Operation(summary = "프로젝트의 특정 분기레일 정보 수정")
+	public BaseResponse<Void> patchProjectBranch(
+		@PathVariable("projectBranchId") Long projectBranchId,
+		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto
+	) {
+		projectService.patchProjectBranch(projectBranchId, patchProjectBranchDto);
+		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
+	}
 }
