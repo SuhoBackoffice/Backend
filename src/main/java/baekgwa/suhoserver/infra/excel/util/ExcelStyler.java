@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.infra.excel.util;
 
 import java.awt.*;
+import java.util.function.Consumer;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -140,16 +141,56 @@ public final class ExcelStyler {
 
 	/** 볼드(옵션) — 폰트 캐시는 생략(많이 만들면 폰트/스타일 폭증 가능) */
 	public static void bold(Cell cell, boolean bold) {
-		Workbook wb = cell.getSheet().getWorkbook();
-		Font f = wb.createFont(); f.setBold(bold);
-		XSSFCellStyle ns = clone(cell);
-		ns.setFont(f);
-		cell.setCellStyle(ns);
+		applyFont(cell, f -> f.setBold(bold)); // 기존 폰트 속성(크기/이름 등) 보존
 	}
 	public static void bold(Row row, int fromCol, int toCol, boolean bold) {
 		ensureCells(row, fromCol, toCol);
 		for (int c = fromCol; c <= toCol; c++) bold(row.getCell(c), bold);
 	}
+
+	/* ===================== 폰트 유틸 ===================== */
+	/** 단일 셀의 폰트 크기(pt)만 변경, 기존 굵기/이탤릭/폰트명/색 등은 유지 */
+	public static void fontSize(Cell cell, short points) {
+		applyFont(cell, f -> f.setFontHeightInPoints(points));
+	}
+
+	/** 행의 특정 구간 폰트 크기(pt) 일괄 변경 */
+	public static void fontSize(Row row, int fromCol, int toCol, short points) {
+		ensureCells(row, fromCol, toCol);
+		for (int c = fromCol; c <= toCol; c++) {
+			fontSize(row.getCell(c), points);
+		}
+	}
+
+	/** 행 전체(헤더 기준 lastCol 자동) 폰트 크기(pt) 변경 */
+	public static void fontSize(Row row, short points) {
+		int lastCol = resolveLastCol(row.getSheet(), row);
+		fontSize(row, 0, lastCol, points);
+	}
+
+	/** 폰트 커스터마이즈: 기존 폰트 속성을 복사한 뒤 커스터마이저를 적용 */
+	public static void applyFont(Cell cell, Consumer<Font> customizer) {
+		Workbook wb = cell.getSheet().getWorkbook();
+
+		// 현재 스타일 복제
+		XSSFCellStyle ns = clone(cell);
+
+		// 기존 폰트 속성 가져오기
+		int curIdx = ns.getFontIndex();
+		Font cur = wb.getFontAt(curIdx);
+
+		// 새 폰트 생성 + 기존 속성 복사
+		Font nf = wb.createFont();
+		copyFont(cur, nf);
+
+		// 원하는 변경 적용
+		customizer.accept(nf);
+
+		// 스타일에 새 폰트 적용
+		ns.setFont(nf);
+		cell.setCellStyle(ns);
+	}
+
 
 	/* ========= 내부 유틸 ========= */
 	/** 헤더(0행)가 있으면 그걸로, 없으면 해당 행의 lastCellNum으로 lastCol 산출 */
@@ -179,4 +220,20 @@ public final class ExcelStyler {
 			if (row.getCell(c) == null) row.createCell(c);
 		}
 	}
+
+	/** 기존 폰트 속성을 새 폰트로 복사 (굵기/이탤릭/밑줄/색/오프셋/이름/크기 포함) */
+	private static void copyFont(Font src, Font dst) {
+		if (src == null || dst == null) return;
+		dst.setBold(src.getBold());
+		dst.setItalic(src.getItalic());
+		dst.setUnderline(src.getUnderline());
+		dst.setColor(src.getColor());
+		dst.setFontName(src.getFontName());
+		dst.setStrikeout(src.getStrikeout());
+		dst.setTypeOffset(src.getTypeOffset());
+		dst.setCharSet(src.getCharSet());
+		// 크기도 기본 복사해 두고, 필요 시 위에서 덮어씀
+		dst.setFontHeight(src.getFontHeight()); // twips 단위
+	}
+
 }

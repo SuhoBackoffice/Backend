@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ExcelPalette {
+	public static final Color HEADER_GREEN = new Color(226, 239, 218);
 	public static final Color HEADER_YELLOW = new Color(255, 242, 204);
 	public static final Color DATA_BLUE = new Color(217, 225, 242);
 
