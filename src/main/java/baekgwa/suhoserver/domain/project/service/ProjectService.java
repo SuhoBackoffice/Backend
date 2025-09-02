@@ -1,6 +1,13 @@
 package baekgwa.suhoserver.domain.project.service;
 
+import static java.lang.Boolean.*;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +17,14 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +34,10 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.infra.excel.util.ExcelMerges;
+import baekgwa.suhoserver.infra.excel.util.ExcelPalette;
+import baekgwa.suhoserver.infra.excel.util.ExcelRowWriter;
+import baekgwa.suhoserver.infra.excel.util.ExcelStyler;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.branch.type.repository.BranchTypeRepository;
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
@@ -61,6 +80,14 @@ public class ProjectService {
 	private static final BigDecimal TH_1200 = BigDecimal.valueOf(1200L);
 	private static final BigDecimal TH_2400 = BigDecimal.valueOf(2400L);
 	private static final BigDecimal TH_3600 = BigDecimal.valueOf(3600L);
+
+	private static final int STRAIGHT_COL_KIND = 0;
+	private static final int STRAIGHT_COL_LEN = 1;
+	private static final int STRAIGHT_COL_TYPE = 2;
+	private static final int STRAIGHT_COL_PROC = 3;
+	private static final int STRAIGHT_COL_NUM = 4;
+	private static final int STRAIGHT_COL_QTY = 5;
+	private static final int STRAIGHT_LAST_COL = 11;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -122,7 +149,7 @@ public class ProjectService {
 				if (!findProject.getVersionInfoEntity().getId().equals(branchType.getVersionInfoEntity().getId())) {
 					throw new GlobalException(ErrorCode.INVALID_VERSION_BRANCH);
 				}
-				if(existBranchCode.contains(branchType.getCode())) {
+				if (existBranchCode.contains(branchType.getCode())) {
 					throw new GlobalException(ErrorCode.ALREADY_EXIST_PROJECT_BRANCH_DATA);
 				}
 				return ProjectBranchEntity.createNewProjectBranch(findProject, branchType, dto.getQuantity());
@@ -168,8 +195,7 @@ public class ProjectService {
 		return findProjectStraightList.stream()
 			.map(data -> {
 				BigDecimal holePosition = calcHolePosition(data);
-				ProjectResponse.LitzInfo litzInfo;
-				litzInfo = generateLitzInfoList(data);
+				ProjectResponse.LitzInfo litzInfo = generateLitzInfoList(data);
 				return ProjectResponse.ProjectStraightInfo.of(data, litzInfo, holePosition);
 			})
 			.toList();
@@ -267,9 +293,212 @@ public class ProjectService {
 		findProjectBranch.patchProjectBranch(dto.getTotalQuantity());
 	}
 
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectQuantityList getProjectQuantityList(Long projectId) {
+		// 1. 프로젝트 정보 조회
+		ProjectEntity findProject = projectRepository.findById(projectId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_PROJECT));
+
+		// 2. 파일명 생성 및 인코딩 처리
+		String fileName = "[" + findProject.getRegion() + "]" + findProject.getName() + "_" + LocalDate.now() + ".xlsx";
+		String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("\\+", "%20");
+
+		// 3. WorkSheet 생성
+		Workbook workbook = new SXSSFWorkbook(200);
+
+		// 4. 직선레일 물량리스트 제작
+		createStraightRailWorkSheet(workbook, findProject);
+
+		// 5. 분기레일 물량리스트 제작
+		// todo
+
+		// 6. 설치자재 물량리스트 제작
+		// todo
+
+		// 7. 응답
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		try {
+			workbook.write(outputStream);
+			workbook.close();
+		} catch (IOException e) {
+			throw new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR);
+		}
+		return new ProjectResponse.ProjectQuantityList(outputStream.toByteArray(), encodedFileName);
+	}
+
+	private void createStraightRailWorkSheet(Workbook workbook, ProjectEntity findProject) {
+		Sheet sheet = workbook.createSheet("직선레일");
+
+		// 열 너비(A~L) 고정
+		ExcelRowWriter.setColumnWidthsChars(sheet, 8,8,10,10,18,8,12,12,12,12,12,12);
+
+		// 데이터 로드
+		List<ProjectStraightEntity> normalList = projectStraightRepository.findSortedWithType(findProject, Boolean.FALSE);
+		List<ProjectStraightEntity> loopList = projectStraightRepository.findSortedWithType(findProject, Boolean.TRUE);
+
+		// 헤더, 직선레일, 루프레일 순서대로 생성
+		int rowIdx = 0;
+		rowIdx = generateStraightHeader(sheet, rowIdx);
+		rowIdx = generateStraightNormal(rowIdx, normalList, sheet);
+		rowIdx = generateStraightLoop(rowIdx, loopList, sheet);
+
+		// 필터 적용
+		sheet.setAutoFilter(new CellRangeAddress(0, Math.max(0, rowIdx - 1), 0, STRAIGHT_LAST_COL));
+
+		// 셀 위치 고정 적용
+		sheet.createFreezePane(0, 1);
+	}
+
+	private int generateStraightLoop(int rowIdx, List<ProjectStraightEntity> loopList, Sheet sheet) {
+		/* --- 3) 루프 섹션 --- */
+		int loopStart = rowIdx;
+		boolean paintedFirstLoop = false;
+
+		for (ProjectStraightEntity e : loopList) {
+			ProjectResponse.LitzInfo litzInfo = generateLitzInfoList(e);
+
+			Row row = ExcelRowWriter.writeRow(sheet, rowIdx++, r -> {
+				r.createCell(STRAIGHT_COL_KIND).setCellValue("LOOP");
+				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
+				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_PROC).setCellValue(String.valueOf(calcHolePosition(e)));
+				r.createCell(STRAIGHT_COL_NUM).setCellValue("LR-" + e.getLength() + "-" + e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
+				r.createCell(6).setCellValue(toDouble(litzInfo.getLitz1()));
+				r.createCell(7).setCellValue(toDouble(litzInfo.getLitz2()));
+				r.createCell(8).setCellValue(toDouble(litzInfo.getLitz3()));
+				r.createCell(9).setCellValue(toDouble(litzInfo.getLitz4()));
+				r.createCell(10).setCellValue(toDouble(litzInfo.getLitz5()));
+				r.createCell(11).setCellValue(toDouble(litzInfo.getLitz6()));
+			});
+
+			ExcelStyler.align(row, 0, STRAIGHT_LAST_COL, HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
+			ExcelStyler.lineOuter(row, 0, STRAIGHT_LAST_COL, BorderStyle.THIN, true, true, true, true);
+			ExcelStyler.lineOuter(row.getCell(0), BorderStyle.MEDIUM, false, false, true, false);
+			ExcelStyler.lineOuter(row.getCell(STRAIGHT_LAST_COL), BorderStyle.MEDIUM, false, false, false, true);
+			ExcelStyler.backgroundColor(row.getCell(STRAIGHT_COL_NUM), ExcelPalette.DATA_BLUE);
+			for (int c = 6; c <= 11; c++) ExcelStyler.backgroundColor(row.getCell(c), ExcelPalette.DATA_BLUE);
+
+			if (!paintedFirstLoop) {
+				ExcelStyler.backgroundColor(row.getCell(STRAIGHT_COL_KIND), ExcelPalette.HEADER_YELLOW);
+				ExcelStyler.bold(row.getCell(STRAIGHT_COL_KIND), true);
+				paintedFirstLoop = true;
+			}
+		}
+
+		// 루프 합계
+		Row loopSum = ExcelRowWriter.writeRow(sheet, rowIdx++, r ->
+			r.createCell(STRAIGHT_COL_QTY).setCellValue(
+				loopList.stream().mapToLong(ProjectStraightEntity::getTotalQuantity).sum()));
+		ExcelRowWriter.ensureCells(loopSum, 0, STRAIGHT_LAST_COL);
+		ExcelStyler.backgroundColor(loopSum, 0, STRAIGHT_LAST_COL, ExcelPalette.HEADER_YELLOW);
+		ExcelStyler.align(loopSum, 0, STRAIGHT_LAST_COL, HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
+		ExcelStyler.lineOuter(loopSum, 0, STRAIGHT_LAST_COL, BorderStyle.THIN, true, true, true, true);
+		ExcelStyler.lineOuter(loopSum, BorderStyle.MEDIUM, false, true, false, false);
+		ExcelStyler.lineOuter(loopSum.getCell(0), BorderStyle.MEDIUM, false, false, true, false);
+		ExcelStyler.lineOuter(loopSum.getCell(STRAIGHT_LAST_COL), BorderStyle.MEDIUM, false, false, false, true);
+		ExcelStyler.bold(loopSum, 0, STRAIGHT_LAST_COL, true);
+
+		// 루프 병합
+		if (!loopList.isEmpty()) {
+			ExcelMerges.mergeRows(sheet, loopStart, rowIdx - 1, 0);
+		}
+		return rowIdx;
+	}
+
+	private int generateStraightNormal(int rowIdx, List<ProjectStraightEntity> normalList, Sheet sheet) {
+		/* --- 2) 일반 섹션 --- */
+		int normalStart = rowIdx;
+		boolean paintedFirstNormal = false;
+
+		for (ProjectStraightEntity e : normalList) {
+			ProjectResponse.LitzInfo l = generateLitzInfoList(e);
+
+			Row row = ExcelRowWriter.writeRow(sheet, rowIdx++, r -> {
+				r.createCell(STRAIGHT_COL_KIND).setCellValue("일반");
+				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
+				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_PROC).setCellValue("");
+				r.createCell(STRAIGHT_COL_NUM).setCellValue("SR-" + e.getLength() + "-" + e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
+				r.createCell(6).setCellValue(toDouble(l.getLitz1()));
+				r.createCell(7).setCellValue(toDouble(l.getLitz2()));
+				r.createCell(8).setCellValue(toDouble(l.getLitz3()));
+				r.createCell(9).setCellValue(toDouble(l.getLitz4()));
+				r.createCell(10).setCellValue(toDouble(l.getLitz5()));
+				r.createCell(11).setCellValue(toDouble(l.getLitz6()));
+			});
+
+			ExcelStyler.align(row, 0, STRAIGHT_LAST_COL, HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
+			ExcelStyler.lineOuter(row, 0, STRAIGHT_LAST_COL, BorderStyle.THIN, true, true, true, true);
+			ExcelStyler.lineOuter(row.getCell(0), BorderStyle.MEDIUM, false, false, true, false);
+			ExcelStyler.lineOuter(row.getCell(STRAIGHT_LAST_COL), BorderStyle.MEDIUM, false, false, false, true);
+			ExcelStyler.backgroundColor(row.getCell(STRAIGHT_COL_NUM), ExcelPalette.DATA_BLUE);
+			for (int c = 6; c <= 11; c++) ExcelStyler.backgroundColor(row.getCell(c), ExcelPalette.DATA_BLUE);
+
+			if (!paintedFirstNormal) {
+				ExcelStyler.backgroundColor(row.getCell(STRAIGHT_COL_KIND), ExcelPalette.HEADER_YELLOW);
+				ExcelStyler.bold(row.getCell(STRAIGHT_COL_KIND), true);
+				paintedFirstNormal = true;
+			}
+		}
+
+		Row normalSum = ExcelRowWriter.writeRow(sheet, rowIdx++, r ->
+			r.createCell(STRAIGHT_COL_QTY)
+				.setCellValue(normalList.stream().mapToLong(ProjectStraightEntity::getTotalQuantity).sum())
+		);
+		ExcelRowWriter.ensureCells(normalSum, 0, STRAIGHT_LAST_COL);
+		ExcelStyler.backgroundColor(normalSum, 0, STRAIGHT_LAST_COL, ExcelPalette.HEADER_YELLOW);
+		ExcelStyler.align(normalSum, 0, STRAIGHT_LAST_COL, HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
+		ExcelStyler.lineOuter(normalSum, 0, STRAIGHT_LAST_COL, BorderStyle.THIN, true, true, true, true);
+		ExcelStyler.lineOuter(normalSum.getCell(STRAIGHT_LAST_COL), BorderStyle.MEDIUM, false, false, false, true);
+		ExcelStyler.lineOuter(normalSum.getCell(0), BorderStyle.MEDIUM, false, false, true, false);
+		ExcelStyler.bold(normalSum, 0, STRAIGHT_LAST_COL, true);
+
+		// 일반 "종류" 병합
+		if (!normalList.isEmpty()) {
+			ExcelMerges.mergeRows(sheet, normalStart, rowIdx - 1, 0);
+		}
+		return rowIdx;
+	}
+
+	private static int generateStraightHeader(Sheet sheet, int rowIdx) {
+		/* --- 1) 헤더 값 --- */
+		Row header = ExcelRowWriter.writeRow(sheet, rowIdx++, r -> {
+			r.createCell(0).setCellValue("종류");
+			r.createCell(1).setCellValue("종류");
+			r.createCell(2).setCellValue("타입");
+			r.createCell(3).setCellValue("가공");
+			r.createCell(4).setCellValue("NUMBER");
+			r.createCell(5).setCellValue("수량");
+			r.createCell(6).setCellValue("LITZ WIRE 1");
+			r.createCell(7).setCellValue("LITZ WIRE 2");
+			r.createCell(8).setCellValue("LITZ WIRE 3");
+			r.createCell(9).setCellValue("LITZ WIRE 4");
+			r.createCell(10).setCellValue("LITZ WIRE 5");
+			r.createCell(11).setCellValue("LITZ WIRE 6");
+		});
+
+		/* --- 1-1) 헤더 스타일 --- */
+		ExcelStyler.backgroundColor(header, 0, STRAIGHT_LAST_COL, ExcelPalette.HEADER_YELLOW);
+		ExcelStyler.align(header, 0, STRAIGHT_LAST_COL, HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
+		ExcelStyler.lineOuter(header, 0, STRAIGHT_LAST_COL, BorderStyle.THIN, true, true, true, true);
+		ExcelStyler.lineOuter(header, 0, STRAIGHT_LAST_COL, BorderStyle.MEDIUM, true, false, false, false);
+		ExcelStyler.lineOuter(header.getCell(0), BorderStyle.MEDIUM, false, false, true, false);
+		ExcelStyler.lineOuter(header.getCell(STRAIGHT_LAST_COL), BorderStyle.MEDIUM, false, false, false, true);
+		ExcelStyler.bold(header, 0, STRAIGHT_LAST_COL, true);
+		return rowIdx;
+	}
+
+	private static double toDouble(Object v) {
+		if (v == null) return 0d;
+		if (v instanceof Number n) return n.doubleValue();
+		try { return Double.parseDouble(String.valueOf(v)); } catch (Exception e) { return 0d; }
+	}
+
 	private @NotNull BigDecimal calcHolePosition(ProjectStraightEntity projectStraight) {
 		// 1. 루프레일이 아닌 경우
-		if (Boolean.FALSE.equals(projectStraight.getIsLoopRail())) {
+		if (FALSE.equals(projectStraight.getIsLoopRail())) {
 			return BigDecimal.ZERO;
 		}
 
@@ -294,7 +523,7 @@ public class ProjectService {
 	private @NotNull ProjectResponse.LitzInfo generateLitzInfoList(ProjectStraightEntity projectStraight) {
 		// OffsetType 및 LoopType 추출
 		String rawType = projectStraight.getStraightType().getType().toUpperCase();
-		boolean loop = Boolean.TRUE.equals(projectStraight.getIsLoopRail());
+		boolean loop = TRUE.equals(projectStraight.getIsLoopRail());
 
 		String offsetType;
 		String loopType;
@@ -314,7 +543,7 @@ public class ProjectService {
 		// 1. baseLitzWire 계산
 		long length = projectStraight.getLength();
 		BigDecimal loopLitzWire = projectStraight.getProject().getVersionInfoEntity().getLoopLitzWire();
-		Map<Integer, BigDecimal> baseLitzWireMap = Boolean.FALSE.equals(projectStraight.getIsLoopRail())
+		Map<Integer, BigDecimal> baseLitzWireMap = FALSE.equals(projectStraight.getIsLoopRail())
 			? baseLitzWireSupporter(length)
 			: baseLoopLitzWireSupporter(length, loopType, loopLitzWire);
 
@@ -481,7 +710,7 @@ public class ProjectService {
 						throw new GlobalException(ErrorCode.NOT_FOUND_STRAIGHT_TYPE);
 					}
 					if (!Objects.equals(findStraightType.getIsLoopRail(), dto.getIsLoopRail())) {
-						if (Boolean.TRUE.equals(dto.getIsLoopRail())) {
+						if (TRUE.equals(dto.getIsLoopRail())) {
 							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_LOOP_TYPE);
 						} else {
 							throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_NORMAL_TYPE);
