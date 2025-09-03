@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -172,5 +174,24 @@ public class ProjectController {
 	) {
 		projectService.patchProjectBranch(projectBranchId, patchProjectBranchDto);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
+	}
+
+	@GetMapping("/{projectId}/quantity-list")
+	@Operation(summary = "프로젝트 물량리스트 산출 및 excel 파일 다운로드")
+	public ResponseEntity<byte[]> getProjectQuantityList(
+		@PathVariable("projectId") Long projectId
+	) {
+		// 1. 엑셀 데이터 생성 및 응답
+		ProjectResponse.ProjectQuantityList response = projectService.getProjectQuantityList(projectId);
+
+		// 2. Header 구성
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Content-Disposition", "attachment; filename=\"" + response.getFileName() + "\"");
+		headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+		// 3. 응답
+		return ResponseEntity.ok()
+			.headers(headers)
+			.body(response.getExcelBytes());
 	}
 }

@@ -3,6 +3,8 @@ package baekgwa.suhoserver.model.project.branch.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -22,4 +24,8 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 	List<ProjectBranchEntity> findByProject(ProjectEntity project);
 
 	List<ProjectBranchEntity> findAllByBranchTypeIdIn(List<Long> findBranchTypeIdList);
+
+	@Query("SELECT pb FROM ProjectBranchEntity pb JOIN FETCH pb.branchType bt WHERE pb.project = :project ORDER BY bt.code ASC")
+	List<ProjectBranchEntity> findByProjectOrderByBranchCode(@Param("project") ProjectEntity project);
+
 }

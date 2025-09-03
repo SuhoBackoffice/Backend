@@ -50,6 +50,7 @@ public enum ErrorCode {
 	NOT_EXIST_PROJECT_STRAIGHT(HttpStatus.BAD_REQUEST, "5005", "삭제되었거나, 없는 직선 레일 입니다. 확인해주세요."),
 	NOT_EXIST_PROJECT_BRANCH(HttpStatus.BAD_REQUEST, "5006", "삭제되었거나, 없는 분기 레일 입니다. 확인해주세요."),
 	ALREADY_EXIST_PROJECT_BRANCH_DATA(HttpStatus.BAD_REQUEST, "5007", "이미 동일한 분기레일이 존재합니다. 변경이 필요하다면 수정/삭제 기능을 사용해 주세요."),
+	CREATE_QUANTITY_LIST_BRANCH_BOM_VALID_FAIL(HttpStatus.BAD_REQUEST, "5008", "프로젝트 BOM List 생성 실패. 관리자에게 문의해 주세요."),
 
 	// Straight : 6000 ~ 69999
 	DUPLICATE_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),

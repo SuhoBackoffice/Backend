@@ -215,4 +215,15 @@ public class ProjectResponse {
 			return new ProjectSearchSort(sort.name(), sort.getDescription());
 		}
 	}
+
+	@Getter
+	public static class ProjectQuantityList {
+		private final byte[] excelBytes;
+		private final String fileName; //인코딩 후, 넣을 것
+
+		public ProjectQuantityList(byte[] excelBytes, String fileName) {
+			this.excelBytes = excelBytes;
+			this.fileName = fileName;
+		}
+	}
 }
