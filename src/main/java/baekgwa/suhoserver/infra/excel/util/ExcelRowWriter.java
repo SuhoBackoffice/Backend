@@ -3,6 +3,9 @@ package baekgwa.suhoserver.infra.excel.util;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * PackageName : baekgwa.suhoserver.infra.excel.util
  * FileName    : ExcelRowWriter
@@ -14,13 +17,14 @@ import org.apache.poi.ss.usermodel.Sheet;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-09-02     Baekgwa               Initial creation
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ExcelRowWriter {
-	private ExcelRowWriter() {
-	}
 
-	/** rowIndex에 행을 만들고 valueWriter로 값만 채운 뒤 Row 반환 */
 	public static Row writeRow(Sheet sheet, int rowIndex, java.util.function.Consumer<Row> valueWriter) {
-		Row row = sheet.createRow(rowIndex);
+		Row row = sheet.getRow(rowIndex);
+		if (row == null) {
+			row = sheet.createRow(rowIndex);
+		}
 		valueWriter.accept(row);
 		return row;
 	}

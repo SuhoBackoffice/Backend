@@ -46,26 +46,4 @@ public final class ExcelMerges {
 		CellRangeAddress a = CellRangeAddress.valueOf(a1range);
 		merge(sheet, a.getFirstRow(), a.getLastRow(), a.getFirstColumn(), a.getLastColumn());
 	}
-
-	/* 선택: 겹침 방지 버전 */
-	public static boolean tryMerge(Sheet sheet, int firstRow, int lastRow, int firstCol, int lastCol) {
-		int fr = Math.min(firstRow, lastRow);
-		int lr = Math.max(firstRow, lastRow);
-		int fc = Math.min(firstCol, lastCol);
-		int lc = Math.max(firstCol, lastCol);
-		if (fr == lr && fc == lc) return false;
-
-		CellRangeAddress candidate = new CellRangeAddress(fr, lr, fc, lc);
-		for (CellRangeAddress existing : sheet.getMergedRegions()) {
-			if (rangesOverlap(existing, candidate)) return false;
-		}
-		sheet.addMergedRegion(candidate);
-		return true;
-	}
-
-	private static boolean rangesOverlap(CellRangeAddress a, CellRangeAddress b) {
-		boolean rows = a.getFirstRow() <= b.getLastRow() && b.getFirstRow() <= a.getLastRow();
-		boolean cols = a.getFirstColumn() <= b.getLastColumn() && b.getFirstColumn() <= a.getLastColumn();
-		return rows && cols;
-	}
 }

@@ -33,6 +33,19 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ExcelStyler {
+	public static final short H1 = 32;
+	public static final short H2 = 24;
+	public static final short H3 = 20;
+	public static final short H4 = 18;
+	public static final short H5 = 14;
+	public static final short P1 = 12;
+
+	public static final int H1_HEIGHT_PX = 80;
+	public static final int H2_HEIGHT_PX = 60;
+	public static final int H3_HEIGHT_PX = 50;
+	public static final int H4_HEIGHT_PX = 45;
+	public static final int H5_HEIGHT_PX = 35;
+	public static final int P1_HEIGHT_PX = 35;
 
 	/** 행 전체 외곽선 (헤더 기준 lastCol 자동 판단) */
 	public static void lineOuter(Row row, BorderStyle style,
@@ -56,7 +69,8 @@ public final class ExcelStyler {
 	/** 선택 컬럼만 배경색 (중간 공백 안전) */
 	public static void backgroundColor(Row row, Color rgb, int... cols) {
 		for (int c : cols) {
-			if (row.getCell(c) == null) row.createCell(c);
+			if (row.getCell(c) == null)
+				row.createCell(c);
 			backgroundColor(row.getCell(c), rgb);
 		}
 	}
@@ -66,7 +80,8 @@ public final class ExcelStyler {
 		boolean top, boolean bottom, boolean left, boolean right,
 		int... cols) {
 		for (int c : cols) {
-			if (row.getCell(c) == null) row.createCell(c);
+			if (row.getCell(c) == null)
+				row.createCell(c);
 			lineOuter(row.getCell(c), style, top, bottom, left, right);
 		}
 	}
@@ -75,10 +90,14 @@ public final class ExcelStyler {
 	public static void lineOuter(Cell cell, BorderStyle style,
 		boolean top, boolean bottom, boolean left, boolean right) {
 		XSSFCellStyle ns = clone(cell);
-		if (top)    ns.setBorderTop(style);
-		if (bottom) ns.setBorderBottom(style);
-		if (left)   ns.setBorderLeft(style);
-		if (right)  ns.setBorderRight(style);
+		if (top)
+			ns.setBorderTop(style);
+		if (bottom)
+			ns.setBorderBottom(style);
+		if (left)
+			ns.setBorderLeft(style);
+		if (right)
+			ns.setBorderRight(style);
 		cell.setCellStyle(ns);
 	}
 
@@ -129,26 +148,32 @@ public final class ExcelStyler {
 
 	public static void align(Cell cell, HorizontalAlignment ha, VerticalAlignment va) {
 		XSSFCellStyle ns = clone(cell);
-		if (ha != null) ns.setAlignment(ha);
-		if (va != null) ns.setVerticalAlignment(va);
+		if (ha != null)
+			ns.setAlignment(ha);
+		if (va != null)
+			ns.setVerticalAlignment(va);
 		cell.setCellStyle(ns);
 	}
 
 	public static void align(Row row, int fromCol, int toCol, HorizontalAlignment ha, VerticalAlignment va) {
 		ensureCells(row, fromCol, toCol);
-		for (int c = fromCol; c <= toCol; c++) align(row.getCell(c), ha, va);
+		for (int c = fromCol; c <= toCol; c++)
+			align(row.getCell(c), ha, va);
 	}
 
 	/** 볼드(옵션) — 폰트 캐시는 생략(많이 만들면 폰트/스타일 폭증 가능) */
 	public static void bold(Cell cell, boolean bold) {
 		applyFont(cell, f -> f.setBold(bold)); // 기존 폰트 속성(크기/이름 등) 보존
 	}
+
 	public static void bold(Row row, int fromCol, int toCol, boolean bold) {
 		ensureCells(row, fromCol, toCol);
-		for (int c = fromCol; c <= toCol; c++) bold(row.getCell(c), bold);
+		for (int c = fromCol; c <= toCol; c++)
+			bold(row.getCell(c), bold);
 	}
 
 	/* ===================== 폰트 유틸 ===================== */
+
 	/** 단일 셀의 폰트 크기(pt)만 변경, 기존 굵기/이탤릭/폰트명/색 등은 유지 */
 	public static void fontSize(Cell cell, short points) {
 		applyFont(cell, f -> f.setFontHeightInPoints(points));
@@ -193,6 +218,7 @@ public final class ExcelStyler {
 
 
 	/* ========= 내부 유틸 ========= */
+
 	/** 헤더(0행)가 있으면 그걸로, 없으면 해당 행의 lastCellNum으로 lastCol 산출 */
 	static int resolveLastCol(Sheet sheet, Row currentRow) {
 		Row header = sheet.getRow(0);
@@ -204,9 +230,10 @@ public final class ExcelStyler {
 
 	private static XSSFCellStyle clone(Cell cell) {
 		Workbook wb = cell.getSheet().getWorkbook();
-		XSSFCellStyle ns = (XSSFCellStyle) wb.createCellStyle();
+		XSSFCellStyle ns = (XSSFCellStyle)wb.createCellStyle();
 		CellStyle cur = cell.getCellStyle();
-		if (cur != null) ns.cloneStyleFrom(cur);
+		if (cur != null)
+			ns.cloneStyleFrom(cur);
 		return ns;
 	}
 
@@ -217,13 +244,15 @@ public final class ExcelStyler {
 
 	private static void ensureCells(Row row, int fromCol, int toCol) {
 		for (int c = fromCol; c <= toCol; c++) {
-			if (row.getCell(c) == null) row.createCell(c);
+			if (row.getCell(c) == null)
+				row.createCell(c);
 		}
 	}
 
 	/** 기존 폰트 속성을 새 폰트로 복사 (굵기/이탤릭/밑줄/색/오프셋/이름/크기 포함) */
 	private static void copyFont(Font src, Font dst) {
-		if (src == null || dst == null) return;
+		if (src == null || dst == null)
+			return;
 		dst.setBold(src.getBold());
 		dst.setItalic(src.getItalic());
 		dst.setUnderline(src.getUnderline());
