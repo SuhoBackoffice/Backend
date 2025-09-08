@@ -47,6 +47,9 @@ public class BranchTypeEntity extends TemporalEntity {
 	@Column(name = "code", nullable = false)
 	private String code;
 
+	@Column(name = "name", nullable = false)
+	private String name;
+
 	@Column(name = "version", nullable = false, columnDefinition = "분기레일 BOM 리스트의 버전.")
 	private LocalDate version;
 
@@ -60,17 +63,19 @@ public class BranchTypeEntity extends TemporalEntity {
 	}
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private BranchTypeEntity(VersionInfoEntity versionInfoEntity, String code, LocalDate version) {
+	public BranchTypeEntity(VersionInfoEntity versionInfoEntity, String code, String name, LocalDate version) {
 		this.versionInfoEntity = versionInfoEntity;
 		this.code = code;
+		this.name = name;
 		this.version = version;
 	}
 
-	public static BranchTypeEntity createNewBranchType(VersionInfoEntity versionInfoEntity, String code) {
+	public static BranchTypeEntity createNewBranchType(VersionInfoEntity versionInfoEntity, String code, String branchName) {
 		return BranchTypeEntity
 			.builder()
 			.versionInfoEntity(versionInfoEntity)
 			.code(code)
+			.name(branchName)
 			.version(BranchTypeEntity.generateVersion())
 			.build();
 	}
