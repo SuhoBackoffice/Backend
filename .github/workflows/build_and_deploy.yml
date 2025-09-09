@@ -67,6 +67,6 @@ jobs:
               -e FRONTEND_URL=${{ secrets.FRONTEND_URL }} \
               -e API_SERVER_URL=${{ secrets.API_SERVER_URL }} \
               -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-              -e JWT_TOKEN_EXPIRATION=${{ secrets.JWT_TOKEN_EXPIRATION }} \
+              -e JWT_TOKEN_EXPIRATION_MIN=${{ secrets.JWT_TOKEN_EXPIRATION_MIN }} \
               -p 8080:8080 \
               ${{ secrets.DOCKERHUB_USERNAME }}/suhotech-server:latest
