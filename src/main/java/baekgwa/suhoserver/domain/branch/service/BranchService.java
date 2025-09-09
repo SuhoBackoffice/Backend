@@ -16,6 +16,7 @@ import org.apache.poi.xssf.model.SharedStringsTable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
@@ -71,8 +72,14 @@ public class BranchService {
 				throw new GlobalException(ErrorCode.ALREADY_UPLOADED_COMPLETE_BRANCH_BOM);
 			});
 
+		// 1-2. 분기레일 이름, Bom List 로 생성하기
+		String branchName = extractBranchName(file);
+		if(!StringUtils.hasText(branchName)) {
+			branchName = branchCode + "번 분기";
+		}
+
 		// 2. Branch Type 신규 생성 및 저장
-		BranchTypeEntity newBranchType = BranchTypeEntity.createNewBranchType(findVersionInfo, branchCode);
+		BranchTypeEntity newBranchType = BranchTypeEntity.createNewBranchType(findVersionInfo, branchCode, branchName);
 		BranchTypeEntity savedBranchType = branchTypeRepository.save(newBranchType);
 
 		// 3. multipartFile 파싱
@@ -275,5 +282,28 @@ public class BranchService {
 		} catch (Exception e) {
 			throw new GlobalException(ErrorCode.INVALID_EXCEL_PARSE_ERROR);
 		}
+	}
+
+	// 파일명으로, branchName 추출
+	private String extractBranchName(MultipartFile file) {
+		String original = file.getOriginalFilename();
+		if (!StringUtils.hasText(original)) {
+			return null;
+		}
+
+		// 경로 제거 (브라우저/OS별 경로 포함 가능)
+		String base = original.replaceAll(".*[\\\\/]", "");
+
+		// 확장자 제거
+		int dot = base.lastIndexOf('.');
+		String nameOnly = (dot >= 0) ? base.substring(0, dot) : base;
+
+		// 끝의 "BOM" 제거(대소문자 무시), 양옆 공백 정리
+		String stripped = nameOnly.replaceAll("(?i)\\s*BOM\\s*$", "").trim();
+
+		// 모두 사라졌다면 원래 이름(확장자 제거본)으로 폴백
+		if (stripped.isEmpty()) stripped = nameOnly.trim();
+
+		return stripped;
 	}
 }

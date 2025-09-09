@@ -318,7 +318,7 @@ public class ProjectService {
 
 		// 2. 파일명 생성 및 인코딩 처리
 		String fileName = "[" + findProject.getRegion() + "]" + findProject.getName() + "_" + LocalDate.now() + ".xlsx";
-		String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "_");
+		String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "_");
 
 		// 3. WorkSheet 생성
 		Workbook workbook = new SXSSFWorkbook(200);
@@ -347,7 +347,7 @@ public class ProjectService {
 		Sheet sheet = workbook.createSheet("분기레일");
 
 		// 열 사이즈 설정
-		ExcelRowWriter.setColumnWidthsChars(sheet, 18, 30, 7, 40, 20, 7, 4, 40, 20, 7, 4, 40, 20, 7, 4, 25, 7, 4, 0, 0,
+		ExcelRowWriter.setColumnWidthsChars(sheet, 18, 30, 10, 40, 20, 7, 4, 40, 20, 7, 4, 40, 20, 7, 4, 25, 7, 4, 0, 0,
 			0, 35, 20, 7, 4);
 
 		// 데이터 로드
@@ -449,7 +449,7 @@ public class ProjectService {
 
 		// 2번라인 처리
 		Row bomHeaderRow2 = ExcelRowWriter.writeRow(sheet, rowIdx++, r -> {
-			r.createCell(1).setCellValue("todo : 분기 명칭");
+			r.createCell(1).setCellValue(findProjectBranch.getBranchType().getName());
 			r.createCell(3).setCellValue("품명");
 			r.createCell(4).setCellValue("도번");
 			r.createCell(5).setCellValue("수량");
@@ -492,7 +492,8 @@ public class ProjectService {
 
 		// 분기레일 이미지 추가
 		// todo: data 에 분기레일 이미지 추가할 것.
-		insertImage(sheet, rowIdx + 2, 1, "https://baekgwa-blog-s3-bucket.s3.ap-northeast-2.amazonaws.com/post/20250724_befd9267");
+		insertImage(sheet, rowIdx + 2, 1,
+			"https://baekgwa-blog-s3-bucket.s3.ap-northeast-2.amazonaws.com/post/20250724_befd9267");
 
 		// 3번라인 부터 데이터 영역 설정 없음 색상 처리
 		ExcelStyler.backgroundColor(sheet, new CellRangeAddress(rowIdx, endRow, 3, 24), ExcelPalette.EMPTY_GRAY);
@@ -1198,7 +1199,7 @@ public class ProjectService {
 
 			// 3. 리사이즈 비율 계산
 			float columnWidthInPixels = sheet.getColumnWidthInPixels(colIdx);
-			double scale = (originalWidth > 0) ? (double) columnWidthInPixels / originalWidth : 1.0;
+			double scale = (originalWidth > 0) ? (double)columnWidthInPixels / originalWidth : 1.0;
 
 			// 4. POI를 사용하여 시트에 이미지 삽입
 			int pictureIdx = sheet.getWorkbook().addPicture(imageBytes, Workbook.PICTURE_TYPE_JPEG);

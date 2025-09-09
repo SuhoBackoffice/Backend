@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -139,7 +140,8 @@ public class SecurityConfig {
 		configuration.setAllowedOrigins(List.of(urlProperties.getFrontend(), urlProperties.getBackend()));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 		configuration.setAllowCredentials(true);
-		configuration.setAllowedHeaders(List.of("Content-Type"));
+		configuration.setAllowedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_DISPOSITION));
+		configuration.setExposedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.CONTENT_DISPOSITION));
 		configuration.setMaxAge(3600L);
 
 		return request -> configuration;

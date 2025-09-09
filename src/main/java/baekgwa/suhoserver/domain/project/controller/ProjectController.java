@@ -186,8 +186,8 @@ public class ProjectController {
 
 		// 2. Header 구성
 		HttpHeaders headers = new HttpHeaders();
-		headers.add("Content-Disposition", "attachment; filename=\"" + response.getFileName() + "\"");
-		headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + response.getFileName() + "\"");
+		headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
 		// 3. 응답
 		return ResponseEntity.ok()

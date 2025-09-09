@@ -38,6 +38,7 @@ CREATE TABLE `branch_type`
     `id`          BIGINT AUTO_INCREMENT NOT NULL,
     `version_id`  BIGINT                NOT NULL,
     `code`        VARCHAR(255)          NOT NULL,
+    `name`        VARCHAR(255)          NOT NULL,
     `version`     DATE                  NOT NULL,
     `created_at`  DATETIME              NOT NULL,
     `modified_at` DATETIME              NOT NULL,
