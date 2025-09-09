@@ -36,8 +36,8 @@ public class SwaggerConfig {
 				)
 			)
 			.servers(List.of(
-				new Server().url("http://localhost:8080").description("로컬 서버")
-				// new Server().url("https://blog.api.baekgwa.site").description("배포 서버")
+				new Server().url("http://localhost:8080").description("로컬 서버"),
+				new Server().url("https://api.suhotech.co.kr").description("배포 서버")
 			));
 	}
 }
