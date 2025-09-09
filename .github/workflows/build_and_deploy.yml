@@ -53,8 +53,8 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker stop baekgwa-server || true
-            docker rm baekgwa-server || true
+            docker stop suho-server || true
+            docker rm suho-server || true
             docker image prune -af
             
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/suhotech-server:latest
