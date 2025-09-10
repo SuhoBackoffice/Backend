@@ -48,7 +48,7 @@ import baekgwa.suhoserver.infra.excel.util.ExcelMerges;
 import baekgwa.suhoserver.infra.excel.util.ExcelPalette;
 import baekgwa.suhoserver.infra.excel.util.ExcelRowWriter;
 import baekgwa.suhoserver.infra.excel.util.ExcelStyler;
-import baekgwa.suhoserver.infra.image.download.ImageDownloader;
+import baekgwa.suhoserver.infra.download.ImageDownloader;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.bom.repository.BranchBomRepository;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;

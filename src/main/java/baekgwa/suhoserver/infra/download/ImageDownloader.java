@@ -1,4 +1,4 @@
-package baekgwa.suhoserver.infra.image.download;
+package baekgwa.suhoserver.infra.download;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
