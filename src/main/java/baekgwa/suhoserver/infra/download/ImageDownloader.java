@@ -6,8 +6,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PackageName : baekgwa.suhoserver.infra.image.download
@@ -20,17 +22,35 @@ import lombok.NoArgsConstructor;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-09-03     Baekgwa               Initial creation
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class ImageDownloader {
+@Slf4j
+@Component
+public class ImageDownloader {
+
+	private static final String DEFAULT_IMAGE_PATH = "static/images/no_image.png";
+	private final byte[] defaultImageBytes;
+
+	public ImageDownloader() {
+		try (InputStream is = new ClassPathResource(DEFAULT_IMAGE_PATH).getInputStream()) {
+			this.defaultImageBytes = is.readAllBytes();
+		} catch (IOException e) {
+			log.error("기본 이미지 로드 실패. static 이미지 확인해주세요. {}", e);
+			throw new IllegalStateException("기본 이미지(no_image.png)를 로드할 수 없습니다.", e);
+		}
+	}
 
 	/**
 	 * 주어진 URL 문자열로부터 이미지를 다운로드하여 byte 배열로 반환합니다.
-	 * 다운로드 실패 시 null을 반환합니다.
+	 * - null 이면 기본 이미지 반환
+	 * - 다운로드 실패 시 기본 이미지 반환
 	 *
 	 * @param imageUrl 다운로드할 이미지의 URL 문자열
-	 * @return 성공 시 이미지 데이터의 byte 배열, 실패 시 null
+	 * @return 성공 시 이미지 데이터의 byte 배열, 실패 시 기본 이미지
 	 */
-	public static byte[] downloadImage(String imageUrl) {
+	public byte[] downloadImage(String imageUrl) {
+		if (imageUrl == null || imageUrl.isBlank()) {
+			return defaultImageBytes;
+		}
+
 		try {
 			URL url = URI.create(imageUrl).toURL();
 
@@ -47,7 +67,8 @@ public final class ImageDownloader {
 				return out.toByteArray();
 			}
 		} catch (IOException e) {
-			return null;
+			log.warn("Bom List 이미지 로드 실패. imageUrl = {}", imageUrl);
+			return defaultImageBytes;
 		}
 	}
 }

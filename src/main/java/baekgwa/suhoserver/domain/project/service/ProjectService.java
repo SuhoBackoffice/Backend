@@ -2,11 +2,8 @@ package baekgwa.suhoserver.domain.project.service;
 
 import static java.lang.Boolean.*;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -21,19 +18,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.imageio.ImageIO;
-
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.Picture;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.util.Units;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -44,11 +39,11 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.infra.download.ImageDownloader;
 import baekgwa.suhoserver.infra.excel.util.ExcelMerges;
 import baekgwa.suhoserver.infra.excel.util.ExcelPalette;
 import baekgwa.suhoserver.infra.excel.util.ExcelRowWriter;
 import baekgwa.suhoserver.infra.excel.util.ExcelStyler;
-import baekgwa.suhoserver.infra.download.ImageDownloader;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.bom.repository.BranchBomRepository;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
@@ -65,6 +60,7 @@ import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.version.repository.VersionInfoRepository;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PackageName : baekgwa.suhoserver.domain.project.service
@@ -77,6 +73,7 @@ import lombok.RequiredArgsConstructor;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-08-07     Baekgwa               Initial creation
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProjectService {
@@ -88,6 +85,8 @@ public class ProjectService {
 	private final VersionInfoRepository versionInfoRepository;
 	private final ProjectStraightRepository projectStraightRepository;
 	private final BranchBomRepository branchBomRepository;
+
+	private final ImageDownloader imageDownloader;
 
 	private static final BigDecimal LITZ_WIRE_MAX = BigDecimal.valueOf(1800L);
 	private static final BigDecimal OFFSET_215 = BigDecimal.valueOf(215L);
@@ -491,9 +490,7 @@ public class ProjectService {
 		ExcelMerges.mergeCols(sheet, rowIdx - 1, 23, 24);
 
 		// 분기레일 이미지 추가
-		// todo: data 에 분기레일 이미지 추가할 것.
-		insertImage(sheet, rowIdx + 2, 1,
-			"https://baekgwa-blog-s3-bucket.s3.ap-northeast-2.amazonaws.com/post/20250724_befd9267");
+		insertImage(sheet, rowIdx + 2, 1, findProjectBranch.getBranchType().getImageUrl());
 
 		// 3번라인 부터 데이터 영역 설정 없음 색상 처리
 		ExcelStyler.backgroundColor(sheet, new CellRangeAddress(rowIdx, endRow, 3, 24), ExcelPalette.EMPTY_GRAY);
@@ -1167,54 +1164,34 @@ public class ProjectService {
 		}
 	}
 
-	/**
-	 * URL의 이미지를 다운로드하여 시트의 특정 위치에 삽입합니다.
-	 * 너비는 지정된 컬럼에 맞추고 높이는 비율에 따라 자동 조절됩니다.
-	 *
-	 * @param sheet      이미지를 삽입할 시트
-	 * @param startRow   이미지가 시작될 행 인덱스
-	 * @param colIdx     이미지가 삽입될 열 인덱스
-	 * @param imageUrl   다운로드할 이미지의 URL
-	 * @throws GlobalException 이미지 처리 중 오류 발생 시
-	 */
 	private void insertImage(Sheet sheet, int startRow, int colIdx, String imageUrl) {
-		try {
-			// 1. URL로부터 이미지 다운로드
-			byte[] imageBytes = ImageDownloader.downloadImage(imageUrl);
-
-			// 다운로드 실패 시(null 반환) 메소드 종료
-			if (imageBytes == null) {
-				throw new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR);
-			}
-
-			// 2. 원본 이미지 크기 계산 (try-with-resources로 InputStream 자동 관리)
-			int originalWidth;
-			try (InputStream is = new ByteArrayInputStream(imageBytes)) {
-				BufferedImage originalImage = ImageIO.read(is);
-				if (originalImage == null) {
-					throw new IOException("지원되지 않는 이미지 형식이거나 이미지 데이터가 손상되었습니다.");
-				}
-				originalWidth = originalImage.getWidth();
-			}
-
-			// 3. 리사이즈 비율 계산
-			float columnWidthInPixels = sheet.getColumnWidthInPixels(colIdx);
-			double scale = (originalWidth > 0) ? (double)columnWidthInPixels / originalWidth : 1.0;
-
-			// 4. POI를 사용하여 시트에 이미지 삽입
-			int pictureIdx = sheet.getWorkbook().addPicture(imageBytes, Workbook.PICTURE_TYPE_JPEG);
-			CreationHelper helper = sheet.getWorkbook().getCreationHelper();
-			Drawing<?> drawing = sheet.createDrawingPatriarch();
-			ClientAnchor anchor = helper.createClientAnchor();
-
-			anchor.setCol1(colIdx);
-			anchor.setRow1(startRow);
-
-			Picture pict = drawing.createPicture(anchor, pictureIdx);
-			pict.resize(scale);
-
-		} catch (Exception e) {
+		byte[] imageBytes = imageDownloader.downloadImage(imageUrl);
+		if (imageBytes == null)
 			throw new GlobalException(ErrorCode.INTERNAL_SERVER_ERROR);
-		}
+
+		// 가로는 해당 열 전체(30자)로 꽉 채움
+		float colWpx = sheet.getColumnWidthInPixels(colIdx);
+		int sidePx = Math.round(colWpx);            // 정사각형이면 세로도 동일 픽셀
+		int emuH = Units.pixelToEMU(sidePx);      // 세로 높이(EMU)
+
+		Workbook wb = sheet.getWorkbook();
+		int pictureIdx = wb.addPicture(imageBytes, Workbook.PICTURE_TYPE_PNG);
+
+		CreationHelper helper = wb.getCreationHelper();
+		Drawing<?> drawing = sheet.createDrawingPatriarch();
+
+		ClientAnchor anchor = helper.createClientAnchor();
+		anchor.setCol1(colIdx);
+		anchor.setRow1(startRow);
+		anchor.setCol2(colIdx + 1);
+		anchor.setDx1(0);
+		anchor.setDx2(0);
+		anchor.setRow2(startRow + 5);
+		anchor.setDy1(0);
+		anchor.setDy2(emuH);
+
+		anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
+
+		drawing.createPicture(anchor, pictureIdx);
 	}
 }
