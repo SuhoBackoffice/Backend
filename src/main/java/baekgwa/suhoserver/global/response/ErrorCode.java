@@ -69,6 +69,8 @@ public enum ErrorCode {
 	METHOD_ARGUMENT_TYPE_MISS_MATCH(HttpStatus.BAD_REQUEST, "9008", "요청 파라미터 타입 불일치. API 문서 확인해주세요."),
 	INVALID_PAGINATION_PARAMETER(HttpStatus.BAD_REQUEST, "9009", "올바르지 않은 페이지 네이션 파라미터 요청입니다."),
 	INVALID_EXCEL_PARSE_ERROR(HttpStatus.BAD_REQUEST, "9010", "올바르지 않은 Excel 데이터입니다. 관리자에게 문의해 주세요."),
+	UPLOAD_FILE_FAIL(HttpStatus.BAD_REQUEST, "9011", "파일 업로드 실패."),
+	DELETE_FILE_FAIL(HttpStatus.BAD_REQUEST, "9013", "파일 삭제 실패."),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "9999", "서버 내부 오류 발생했습니다");
 
 	private final HttpStatus status;
