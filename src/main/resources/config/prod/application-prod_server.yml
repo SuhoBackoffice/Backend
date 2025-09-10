@@ -27,7 +27,7 @@ spring:
 
 logging:
   level:
-    root: error
+    root: warn
 
 url:
   frontend: ${FRONTEND_URL}

@@ -121,6 +121,10 @@ public class SecurityConfig {
 				// Straight
 				.requestMatchers(POST, "/straight/type").hasRole(STAFF.name())
 
+				// File Uploader
+				.requestMatchers(POST, "/file").hasRole(STAFF.name())
+				.requestMatchers(DELETE, "/file").hasRole(STAFF.name())
+
 				.anyRequest().authenticated());
 
 		// ❗ 인증 Filter 추가

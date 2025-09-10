@@ -76,6 +76,9 @@ dependencies {
 
     // Poi
     implementation("org.apache.poi:poi-ooxml:5.4.0")
+
+    //S3
+    implementation("software.amazon.awssdk:s3:2.31.11")
 }
 
 tasks.named('test') {
