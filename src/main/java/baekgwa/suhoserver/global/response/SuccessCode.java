@@ -58,6 +58,10 @@ public enum SuccessCode {
 	DELETE_PROJECT_BRANCH_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 삭제 완료"),
 	PATCH_PROJECT_BRANCH_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 수정 완료"),
 
+	// File Uploader
+	UPLOAD_FILE_SUCCESS(HttpStatus.CREATED, "파일 업로드 완료"),
+	DELETE_FILE_SUCCESS(HttpStatus.OK, "파일 삭제 완료"),
+
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
 

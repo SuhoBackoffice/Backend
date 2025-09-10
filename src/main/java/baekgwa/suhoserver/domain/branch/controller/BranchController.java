@@ -44,10 +44,11 @@ public class BranchController {
 	public BaseResponse<BranchResponse.PostNewBranchBom> newBranchBom(
 		@RequestParam("branchCode") String branchCode,
 		@RequestParam("versionInfoId") Long versionInfoId,
+		@RequestParam(value = "imageUrl", required = false) String imageUrl,
 		@RequestPart("file") MultipartFile file
 	) {
 		BranchResponse.PostNewBranchBom postNewBranchBom =
-			branchService.createNewBranchBom(branchCode, versionInfoId, file);
+			branchService.createNewBranchBom(branchCode, versionInfoId, file, imageUrl);
 		return BaseResponse.success(SuccessCode.CREATE_NEW_BRANCH_BOM_SUCCESS, postNewBranchBom);
 	}
 

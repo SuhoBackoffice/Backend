@@ -53,6 +53,9 @@ public class BranchTypeEntity extends TemporalEntity {
 	@Column(name = "version", nullable = false, columnDefinition = "분기레일 BOM 리스트의 버전.")
 	private LocalDate version;
 
+	@Column(name = "image_url", nullable = false)
+	private String imageUrl;
+
 	/**
 	 * 현재 시간 기준으로, Version 정보를 생성
 	 * YYYY-mm-dd
@@ -63,20 +66,22 @@ public class BranchTypeEntity extends TemporalEntity {
 	}
 
 	@Builder(access = AccessLevel.PRIVATE)
-	public BranchTypeEntity(VersionInfoEntity versionInfoEntity, String code, String name, LocalDate version) {
+	public BranchTypeEntity(VersionInfoEntity versionInfoEntity, String code, String name, LocalDate version, String imageUrl) {
 		this.versionInfoEntity = versionInfoEntity;
 		this.code = code;
 		this.name = name;
 		this.version = version;
+		this.imageUrl = imageUrl;
 	}
 
-	public static BranchTypeEntity createNewBranchType(VersionInfoEntity versionInfoEntity, String code, String branchName) {
+	public static BranchTypeEntity createNewBranchType(VersionInfoEntity versionInfoEntity, String code, String branchName, String imageUrl) {
 		return BranchTypeEntity
 			.builder()
 			.versionInfoEntity(versionInfoEntity)
 			.code(code)
 			.name(branchName)
 			.version(BranchTypeEntity.generateVersion())
+			.imageUrl(imageUrl)
 			.build();
 	}
 }

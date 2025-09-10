@@ -60,7 +60,7 @@ public class BranchService {
 
 	@Transactional
 	public BranchResponse.PostNewBranchBom createNewBranchBom(String branchCode, Long versionInfoId,
-		MultipartFile file) {
+		MultipartFile file, String imageUrl) {
 		// 1. 버전 유효성 검증 및, Entity 조회
 		VersionInfoEntity findVersionInfo = versionInfoRepository.findById(versionInfoId)
 			.orElseThrow(
@@ -79,8 +79,10 @@ public class BranchService {
 		}
 
 		// 2. Branch Type 신규 생성 및 저장
-		BranchTypeEntity newBranchType = BranchTypeEntity.createNewBranchType(findVersionInfo, branchCode, branchName);
-		BranchTypeEntity savedBranchType = branchTypeRepository.save(newBranchType);
+		BranchTypeEntity newBranchType =
+			BranchTypeEntity.createNewBranchType(findVersionInfo, branchCode, branchName, imageUrl);
+		BranchTypeEntity savedBranchType =
+			branchTypeRepository.save(newBranchType);
 
 		// 3. multipartFile 파싱
 		SheetParserHandler handler = extractExcelXml(file);
