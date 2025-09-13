@@ -46,7 +46,8 @@ public class ProjectResponse {
 		private final LocalDate endDate;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectDetailInfo(Long versionInfoId, String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+		private ProjectDetailInfo(Long versionInfoId, String version, String region, String name, LocalDate startDate,
+			LocalDate endDate) {
 			this.versionInfoId = versionInfoId;
 			this.version = version;
 			this.region = region;
@@ -77,9 +78,11 @@ public class ProjectResponse {
 		private final Long completedQuantity;
 		private final Long branchTypeId;
 		private final String branchName;
+		private final String imageUrl;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectBranchInfo(Long projectBranchId, String branchCode, LocalDate branchVersion, Long totalQuantity, Long completedQuantity, Long branchTypeId, String branchName) {
+		private ProjectBranchInfo(Long projectBranchId, String branchCode, LocalDate branchVersion, Long totalQuantity,
+			Long completedQuantity, Long branchTypeId, String branchName, String imageUrl) {
 			this.projectBranchId = projectBranchId;
 			this.branchCode = branchCode;
 			this.branchVersion = branchVersion;
@@ -87,6 +90,7 @@ public class ProjectResponse {
 			this.completedQuantity = completedQuantity;
 			this.branchTypeId = branchTypeId;
 			this.branchName = branchName;
+			this.imageUrl = imageUrl;
 		}
 
 		public static ProjectBranchInfo of(ProjectBranchEntity projectBranch) {
@@ -99,6 +103,7 @@ public class ProjectResponse {
 				.completedQuantity(projectBranch.getCompletedQuantity())
 				.branchTypeId(projectBranch.getBranchType().getId())
 				.branchName(projectBranch.getBranchType().getName())
+				.imageUrl(projectBranch.getBranchType().getImageUrl())
 				.build();
 		}
 	}
@@ -114,7 +119,8 @@ public class ProjectResponse {
 		private final BigDecimal holePosition; //가공위치
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectStraightInfo(Long straightRailId, Long length, Boolean isLoopRail, String straightType, Long totalQuantity,
+		private ProjectStraightInfo(Long straightRailId, Long length, Boolean isLoopRail, String straightType,
+			Long totalQuantity,
 			LitzInfo litzInfo, BigDecimal holePosition) {
 			this.straightRailId = straightRailId;
 			this.length = length;
@@ -125,7 +131,8 @@ public class ProjectResponse {
 			this.holePosition = holePosition;
 		}
 
-		public static ProjectStraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo, BigDecimal holePosition) {
+		public static ProjectStraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo,
+			BigDecimal holePosition) {
 			return ProjectStraightInfo
 				.builder()
 				.straightRailId(projectStraight.getId())
@@ -182,7 +189,8 @@ public class ProjectResponse {
 		private final LocalDate endDate;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectInfo(Long id, String version, String region, String name, LocalDate startDate, LocalDate endDate) {
+		private ProjectInfo(Long id, String version, String region, String name, LocalDate startDate,
+			LocalDate endDate) {
 			this.id = id;
 			this.version = version;
 			this.region = region;
