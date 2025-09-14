@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.version.dto.VersionResponse;
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
+import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.version.repository.VersionInfoRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -26,11 +29,27 @@ public class VersionReadService {
 
 	private final VersionInfoRepository versionInfoRepository;
 
+	/**
+	 * 현존하는 모든 version 데이터 조회
+	 * @return version List
+	 */
 	@Transactional(readOnly = true)
 	public List<VersionResponse.VersionListDto> getVersionList() {
 		return versionInfoRepository.findAll()
 			.stream()
 			.map(data -> VersionResponse.VersionListDto.of(data.getId(), data.getName()))
 			.toList();
+	}
+
+	/**
+	 * VersionId로, Version Entity 조회
+	 * 없을 경우, throw GlobalException(ErrorCode.NOT_FOUND_VERSION)
+	 * @param versionInfoId 버전 PK
+	 * @return 조회된 VersionInfoEntity
+	 */
+	@Transactional(readOnly = true)
+	public VersionInfoEntity getVersionInfoOrThrow(Long versionInfoId) {
+		return versionInfoRepository.findById(versionInfoId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_VERSION));
 	}
 }
