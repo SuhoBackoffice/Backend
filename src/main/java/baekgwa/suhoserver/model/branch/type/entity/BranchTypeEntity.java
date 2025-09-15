@@ -61,7 +61,7 @@ public class BranchTypeEntity extends TemporalEntity {
 	 * YYYY-mm-dd
 	 * @return version
 	 */
-	private static LocalDate generateVersion() {
+	public static LocalDate generateVersion() {
 		return LocalDate.now();
 	}
 
