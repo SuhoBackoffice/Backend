@@ -52,4 +52,15 @@ public class VersionReadService {
 		return versionInfoRepository.findById(versionInfoId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_VERSION));
 	}
+
+	/**
+	 * 유효한 versionId 인지 검증하는 메서드
+	 * 유효하지 않은 versionId 라면, Exception 발생
+	 * @param versionId 버전 PK
+	 */
+	public void invalidVersionIdOrThrow(Long versionId) {
+		if (versionId != null && !versionInfoRepository.existsById(versionId)) {
+			throw new GlobalException(ErrorCode.NOT_FOUND_VERSION);
+		}
+	}
 }

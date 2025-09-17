@@ -6,6 +6,7 @@ import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -50,6 +51,7 @@ public class ProjectRequest {
 
 	@Getter
 	@NoArgsConstructor(access = AccessLevel.PROTECTED)
+	@EqualsAndHashCode
 	public static class PostProjectStraightInfo {
 		@Min(value = 300L, message = "레일 길이는 최소 300 부터입니다.")
 		private Long length;

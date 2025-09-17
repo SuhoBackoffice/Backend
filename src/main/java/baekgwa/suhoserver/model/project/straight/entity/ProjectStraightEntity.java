@@ -2,6 +2,7 @@ package baekgwa.suhoserver.model.project.straight.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,6 +48,10 @@ public class ProjectStraightEntity extends TemporalEntity {
 	@JoinColumn(name = "straight_type_id", nullable = false)
 	private StraightTypeEntity straightType;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "straight_info_id", nullable = false)
+	private StraightInfoEntity straightInfo;
+
 	@Column(name = "total_quantity", nullable = false)
 	private Long totalQuantity;
 
@@ -61,7 +66,7 @@ public class ProjectStraightEntity extends TemporalEntity {
 
 	@Builder
 	private ProjectStraightEntity(ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity,
-		Long completedQuantity, Boolean isLoopRail, Long length
+		Long completedQuantity, Boolean isLoopRail, Long length, StraightInfoEntity straightInfo
 	) {
 		this.project = project;
 		this.straightType = straightType;
@@ -69,10 +74,11 @@ public class ProjectStraightEntity extends TemporalEntity {
 		this.completedQuantity = completedQuantity;
 		this.isLoopRail = isLoopRail;
 		this.length = length;
+		this.straightInfo = straightInfo;
 	}
 
 	public static ProjectStraightEntity createNewStraight(
-		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length
+		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length, StraightInfoEntity straightInfo
 	) {
 		return ProjectStraightEntity
 			.builder()
@@ -82,6 +88,7 @@ public class ProjectStraightEntity extends TemporalEntity {
 			.completedQuantity(0L)
 			.isLoopRail(isLoopRail)
 			.length(length)
+			.straightInfo(straightInfo)
 			.build();
 	}
 

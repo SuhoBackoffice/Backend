@@ -1,6 +1,10 @@
 package baekgwa.suhoserver.domain.branch.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -83,5 +87,22 @@ public class BranchReadService {
 	public BranchTypeEntity getBranchTypeOrThrow(Long branchTypeId) {
 		return branchTypeRepository.findById(branchTypeId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_BRANCH_TYPE));
+	}
+
+	/**
+	 * branchIdSet 으로, Map<PK, Entity> 를 반환하는 메서드
+	 * @param branchIdSet 분기레일 PK Set
+	 * @return Map<PK, Entity>
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, BranchTypeEntity> getBranchTypeListOrThrow(Set<Long> branchIdSet) {
+		List<BranchTypeEntity> findBranchTypeList = branchTypeRepository.findAllById(branchIdSet);
+
+		if(branchIdSet.size() != findBranchTypeList.size()) {
+			throw new GlobalException(ErrorCode.NOT_FOUND_BRANCH_TYPE);
+		}
+
+		return findBranchTypeList.stream()
+			.collect(Collectors.toMap(BranchTypeEntity::getId, Function.identity()));
 	}
 }

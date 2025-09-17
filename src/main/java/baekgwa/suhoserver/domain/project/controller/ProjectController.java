@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
-import baekgwa.suhoserver.domain.project.service.ProjectService;
+import baekgwa.suhoserver.domain.project.facade.ProjectFacade;
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.PageResponse;
@@ -45,14 +45,14 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Project Controller", description = "프로젝트 컨트롤러")
 public class ProjectController {
 
-	private final ProjectService projectService;
+	private final ProjectFacade projectFacade;
 
 	@PostMapping("/new")
 	@Operation(summary = "신규 프로젝트 등록")
 	public BaseResponse<ProjectResponse.NewProjectDto> createNewProject(
 		@RequestBody @Valid ProjectRequest.PostNewProjectDto postNewProjectDto
 	) {
-		ProjectResponse.NewProjectDto newProjectDto = projectService.createNewProject(postNewProjectDto);
+		ProjectResponse.NewProjectDto newProjectDto = projectFacade.createNewProject(postNewProjectDto);
 		return BaseResponse.success(SuccessCode.CREATE_NEW_PROJECT_SUCCESS, newProjectDto);
 	}
 
@@ -63,9 +63,18 @@ public class ProjectController {
 		@PathVariable("projectId") Long projectId
 	) {
 		ProjectResponse.NewProjectDto newProjectDto =
-			projectService.registerProjectBranch(postProjectBranchInfoList, projectId);
+			projectFacade.registerProjectBranch(postProjectBranchInfoList, projectId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_BRANCH_SUCCESS, newProjectDto);
+	}
+
+	@GetMapping("/{projectId}")
+	@Operation(summary = "프로젝트 정보 조회")
+	public BaseResponse<ProjectResponse.ProjectDetailInfo> getProjectInfo(
+		@PathVariable("projectId") Long projectId
+	) {
+		ProjectResponse.ProjectDetailInfo projectDetailInfo = projectFacade.getProjectInfo(projectId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_INFORMATION_SUCCESS, projectDetailInfo);
 	}
 
 	@PostMapping("/{projectId}/straight")
@@ -74,18 +83,9 @@ public class ProjectController {
 		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
 		@PathVariable("projectId") Long projectId
 	) {
-		projectService.registerProjectStraight(postProjectStraightInfoList, projectId);
+		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
-	}
-
-	@GetMapping("/{projectId}")
-	@Operation(summary = "프로젝트 정보 조회")
-	public BaseResponse<ProjectResponse.ProjectDetailInfo> getProjectInfo(
-		@PathVariable("projectId") Long projectId
-	) {
-		ProjectResponse.ProjectDetailInfo projectDetailInfo = projectService.getProjectInfo(projectId);
-		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_INFORMATION_SUCCESS, projectDetailInfo);
 	}
 
 	@GetMapping("/{projectId}/branch")
@@ -93,7 +93,7 @@ public class ProjectController {
 	public BaseResponse<List<ProjectResponse.ProjectBranchInfo>> getProjectBranchInfo(
 		@PathVariable("projectId") Long projectId
 	) {
-		List<ProjectResponse.ProjectBranchInfo> projectBranchInfoList = projectService.getProjectBranchInfo(projectId);
+		List<ProjectResponse.ProjectBranchInfo> projectBranchInfoList = projectFacade.getProjectBranchInfo(projectId);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS, projectBranchInfoList);
 	}
 
@@ -103,7 +103,7 @@ public class ProjectController {
 		@PathVariable("projectId") Long projectId
 	) {
 		List<ProjectResponse.ProjectStraightInfo> projectStraightInfoList =
-			projectService.getProjectStraightInfo(projectId);
+			projectFacade.getProjectStraightInfo(projectId);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, projectStraightInfoList);
 	}
 
@@ -122,8 +122,7 @@ public class ProjectController {
 		ProjectRequest.GetProjectInfo dto =
 			new ProjectRequest.GetProjectInfo(keyword, page, size, versionId, startDate, endDate, sort);
 
-		PageResponse<ProjectResponse.ProjectInfo> projectInfoList =
-			projectService.getProjectInfoList(dto);
+		PageResponse<ProjectResponse.ProjectInfo> projectInfoList = projectFacade.getProjectInfoList(dto);
 
 		return BaseResponse.success(SuccessCode.GET_PROJECT_INFORMATION_SUCCESS, projectInfoList);
 	}
@@ -143,7 +142,7 @@ public class ProjectController {
 	public BaseResponse<Void> deleteProjectStraight(
 		@PathVariable("projectStraightId") Long projectStraightId
 	) {
-		projectService.deleteProjectStraight(projectStraightId);
+		projectFacade.deleteProjectStraight(projectStraightId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
 
@@ -153,7 +152,7 @@ public class ProjectController {
 		@PathVariable("projectStraightId") Long projectStraightId,
 		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
 	) {
-		projectService.patchProjectStraight(projectStraightId, patchProjectStraightDto);
+		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
 	}
 
@@ -162,7 +161,7 @@ public class ProjectController {
 	public BaseResponse<Void> deleteProjectBranch(
 		@PathVariable("projectBranchId") Long projectBranchId
 	) {
-		projectService.deleteProjectBranch(projectBranchId);
+		projectFacade.deleteProjectBranch(projectBranchId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
 
@@ -172,7 +171,7 @@ public class ProjectController {
 		@PathVariable("projectBranchId") Long projectBranchId,
 		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto
 	) {
-		projectService.patchProjectBranch(projectBranchId, patchProjectBranchDto);
+		projectFacade.patchProjectBranch(projectBranchId, patchProjectBranchDto);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
 	}
 
@@ -182,7 +181,7 @@ public class ProjectController {
 		@PathVariable("projectId") Long projectId
 	) {
 		// 1. 엑셀 데이터 생성 및 응답
-		ProjectResponse.ProjectQuantityList response = projectService.getProjectQuantityList(projectId);
+		ProjectResponse.ProjectQuantityList response = projectFacade.getProjectQuantityList(projectId);
 
 		// 2. Header 구성
 		HttpHeaders headers = new HttpHeaders();

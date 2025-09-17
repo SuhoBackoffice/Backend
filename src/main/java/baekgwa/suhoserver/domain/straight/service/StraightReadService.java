@@ -1,6 +1,10 @@
 package baekgwa.suhoserver.domain.straight.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,5 +38,17 @@ public class StraightReadService {
 		return findStraightTypeList
 			.stream().map(StraightResponse.StraightTypeDto::from)
 			.toList();
+	}
+
+	/**
+	 * 직선레일 PK Set 을 받아서, 조회하여 Map<PK, Entity> 반환
+	 * @param straightTypeIdList 직선레일 PK Set
+	 * @return Map<PK, Entity>
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, StraightTypeEntity> getStraightTypeList(Set<Long> straightTypeIdList) {
+		List<StraightTypeEntity> findStraightTypeList = straightTypeRepository.findAllById(straightTypeIdList);
+
+		return findStraightTypeList.stream().collect(Collectors.toMap(StraightTypeEntity::getId, Function.identity()));
 	}
 }
