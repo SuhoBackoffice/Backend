@@ -1,47 +1,35 @@
 package baekgwa.suhoserver.domain.straight.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import baekgwa.suhoserver.domain.straight.dto.StraightRequest;
 import baekgwa.suhoserver.domain.straight.dto.StraightResponse;
-import baekgwa.suhoserver.global.exception.GlobalException;
-import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.straight.type.repository.StraightTypeRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
  * PackageName : baekgwa.suhoserver.domain.straight.service
- * FileName    : StraightService
+ * FileName    : StraightReadService
  * Author      : Baekgwa
- * Date        : 2025-08-10
+ * Date        : 2025-09-15
  * Description : 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
- * 2025-08-10     Baekgwa               Initial creation
+ * 2025-09-15     Baekgwa               Initial creation
  */
 @Service
 @RequiredArgsConstructor
-public class StraightService {
+public class StraightReadService {
 
 	private final StraightTypeRepository straightTypeRepository;
-
-	@Transactional
-	public void postNewStraightType(StraightRequest.NewStraightTypeDto newStraightTypeDto) {
-		// 1. 중복 확인
-		if(straightTypeRepository.existsByType(newStraightTypeDto.getType())) {
-			throw new GlobalException(ErrorCode.DUPLICATE_STRAIGHT_TYPE);
-		}
-
-		// 2. 신규 Entity 생성 및 저장
-		StraightTypeEntity newStraightType =
-			StraightTypeEntity.createNewStraightType(newStraightTypeDto.getType(), newStraightTypeDto.getIsLoopRail());
-		straightTypeRepository.save(newStraightType);
-	}
 
 	@Transactional(readOnly = true)
 	public List<StraightResponse.StraightTypeDto> getStraightTypeList(boolean isLoopRail) {
@@ -50,5 +38,17 @@ public class StraightService {
 		return findStraightTypeList
 			.stream().map(StraightResponse.StraightTypeDto::from)
 			.toList();
+	}
+
+	/**
+	 * 직선레일 PK Set 을 받아서, 조회하여 Map<PK, Entity> 반환
+	 * @param straightTypeIdList 직선레일 PK Set
+	 * @return Map<PK, Entity>
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, StraightTypeEntity> getStraightTypeList(Set<Long> straightTypeIdList) {
+		List<StraightTypeEntity> findStraightTypeList = straightTypeRepository.findAllById(straightTypeIdList);
+
+		return findStraightTypeList.stream().collect(Collectors.toMap(StraightTypeEntity::getId, Function.identity()));
 	}
 }

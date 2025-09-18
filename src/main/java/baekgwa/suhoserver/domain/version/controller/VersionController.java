@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import baekgwa.suhoserver.domain.version.dto.VersionRequest;
 import baekgwa.suhoserver.domain.version.dto.VersionResponse;
-import baekgwa.suhoserver.domain.version.service.VersionService;
+import baekgwa.suhoserver.domain.version.service.VersionReadService;
+import baekgwa.suhoserver.domain.version.service.VersionWriteService;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-08-05     Baekgwa               Initial creation
+ * 2025-09-14     Baekgwa               Service 로직 분리 진행
  */
 @RestController
 @RequiredArgsConstructor
@@ -35,21 +37,22 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Version Controller", description = "프로젝트 및 직선/분기 레일 버전 관리용 controller")
 public class VersionController {
 
-	private final VersionService versionService;
+	private final VersionReadService versionReadService;
+	private final VersionWriteService versionWriteService;
 
 	@PostMapping
 	@Operation(summary = "신규 버전 추가")
 	public BaseResponse<Void> createNewVersion(
 		@RequestBody @Valid VersionRequest.NewVersionDto newVersionDto
 	) {
-		versionService.createNewVersion(newVersionDto);
+		versionWriteService.createNewVersion(newVersionDto);
 		return BaseResponse.success(SuccessCode.CREATE_NEW_VERSION_SUCCESS);
 	}
 
 	@GetMapping
 	@Operation(summary = "현재 버전 리스트 확인")
 	public BaseResponse<List<VersionResponse.VersionListDto>> getVersionList() {
-		List<VersionResponse.VersionListDto> versionList = versionService.getVersionList();
+		List<VersionResponse.VersionListDto> versionList = versionReadService.getVersionList();
 		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS, versionList);
 	}
 }

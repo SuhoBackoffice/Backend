@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import baekgwa.suhoserver.domain.version.dto.VersionRequest;
 import baekgwa.suhoserver.domain.version.dto.VersionResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
@@ -15,41 +14,53 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * PackageName : baekgwa.suhoserver.domain.version.service
- * FileName    : VersionService
+ * FileName    : VersionReadService
  * Author      : Baekgwa
- * Date        : 2025-08-05
+ * Date        : 2025-09-14
  * Description : 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
- * 2025-08-05     Baekgwa               Initial creation
+ * 2025-09-14     Baekgwa               Initial creation
  */
 @Service
 @RequiredArgsConstructor
-public class VersionService {
+public class VersionReadService {
 
 	private final VersionInfoRepository versionInfoRepository;
 
-	@Transactional
-	public void createNewVersion(VersionRequest.NewVersionDto newVersionDto) {
-		// 1. 중복 확인
-		if( versionInfoRepository.existsByName(newVersionDto.getVersionName()) ){
-			throw new GlobalException(ErrorCode.DUPLICATE_VERSION_NAME);
-		}
-
-		// 2. 새로운 Entity 생성
-		VersionInfoEntity newVersion = VersionInfoEntity.of(newVersionDto.getVersionName(), newVersionDto.getLoopLitzWire());
-
-		// 3. 저장
-		versionInfoRepository.save(newVersion);
-	}
-
+	/**
+	 * 현존하는 모든 version 데이터 조회
+	 * @return version List
+	 */
 	@Transactional(readOnly = true)
 	public List<VersionResponse.VersionListDto> getVersionList() {
-		// 1. 리스트 조회
 		return versionInfoRepository.findAll()
 			.stream()
 			.map(data -> VersionResponse.VersionListDto.of(data.getId(), data.getName()))
 			.toList();
+	}
+
+	/**
+	 * VersionId로, Version Entity 조회
+	 * 없을 경우, throw GlobalException(ErrorCode.NOT_FOUND_VERSION)
+	 * @param versionInfoId 버전 PK
+	 * @return 조회된 VersionInfoEntity
+	 */
+	@Transactional(readOnly = true)
+	public VersionInfoEntity getVersionInfoOrThrow(Long versionInfoId) {
+		return versionInfoRepository.findById(versionInfoId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_VERSION));
+	}
+
+	/**
+	 * 유효한 versionId 인지 검증하는 메서드
+	 * 유효하지 않은 versionId 라면, Exception 발생
+	 * @param versionId 버전 PK
+	 */
+	public void invalidVersionIdOrThrow(Long versionId) {
+		if (versionId != null && !versionInfoRepository.existsById(versionId)) {
+			throw new GlobalException(ErrorCode.NOT_FOUND_VERSION);
+		}
 	}
 }

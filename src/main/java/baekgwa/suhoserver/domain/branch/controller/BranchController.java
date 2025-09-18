@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import baekgwa.suhoserver.domain.branch.dto.BranchResponse;
-import baekgwa.suhoserver.domain.branch.service.BranchService;
+import baekgwa.suhoserver.domain.branch.facade.BranchFacade;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Branch Controller", description = "분기레일 컨트롤러")
 public class BranchController {
 
-	private final BranchService branchService;
+	private final BranchFacade branchFacade;
 
 	@PostMapping(value = "/bom/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@Operation(summary = "분기레일 BOM 리스트 등록")
@@ -48,7 +48,7 @@ public class BranchController {
 		@RequestPart("file") MultipartFile file
 	) {
 		BranchResponse.PostNewBranchBom postNewBranchBom =
-			branchService.createNewBranchBom(branchCode, versionInfoId, file, imageUrl);
+			branchFacade.createNewBranchBom(branchCode, versionInfoId, file, imageUrl);
 		return BaseResponse.success(SuccessCode.CREATE_NEW_BRANCH_BOM_SUCCESS, postNewBranchBom);
 	}
 
@@ -59,7 +59,7 @@ public class BranchController {
 		@RequestParam("versionInfoId") Long versionInfoId
 	) {
 		BranchResponse.BranchInfoDto branchInfoDto =
-			branchService.getLatestVersionBranchBom(branchCode, versionInfoId);
+			branchFacade.getLatestVersionBranchBom(branchCode, versionInfoId);
 		return BaseResponse.success(SuccessCode.GET_LATEST_BRANCH_BOM_SUCCESS, branchInfoDto);
 	}
 
@@ -68,7 +68,7 @@ public class BranchController {
 	public BaseResponse<List<BranchResponse.BranchDetailInfoDto>> getBranchBomList(
 		@PathVariable("branchTypeId") Long branchTypeId
 	) {
-		List<BranchResponse.BranchDetailInfoDto> branchBomList = branchService.getBranchBomList(branchTypeId);
+		List<BranchResponse.BranchDetailInfoDto> branchBomList = branchFacade.getBranchBomList(branchTypeId);
 		return BaseResponse.success(SuccessCode.GET_BRANCH_BOM_SUCCESS, branchBomList);
 	}
 }

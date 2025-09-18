@@ -2,12 +2,12 @@ package baekgwa.suhoserver.domain.project.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Map;
 
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -131,8 +131,7 @@ public class ProjectResponse {
 			this.holePosition = holePosition;
 		}
 
-		public static ProjectStraightInfo of(ProjectStraightEntity projectStraight, LitzInfo litzInfo,
-			BigDecimal holePosition) {
+		public static ProjectStraightInfo from(ProjectStraightEntity projectStraight) {
 			return ProjectStraightInfo
 				.builder()
 				.straightRailId(projectStraight.getId())
@@ -140,8 +139,8 @@ public class ProjectResponse {
 				.isLoopRail(projectStraight.getIsLoopRail())
 				.straightType(projectStraight.getStraightType().getType())
 				.totalQuantity(projectStraight.getTotalQuantity())
-				.litzInfo(litzInfo)
-				.holePosition(holePosition)
+				.litzInfo(LitzInfo.from(projectStraight.getStraightInfo()))
+				.holePosition(projectStraight.getStraightInfo().getHolePosition())
 				.build();
 		}
 	}
@@ -166,16 +165,20 @@ public class ProjectResponse {
 			this.litz6 = litz6;
 		}
 
-		public static LitzInfo from(Map<Integer, BigDecimal> baseLitzWireMap) {
+		public static LitzInfo from(StraightInfoEntity straightInfo) {
 			return LitzInfo
 				.builder()
-				.litz1(baseLitzWireMap.getOrDefault(1, BigDecimal.ZERO))
-				.litz2(baseLitzWireMap.getOrDefault(2, BigDecimal.ZERO))
-				.litz3(baseLitzWireMap.getOrDefault(3, BigDecimal.ZERO))
-				.litz4(baseLitzWireMap.getOrDefault(4, BigDecimal.ZERO))
-				.litz5(baseLitzWireMap.getOrDefault(5, BigDecimal.ZERO))
-				.litz6(baseLitzWireMap.getOrDefault(6, BigDecimal.ZERO))
+				.litz1(getOrZero(straightInfo.getLitzwire1()))
+				.litz2(getOrZero(straightInfo.getLitzwire2()))
+				.litz3(getOrZero(straightInfo.getLitzwire3()))
+				.litz4(getOrZero(straightInfo.getLitzwire4()))
+				.litz5(getOrZero(straightInfo.getLitzwire5()))
+				.litz6(getOrZero(straightInfo.getLitzwire6()))
 				.build();
+		}
+
+		private static BigDecimal getOrZero(BigDecimal bigDecimal) {
+			return bigDecimal == null ? BigDecimal.ZERO : bigDecimal;
 		}
 	}
 
