@@ -1,5 +1,6 @@
 package baekgwa.suhoserver.domain.material.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,5 +73,17 @@ public class MaterialController {
 		List<MaterialResponse.MaterialHistory> materialHistoryList =
 			materialFacade.getMaterialHistoryList(projectId, keyword, sort);
 		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_LIST_SUCCESS, materialHistoryList);
+	}
+
+	@GetMapping("/history/detail/{projectId}")
+	public BaseResponse<List<MaterialResponse.MaterialHistoryDetail>> getMaterialInboundHistoryDetail(
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(value = "keyword", required = false) String keyword,
+		@RequestParam(value = "date") LocalDate date
+	) {
+		List<MaterialResponse.MaterialHistoryDetail> materialHistoryDetailList =
+			materialFacade.getMaterialHistoryDetailList(projectId, keyword, date);
+
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_DETAIL_SUCCESS, materialHistoryDetailList);
 	}
 }

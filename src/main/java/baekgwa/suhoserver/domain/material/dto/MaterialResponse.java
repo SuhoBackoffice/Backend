@@ -1,8 +1,10 @@
 package baekgwa.suhoserver.domain.material.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
+import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -62,13 +64,25 @@ public class MaterialResponse {
 	public static class MaterialHistoryDetail {
 		private final Long id;
 		private final String drawingNumber;
-		private final String materialName;
+		private final String itemName;
+		private final LocalDateTime receivedAt;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialHistoryDetail(Long id, String drawingNumber, String materialName) {
+		private MaterialHistoryDetail(Long id, String drawingNumber, String itemName, LocalDateTime receivedAt) {
 			this.id = id;
 			this.drawingNumber = drawingNumber;
-			this.materialName = materialName;
+			this.itemName = itemName;
+			this.receivedAt = receivedAt;
+		}
+
+		public static MaterialHistoryDetail of(MaterialInboundEntity materialInbound) {
+			return MaterialHistoryDetail
+				.builder()
+				.id(materialInbound.getId())
+				.drawingNumber(materialInbound.getDrawingNumber())
+				.itemName(materialInbound.getItemName())
+				.receivedAt(materialInbound.getCreatedAt())
+				.build();
 		}
 	}
 }

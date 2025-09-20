@@ -1,5 +1,6 @@
 package baekgwa.suhoserver.domain.material.facade;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -57,7 +58,13 @@ public class MaterialFacade {
 	public List<MaterialResponse.MaterialHistory> getMaterialHistoryList(
 		Long projectId, String keyword, MaterialSort sort
 	) {
-		// 1. 조회 후, return
 		return materialReadService.getMaterialHistroyList(projectId, keyword, sort);
+	}
+
+	@Transactional(readOnly = true)
+	public List<MaterialResponse.MaterialHistoryDetail> getMaterialHistoryDetailList(
+		Long projectId, String keyword, LocalDate date
+	) {
+		return materialReadService.getMaterialHistoryDetail(projectId, keyword, date);
 	}
 }

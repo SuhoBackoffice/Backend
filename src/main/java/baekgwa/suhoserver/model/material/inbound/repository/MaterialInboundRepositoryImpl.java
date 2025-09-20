@@ -1,6 +1,8 @@
 package baekgwa.suhoserver.model.material.inbound.repository;
 
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,6 +19,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
 import baekgwa.suhoserver.model.material.inbound.entity.QMaterialInboundEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -48,10 +51,10 @@ public class MaterialInboundRepositoryImpl implements MaterialInboundRepositoryC
 			materialInbound.id.count();
 
 		// 2. where 절
-		BooleanBuilder whereCondition = createWhereCondition(keyword, projectId);
+		BooleanBuilder whereCondition = createMaterialHistoryWhereCondition(keyword, projectId);
 
 		// 3. order by 절
-		OrderSpecifier<Date> orderBySpec = createOrderBySpec(sort, dayExpr);
+		OrderSpecifier<Date> orderBySpec = createMaterialHistoryOrderBySpec(sort, dayExpr);
 
 		List<Tuple> findData = queryFactory
 			.select(dayExpr, cntExpr)
@@ -69,23 +72,60 @@ public class MaterialInboundRepositoryImpl implements MaterialInboundRepositoryC
 			.toList();
 	}
 
-	private OrderSpecifier<Date> createOrderBySpec(MaterialSort sort, DateTemplate<Date> dayExpr) {
+	@Override
+	public List<MaterialInboundEntity> findMaterialDetailByKeywordAndDate(
+		Long projectId, String keyword, LocalDate date
+	) {
+		// 1. where 절
+		BooleanBuilder whereCondition = createMaterialDetailWhereCondition(projectId, keyword, date);
+
+		// 2. query
+		return queryFactory
+			.selectFrom(materialInbound)
+			.where(whereCondition)
+			.fetch();
+	}
+
+	private BooleanBuilder createMaterialDetailWhereCondition(Long projectId, String keyword, LocalDate date) {
+		BooleanBuilder builder = new BooleanBuilder();
+
+		// 1. 프로젝트 id 매칭
+		builder.and(materialInbound.project.id.eq(projectId));
+
+		// 2. keyword 매칭
+		if (StringUtils.hasText(keyword)) {
+			keyword = keyword.trim();
+			builder.and(materialInbound.drawingNumber.containsIgnoreCase(keyword)
+				.or(materialInbound.itemName.containsIgnoreCase(keyword)));
+		}
+
+		// 3. date 매칭
+		LocalDateTime start = date.atStartOfDay();
+		LocalDateTime end = date.plusDays(1).atStartOfDay();
+		builder.and(materialInbound.createdAt.goe(start)
+			.and(materialInbound.createdAt.lt(end)));
+
+		return builder;
+	}
+
+	private OrderSpecifier<Date> createMaterialHistoryOrderBySpec(MaterialSort sort, DateTemplate<Date> dayExpr) {
 		return switch (sort) {
 			case LATEST -> dayExpr.desc();
 			case OLDEST -> dayExpr.asc();
 		};
 	}
 
-	private BooleanBuilder createWhereCondition(String keyword, Long projectId) {
+	private BooleanBuilder createMaterialHistoryWhereCondition(String keyword, Long projectId) {
 		BooleanBuilder builder = new BooleanBuilder();
 
 		// 1. 입력받은 projectId
 		builder.and(materialInbound.project.id.eq(projectId));
 
+		// 2. keyword 매칭
 		if (StringUtils.hasText(keyword)) {
 			keyword = keyword.trim();
 			builder.and(materialInbound.drawingNumber.containsIgnoreCase(keyword)
-				.and(materialInbound.itemName.containsIgnoreCase(keyword)));
+				.or(materialInbound.itemName.containsIgnoreCase(keyword)));
 		}
 
 		return builder;

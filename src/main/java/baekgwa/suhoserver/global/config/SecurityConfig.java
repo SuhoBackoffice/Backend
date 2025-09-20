@@ -129,6 +129,7 @@ public class SecurityConfig {
 				.requestMatchers(GET, "/material/{projectId}").hasRole(USER.name())
 				.requestMatchers(POST, "/material/{projectId}").hasRole(USER.name())
 				.requestMatchers(GET, "/material/history/{projectId}").hasRole(USER.name())
+				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(USER.name())
 
 				.anyRequest().authenticated());
 
