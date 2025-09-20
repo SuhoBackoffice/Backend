@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * PackageName : baekgwa.suhoserver.domain.material.dto
- * FileName    : MaterialResponseDto
+ * FileName    : MaterialResponse
  * Author      : Baekgwa
  * Date        : 2025-09-19
  * Description : 
@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
  * 2025-09-19     Baekgwa               Initial creation
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class MaterialResponseDto {
+public class MaterialResponse {
 
 	@Getter
 	public static class MaterialInfo {

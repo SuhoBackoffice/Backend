@@ -10,7 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import baekgwa.suhoserver.domain.material.dto.MaterialResponseDto;
+import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
@@ -115,13 +115,13 @@ public class BranchReadService {
 	 * @return 찾은 BOM List
 	 */
 	@Transactional(readOnly = true)
-	public List<MaterialResponseDto.MaterialInfo> getAllBranchBomList(List<Long> findBranchTypeIdList, String keyword) {
+	public List<MaterialResponse.MaterialInfo> getAllBranchBomList(List<Long> findBranchTypeIdList, String keyword) {
 		// 1. 분기 타입 중, keyword 와 매칭되는 List 검색
 		List<BranchBomEntity> findBranchBomList = branchBomRepository.searchBranchBomList(findBranchTypeIdList, keyword);
 
 		// 2. DTO 응답
 		return findBranchBomList.stream()
-			.map(MaterialResponseDto.MaterialInfo::of)
+			.map(MaterialResponse.MaterialInfo::of)
 			.toList();
 	}
 }

@@ -64,6 +64,7 @@ public enum SuccessCode {
 
 	// Material & Bom
 	GET_MATERIAL_FIND_LIST_SUCCESS(HttpStatus.OK, "자재 목록 조회 성공"),
+	POST_MATERIAL_INBOUND_UPDATE_SUCCESS(HttpStatus.CREATED, "자재 입고 등록 완료"),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");

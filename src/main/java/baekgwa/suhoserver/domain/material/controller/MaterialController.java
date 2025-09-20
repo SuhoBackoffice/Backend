@@ -4,16 +4,20 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import baekgwa.suhoserver.domain.material.dto.MaterialResponseDto;
+import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
+import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.facade.MaterialFacade;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -37,12 +41,23 @@ public class MaterialController {
 
 	@GetMapping("/{projectId}")
 	@Operation(summary = "도번 혹은 품명과 일치하는 자재 정보 응답")
-	public BaseResponse<List<MaterialResponseDto.MaterialInfo>> getMaterialInfo(
+	public BaseResponse<List<MaterialResponse.MaterialInfo>> getMaterialInfo(
 		@PathVariable("projectId") Long projectId,
 		@RequestParam(value = "keyword", required = false, defaultValue = "") String keyword
 	) {
-		List<MaterialResponseDto.MaterialInfo> findMaterialInfoList
+		List<MaterialResponse.MaterialInfo> findMaterialInfoList
 			= materialFacade.getMaterialList(projectId, keyword);
 		return BaseResponse.success(SuccessCode.GET_MATERIAL_FIND_LIST_SUCCESS, findMaterialInfoList);
+	}
+
+	@PostMapping("/{projectId}")
+	@Operation(summary = "프로젝트에 자재 입고")
+	public BaseResponse<Void> postMaterialInbound(
+		@PathVariable("projectId") Long projectId,
+		@Valid @RequestBody List<MaterialRequest.PostMaterialInbound> postMaterialInboundList
+	) {
+		materialFacade.postMaterialInbound(projectId, postMaterialInboundList);
+
+		return BaseResponse.success(SuccessCode.POST_MATERIAL_INBOUND_UPDATE_SUCCESS);
 	}
 }
