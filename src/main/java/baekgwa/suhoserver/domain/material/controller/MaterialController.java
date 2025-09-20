@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.facade.MaterialFacade;
+import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,5 +60,17 @@ public class MaterialController {
 		materialFacade.postMaterialInbound(projectId, postMaterialInboundList);
 
 		return BaseResponse.success(SuccessCode.POST_MATERIAL_INBOUND_UPDATE_SUCCESS);
+	}
+
+	@GetMapping("/history/{projectId}")
+	@Operation(summary = "키워드에 매칭되는, 자재 입고 일자 확인")
+	public BaseResponse<List<MaterialResponse.MaterialHistory>> getMaterialInboundHistoryDateList(
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(value = "keyword", required = false) String keyword,
+		@RequestParam(value = "sort", required = false, defaultValue = "LATEST") MaterialSort sort
+	) {
+		List<MaterialResponse.MaterialHistory> materialHistoryList =
+			materialFacade.getMaterialHistoryList(projectId, keyword, sort);
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_LIST_SUCCESS, materialHistoryList);
 	}
 }

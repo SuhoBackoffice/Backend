@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import baekgwa.suhoserver.domain.branch.service.BranchReadService;
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
+import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
+import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class MaterialFacade {
 	private final ProjectReadService projectReadService;
 	private final BranchReadService branchReadService;
 	private final MaterialWriteService materialWriteService;
+	private final MaterialReadService materialReadService;
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialInfo> getMaterialList(Long projectId, String keyword) {
@@ -48,5 +51,13 @@ public class MaterialFacade {
 
 		// 2. 신규 Material Inbound 추가
 		materialWriteService.postMaterialInbound(findProject, postMaterialInboundList);
+	}
+
+	@Transactional(readOnly = true)
+	public List<MaterialResponse.MaterialHistory> getMaterialHistoryList(
+		Long projectId, String keyword, MaterialSort sort
+	) {
+		// 1. 조회 후, return
+		return materialReadService.getMaterialHistroyList(projectId, keyword, sort);
 	}
 }

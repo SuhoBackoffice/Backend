@@ -1,7 +1,13 @@
 package baekgwa.suhoserver.domain.material.service;
 
-import org.springframework.stereotype.Service;
+import java.util.List;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
+import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.model.material.inbound.repository.MaterialInboundRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -18,4 +24,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class MaterialReadService {
+
+	private final MaterialInboundRepository materialInboundRepository;
+
+	@Transactional(readOnly = true)
+	public List<MaterialResponse.MaterialHistory> getMaterialHistroyList(
+		Long projectId, String keyword, MaterialSort sort
+	) {
+		// 1. keyword 에 매칭되는 모든 material Info 조회
+		return materialInboundRepository.findByProjectAndKeyword(projectId, keyword, sort);
+	}
 }

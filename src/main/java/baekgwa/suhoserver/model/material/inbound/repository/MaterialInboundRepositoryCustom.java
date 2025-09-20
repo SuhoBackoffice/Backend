@@ -1,19 +1,22 @@
 package baekgwa.suhoserver.model.material.inbound.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
+import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
+import baekgwa.suhoserver.domain.material.type.MaterialSort;
 
 /**
  * PackageName : baekgwa.suhoserver.model.material.inbound.repository
- * FileName    : MaterialInboundRepository
+ * FileName    : MaterialInboundRepositoryCustom
  * Author      : Baekgwa
- * Date        : 2025-09-19
+ * Date        : 2025-09-20
  * Description : 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
- * 2025-09-19     Baekgwa               Initial creation
+ * 2025-09-20     Baekgwa               Initial creation
  */
-public interface MaterialInboundRepository extends JpaRepository<MaterialInboundEntity, Long>, MaterialInboundRepositoryCustom {
+public interface MaterialInboundRepositoryCustom {
+
+	List<MaterialResponse.MaterialHistory> findByProjectAndKeyword(Long projectId, String keyword, MaterialSort sort);
 }
