@@ -93,4 +93,14 @@ public class ProjectReadService {
 
 		return PageResponse.of(findData);
 	}
+
+	/**
+	 * 프로젝트에 할당된 분기레일의 종류 ID List 조회
+	 * @param projectId 프로젝트 PK
+	 * @return branchTypeIdList
+	 */
+	@Transactional(readOnly = true)
+	public List<Long> getBranchTypeIdList(Long projectId) {
+		return projectBranchRepository.findIdListByProjectId(projectId);
+	}
 }

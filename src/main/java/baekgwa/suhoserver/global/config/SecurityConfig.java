@@ -125,6 +125,9 @@ public class SecurityConfig {
 				.requestMatchers(POST, "/file").hasRole(STAFF.name())
 				.requestMatchers(DELETE, "/file").hasRole(STAFF.name())
 
+				// Material
+				.requestMatchers(GET, "/material/{projectId}").hasRole(USER.name())
+
 				.anyRequest().authenticated());
 
 		// ❗ 인증 Filter 추가

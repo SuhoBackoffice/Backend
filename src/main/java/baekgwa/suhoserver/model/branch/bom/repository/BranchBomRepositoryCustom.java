@@ -2,23 +2,20 @@ package baekgwa.suhoserver.model.branch.bom.repository;
 
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
-import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 
 /**
  * PackageName : baekgwa.suhoserver.model.branch.bom.repository
- * FileName    : BranchBomRepository
+ * FileName    : BranchBomRepositoryCustom
  * Author      : Baekgwa
- * Date        : 2025-08-05
+ * Date        : 2025-09-20
  * Description : 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
- * 2025-08-05     Baekgwa               Initial creation
+ * 2025-09-20     Baekgwa               Initial creation
  */
-public interface BranchBomRepository extends JpaRepository<BranchBomEntity, Long>, BranchBomRepositoryCustom {
+public interface BranchBomRepositoryCustom {
 
-	List<BranchBomEntity> findByBranchTypeEntity(BranchTypeEntity branchTypeEntity);
+	List<BranchBomEntity> searchBranchBomList(List<Long> findBranchTypeIdList, String keyword);
 }

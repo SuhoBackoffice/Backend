@@ -62,6 +62,9 @@ public enum SuccessCode {
 	UPLOAD_FILE_SUCCESS(HttpStatus.CREATED, "파일 업로드 완료"),
 	DELETE_FILE_SUCCESS(HttpStatus.OK, "파일 삭제 완료"),
 
+	// Material & Bom
+	GET_MATERIAL_FIND_LIST_SUCCESS(HttpStatus.OK, "자재 목록 조회 성공"),
+
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
 

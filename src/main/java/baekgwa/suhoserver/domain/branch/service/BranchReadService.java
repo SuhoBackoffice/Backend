@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import baekgwa.suhoserver.domain.material.dto.MaterialResponseDto;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
@@ -104,5 +105,23 @@ public class BranchReadService {
 
 		return findBranchTypeList.stream()
 			.collect(Collectors.toMap(BranchTypeEntity::getId, Function.identity()));
+	}
+
+	/**
+	 * 분기 타입 ID List 로, 전체 BomList 중, Keyword 에 일치하는 자재 목록을 반환
+	 * keyword 는, [도번, 자재 명]에서 검색
+	 * @param findBranchTypeIdList 분기 타입 ID List
+	 * @param keyword 검색 키워드
+	 * @return 찾은 BOM List
+	 */
+	@Transactional(readOnly = true)
+	public List<MaterialResponseDto.MaterialInfo> getAllBranchBomList(List<Long> findBranchTypeIdList, String keyword) {
+		// 1. 분기 타입 중, keyword 와 매칭되는 List 검색
+		List<BranchBomEntity> findBranchBomList = branchBomRepository.searchBranchBomList(findBranchTypeIdList, keyword);
+
+		// 2. DTO 응답
+		return findBranchBomList.stream()
+			.map(MaterialResponseDto.MaterialInfo::of)
+			.toList();
 	}
 }
