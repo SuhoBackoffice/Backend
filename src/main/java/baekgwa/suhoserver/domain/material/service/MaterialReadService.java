@@ -10,6 +10,7 @@ import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
 import baekgwa.suhoserver.model.material.inbound.repository.MaterialInboundRepository;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -49,5 +50,16 @@ public class MaterialReadService {
 		return findMaterialInboundList.stream()
 			.map(MaterialResponse.MaterialHistoryDetail::of)
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public MaterialResponse.ProjectMaterialState getMaterialState(
+		MaterialResponse.ProjectMaterialState projectMaterialState,
+		ProjectEntity findProject
+	) {
+		List<MaterialInboundEntity> findMaterialInboundList = materialInboundRepository.findByProject(findProject);
+		long inboundCount = findMaterialInboundList.stream().mapToLong(MaterialInboundEntity::getQuantity).sum();
+
+		return MaterialResponse.ProjectMaterialState.from(projectMaterialState, inboundCount);
 	}
 }

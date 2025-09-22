@@ -13,6 +13,7 @@ import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
+import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -66,5 +67,24 @@ public class MaterialFacade {
 		Long projectId, String keyword, LocalDate date
 	) {
 		return materialReadService.getMaterialHistoryDetail(projectId, keyword, date);
+	}
+
+	@Transactional(readOnly = true)
+	public MaterialResponse.ProjectMaterialState getProjectMaterialState(Long projectId) {
+		// 1. 프로젝트 정보 조회
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+
+		// 2. 프로젝트에 할당된 분기레일 정보 조회
+		List<ProjectBranchEntity> findProjectBranchList =
+			projectReadService.getProjectBranchInfoListOrThrow(findProject);
+		// 추후, 직선레일 관련된 BOM List 가 정비되고, 직선레일 또한 입/출고 관리를 진행한다면, 관련 내용 추가 필요
+
+		// 3. 분기레일 BOM 목록 조회
+		// 반환되는 자재는, 같은 것(도번)은 합쳐지고, 생산 목표 생산 수량과 생산 완료 수량에 영향을 받아 계산될 것
+		MaterialResponse.ProjectMaterialState findMaterialState =
+			branchReadService.getBranchBomList(findProjectBranchList);
+
+		// 4. 현재 입고 된 자재를 기반으로, 내용 추가
+		return materialReadService.getMaterialState(findMaterialState, findProject);
 	}
 }

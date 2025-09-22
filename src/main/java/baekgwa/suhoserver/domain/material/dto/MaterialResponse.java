@@ -1,5 +1,7 @@
 package baekgwa.suhoserver.domain.material.dto;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -82,6 +84,46 @@ public class MaterialResponse {
 				.drawingNumber(materialInbound.getDrawingNumber())
 				.itemName(materialInbound.getItemName())
 				.receivedAt(materialInbound.getCreatedAt())
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectMaterialState {
+		private final BigDecimal inboundPercent; // 입고 진행률
+		private final Long unitKindCount; // 자재 총 종류
+		private final Long totalCount; // 자재 총 수량
+		private final Long inboundCount; // 입고 총 수량
+		private final Long usedCount; // 제작에 사용 된 총 수량
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectMaterialState(BigDecimal inboundPercent, Long unitKindCount, Long totalCount, Long inboundCount,
+			Long usedCount) {
+			this.inboundPercent = inboundPercent;
+			this.unitKindCount = unitKindCount;
+			this.totalCount = totalCount;
+			this.inboundCount = inboundCount;
+			this.usedCount = usedCount;
+		}
+
+		public static ProjectMaterialState from(Long unitKindCount, Long totalCount, Long usedCount) {
+			return ProjectMaterialState
+				.builder()
+				.unitKindCount(unitKindCount)
+				.totalCount(totalCount)
+				.usedCount(usedCount)
+				.build();
+		}
+
+		public static ProjectMaterialState from(ProjectMaterialState materialState, Long inboundCount) {
+			return ProjectMaterialState
+				.builder()
+				.inboundPercent(BigDecimal.valueOf(inboundCount).multiply(BigDecimal.valueOf(100))
+					.divide(BigDecimal.valueOf(materialState.getTotalCount()), 1, RoundingMode.HALF_UP))
+				.unitKindCount(materialState.getUnitKindCount())
+				.totalCount(materialState.getTotalCount())
+				.inboundCount(inboundCount)
+				.usedCount(materialState.getUsedCount())
 				.build();
 		}
 	}

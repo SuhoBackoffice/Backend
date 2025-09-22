@@ -42,6 +42,17 @@ public class MaterialController {
 	private final MaterialFacade materialFacade;
 
 	@GetMapping("/{projectId}")
+	@Operation(summary = "현재 프로젝트 자재 현황 응답")
+	public BaseResponse<MaterialResponse.ProjectMaterialState> getProjectMaterialState(
+		@PathVariable("projectId") Long projectId
+	) {
+		MaterialResponse.ProjectMaterialState projectMaterialState =
+			materialFacade.getProjectMaterialState(projectId);
+
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_STATE_SUCCESS, projectMaterialState);
+	}
+
+	@GetMapping("/inbound/{projectId}")
 	@Operation(summary = "도번 혹은 품명과 일치하는 자재 정보 응답")
 	public BaseResponse<List<MaterialResponse.MaterialInfo>> getMaterialInfo(
 		@PathVariable("projectId") Long projectId,
@@ -52,7 +63,7 @@ public class MaterialController {
 		return BaseResponse.success(SuccessCode.GET_MATERIAL_FIND_LIST_SUCCESS, findMaterialInfoList);
 	}
 
-	@PostMapping("/{projectId}")
+	@PostMapping("/inbound/{projectId}")
 	@Operation(summary = "프로젝트에 자재 입고")
 	public BaseResponse<Void> postMaterialInbound(
 		@PathVariable("projectId") Long projectId,

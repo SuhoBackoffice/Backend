@@ -1,8 +1,11 @@
 package baekgwa.suhoserver.model.material.inbound.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 
 /**
  * PackageName : baekgwa.suhoserver.model.material.inbound.repository
@@ -16,4 +19,6 @@ import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
  * 2025-09-19     Baekgwa               Initial creation
  */
 public interface MaterialInboundRepository extends JpaRepository<MaterialInboundEntity, Long>, MaterialInboundRepositoryCustom {
+
+	List<MaterialInboundEntity> findByProject(ProjectEntity findProject);
 }
