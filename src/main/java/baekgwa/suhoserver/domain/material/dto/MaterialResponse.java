@@ -68,13 +68,15 @@ public class MaterialResponse {
 		private final String drawingNumber;
 		private final String itemName;
 		private final LocalDateTime receivedAt;
+		private final Long quantity;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialHistoryDetail(Long id, String drawingNumber, String itemName, LocalDateTime receivedAt) {
+		private MaterialHistoryDetail(Long id, String drawingNumber, String itemName, LocalDateTime receivedAt, Long quantity) {
 			this.id = id;
 			this.drawingNumber = drawingNumber;
 			this.itemName = itemName;
 			this.receivedAt = receivedAt;
+			this.quantity = quantity;
 		}
 
 		public static MaterialHistoryDetail of(MaterialInboundEntity materialInbound) {
@@ -84,6 +86,7 @@ public class MaterialResponse {
 				.drawingNumber(materialInbound.getDrawingNumber())
 				.itemName(materialInbound.getItemName())
 				.receivedAt(materialInbound.getCreatedAt())
+				.quantity(materialInbound.getQuantity())
 				.build();
 		}
 	}
