@@ -15,7 +15,9 @@ import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.facade.MaterialFacade;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.BaseResponse;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,8 +58,14 @@ public class MaterialController {
 	@Operation(summary = "도번 혹은 품명과 일치하는 자재 정보 응답")
 	public BaseResponse<List<MaterialResponse.MaterialInfo>> getMaterialInfo(
 		@PathVariable("projectId") Long projectId,
-		@RequestParam(value = "keyword", required = false, defaultValue = "") String keyword
+		@RequestParam(value = "keyword") String keyword
 	) {
+		// 1. keyword 검증 (keyword 는 2글자 이상부터 처리 및 null not permit)
+		if(keyword.length() < 2) {
+			throw new GlobalException(ErrorCode.INVALID_MATERIAL_KEYWORD_OVER_2);
+		}
+
+		// 2. 조회
 		List<MaterialResponse.MaterialInfo> findMaterialInfoList
 			= materialFacade.getMaterialList(projectId, keyword);
 		return BaseResponse.success(SuccessCode.GET_MATERIAL_FIND_LIST_SUCCESS, findMaterialInfoList);
