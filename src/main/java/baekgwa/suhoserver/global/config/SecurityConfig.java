@@ -125,6 +125,13 @@ public class SecurityConfig {
 				.requestMatchers(POST, "/file").hasRole(STAFF.name())
 				.requestMatchers(DELETE, "/file").hasRole(STAFF.name())
 
+				// Material
+				.requestMatchers(GET, "/material/{projectId}").hasRole(USER.name())
+				.requestMatchers(GET, "/material/inbound/{projectId}").hasRole(USER.name())
+				.requestMatchers(POST, "/material/inbound/{projectId}").hasRole(USER.name())
+				.requestMatchers(GET, "/material/history/{projectId}").hasRole(USER.name())
+				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(USER.name())
+
 				.anyRequest().authenticated());
 
 		// ❗ 인증 Filter 추가

@@ -62,6 +62,13 @@ public enum SuccessCode {
 	UPLOAD_FILE_SUCCESS(HttpStatus.CREATED, "파일 업로드 완료"),
 	DELETE_FILE_SUCCESS(HttpStatus.OK, "파일 삭제 완료"),
 
+	// Material & Bom
+	GET_MATERIAL_FIND_LIST_SUCCESS(HttpStatus.OK, "자재 목록 조회 성공"),
+	POST_MATERIAL_INBOUND_UPDATE_SUCCESS(HttpStatus.CREATED, "자재 입고 등록 완료"),
+	GET_MATERIAL_HISTORY_LIST_SUCCESS(HttpStatus.OK, "자재 입고 이력 목록 불러오기 성공"),
+	GET_MATERIAL_HISTORY_DETAIL_SUCCESS(HttpStatus.OK, "자재 입고 이력 상세 불러오기 성공"),
+	GET_MATERIAL_STATE_SUCCESS(HttpStatus.OK, "프로젝트 자재 현황 로드 성공"),
+
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");
 

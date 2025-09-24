@@ -54,7 +54,7 @@ public enum ErrorCode {
 		"이미 동일한 분기레일이 존재합니다. 변경이 필요하다면 수정/삭제 기능을 사용해 주세요."),
 	CREATE_QUANTITY_LIST_BRANCH_BOM_VALID_FAIL(HttpStatus.BAD_REQUEST, "5008", "프로젝트 BOM List 생성 실패. 관리자에게 문의해 주세요."),
 
-	// Straight : 6000 ~ 69999
+	// Straight : 6000 ~ 6999
 	DUPLICATE_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),
 	NOT_FOUND_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6001", "레일 타입 정보를 찾을 수 없습니다."),
 	INVALID_LOOP_RAIL_TYPE_DATA(HttpStatus.BAD_REQUEST, "6002", "루프 레일에 일반 레일 타입이 들어가있습니다."),
@@ -62,6 +62,9 @@ public enum ErrorCode {
 	NOT_MATCH_STRAIGHT_NORMAL_TYPE(HttpStatus.BAD_REQUEST, "6003", "일부 데이터가 루프 레일인데, 일반 레일 타입으로 지정되었습니다."),
 	NOT_EXIST_STRAIGHT_TYPE(HttpStatus.BAD_REQUEST, "6004", "존재하지 않는 직선레일 타입 입니다."),
 	INVALID_STRAIGHT_RAIL_LENGTH(HttpStatus.BAD_REQUEST, "6005", "유효하지 않은 직선레일 길이입니다. 3600 이하만 허용됩니다."),
+
+	// Material : 7000 ~ 7999
+	INVALID_MATERIAL_KEYWORD_OVER_2(HttpStatus.BAD_REQUEST, "7000", "키워드는 2글자 이상이어야 합니다."),
 
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
