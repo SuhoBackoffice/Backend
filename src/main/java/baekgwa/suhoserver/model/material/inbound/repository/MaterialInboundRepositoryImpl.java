@@ -47,8 +47,8 @@ public class MaterialInboundRepositoryImpl implements MaterialInboundRepositoryC
 		// 1. select 절
 		DateTemplate<Date> dayExpr = Expressions.dateTemplate(Date.class, "date({0})",
 			materialInbound.createdAt);
-		NumberExpression<Long> cntExpr =
-			materialInbound.id.count();
+		NumberExpression<Long> cntExpr = materialInbound.id.count();
+		NumberExpression<Long> sumQuantityExpr = materialInbound.quantity.sum();
 
 		// 2. where 절
 		BooleanBuilder whereCondition = createMaterialHistoryWhereCondition(keyword, projectId);
@@ -57,7 +57,7 @@ public class MaterialInboundRepositoryImpl implements MaterialInboundRepositoryC
 		OrderSpecifier<Date> orderBySpec = createMaterialHistoryOrderBySpec(sort, dayExpr);
 
 		List<Tuple> findData = queryFactory
-			.select(dayExpr, cntExpr)
+			.select(dayExpr, cntExpr, sumQuantityExpr)
 			.from(materialInbound)
 			.where(whereCondition)
 			.groupBy(dayExpr)
@@ -67,7 +67,8 @@ public class MaterialInboundRepositoryImpl implements MaterialInboundRepositoryC
 		return findData.stream()
 			.map(tuple -> MaterialResponse.MaterialHistory.of(
 				Objects.requireNonNull(tuple.get(dayExpr)).toLocalDate(),
-				tuple.get(cntExpr)
+				tuple.get(cntExpr),
+				tuple.get(sumQuantityExpr)
 			))
 			.toList();
 	}

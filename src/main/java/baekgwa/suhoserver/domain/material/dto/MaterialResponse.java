@@ -49,16 +49,18 @@ public class MaterialResponse {
 	@Getter
 	public static class MaterialHistory {
 		private final LocalDate date;
-		private final Long count;
+		private final Long kindCount;
+		private final Long totalCount;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialHistory(LocalDate date, Long count) {
+		public MaterialHistory(LocalDate date, Long kindCount, Long totalCount) {
 			this.date = date;
-			this.count = count;
+			this.kindCount = kindCount;
+			this.totalCount = totalCount;
 		}
 
-		public static MaterialHistory of(LocalDate date, Long count) {
-			return MaterialHistory.builder().date(date).count(count).build();
+		public static MaterialHistory of(LocalDate date, Long kindCount, Long totalCount) {
+			return MaterialHistory.builder().date(date).kindCount(kindCount).totalCount(totalCount).build();
 		}
 	}
 
