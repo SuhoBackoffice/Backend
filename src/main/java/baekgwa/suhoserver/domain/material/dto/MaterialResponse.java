@@ -28,11 +28,13 @@ public class MaterialResponse {
 
 	@Getter
 	public static class MaterialInfo {
+		private final Long id;
 		private final String drawingNumber;
 		private final String itemName;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialInfo(String drawingNumber, String itemName) {
+		private MaterialInfo(String drawingNumber, String itemName, Long id) {
+			this.id = id;
 			this.drawingNumber = drawingNumber;
 			this.itemName = itemName;
 		}
@@ -40,6 +42,7 @@ public class MaterialResponse {
 		public static MaterialInfo of(BranchBomEntity branchBomEntity) {
 			return MaterialInfo
 				.builder()
+				.id(branchBomEntity.getId())
 				.drawingNumber(branchBomEntity.getDrawingNumber())
 				.itemName(branchBomEntity.getItemName())
 				.build();
