@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.branch.service.BranchReadService;
+import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectBomService;
@@ -52,6 +53,8 @@ public class ProjectFacade {
 
 	private final StraightReadService straightReadService;
 	private final StraightWriteService straightWriteService;
+
+	private final MaterialReadService materialReadService;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -193,5 +196,17 @@ public class ProjectFacade {
 
 		// 2. 프로젝트 물량 리스트 생성
 		return projectBomService.getProjectQuantityList(findProject);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.ProjectBranchCapacity> getProjectBranchCapacity(Long projectId) {
+		// 1. 프로젝트에 입고된 자재 목록 조회 (Map)
+		Map<String, Long> inboundedMaterialMap = materialReadService.getAllProjectMaterial(projectId);
+
+		// 2. 프로젝트에 할당된 분기레일 종류 조회 (수량포함 목적 Entity)
+		List<ProjectBranchEntity> projectBranchList = projectReadService.getBranchTypeList(projectId);
+
+		// 3. 분기레일별로 생산 가능량 조회
+		return branchReadService.getBranchCapacity(inboundedMaterialMap, projectBranchList);
 	}
 }

@@ -2,8 +2,10 @@ package baekgwa.suhoserver.domain.project.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
+import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
@@ -238,6 +240,76 @@ public class ProjectResponse {
 		public ProjectQuantityList(byte[] excelBytes, String fileName) {
 			this.excelBytes = excelBytes;
 			this.fileName = fileName;
+		}
+	}
+
+	@Getter
+	public static class ProjectBranchCapacity {
+		private final String imageUrl;
+		private final Long branchTypeId;
+		private final String code;
+		private final String name;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final Long capacity;
+		private final List<BranchBomShortage> branchBomShortageList;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectBranchCapacity(String imageUrl, Long branchTypeId, String code, String name, Long totalQuantity,
+			Long completedQuantity, Long capacity, List<BranchBomShortage> branchBomShortageList
+		) {
+			this.imageUrl = imageUrl;
+			this.branchTypeId = branchTypeId;
+			this.code = code;
+			this.name = name;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.capacity = capacity;
+			this.branchBomShortageList = branchBomShortageList;
+		}
+
+		public static ProjectBranchCapacity of(ProjectBranchEntity pb, long capacity, List<BranchBomShortage> branchBomShortageList) {
+			return ProjectBranchCapacity.builder()
+				.imageUrl(pb.getBranchType().getImageUrl())
+				.branchTypeId(pb.getBranchType().getId())
+				.code(pb.getBranchType().getCode())
+				.name(pb.getBranchType().getName())
+				.totalQuantity(pb.getTotalQuantity())
+				.completedQuantity(pb.getCompletedQuantity())
+				.capacity(capacity)
+				.branchBomShortageList(branchBomShortageList)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class BranchBomShortage {
+		private final String drawingNumber;
+		private final String itemName;
+		private final Long shortage; // 부족 수량
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private BranchBomShortage(String drawingNumber, String itemName, Long shortage) {
+			this.drawingNumber = drawingNumber;
+			this.itemName = itemName;
+			this.shortage = shortage;
+		}
+
+		public static BranchBomShortage of(BranchBomEntity bom, long available, long remainingTarget) {
+			long unit = (bom.getUnitQuantity() == null ? 0L : bom.getUnitQuantity());
+			if (unit <= 0L) return null;
+
+			// 목표 세트 수량 달성에 필요한 총 자재량
+			long requiredTotal = unit * remainingTarget;
+			long shortage = Math.max(0L, requiredTotal - available);
+
+			if (shortage == 0L) return null;
+
+			return BranchBomShortage.builder()
+				.drawingNumber(bom.getDrawingNumber())
+				.itemName(bom.getItemName())
+				.shortage(shortage)
+				.build();
 		}
 	}
 }

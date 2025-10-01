@@ -57,6 +57,7 @@ public enum SuccessCode {
 	PATCH_PROJECT_STRAIGHT_SUCCESS(HttpStatus.OK, "프로젝트 직선레일 수정 완료"),
 	DELETE_PROJECT_BRANCH_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 삭제 완료"),
 	PATCH_PROJECT_BRANCH_SUCCESS(HttpStatus.OK, "프로젝트 분기레일 수정 완료"),
+	GET_PROJECT_BRANCH_CAPACITY(HttpStatus.OK, "분기레일 생산 가능 수량 조회 성공"),
 
 	// File Uploader
 	UPLOAD_FILE_SUCCESS(HttpStatus.CREATED, "파일 업로드 완료"),

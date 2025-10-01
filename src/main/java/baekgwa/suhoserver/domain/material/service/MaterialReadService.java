@@ -2,6 +2,8 @@ package baekgwa.suhoserver.domain.material.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,5 +63,19 @@ public class MaterialReadService {
 		long inboundCount = findMaterialInboundList.stream().mapToLong(MaterialInboundEntity::getQuantity).sum();
 
 		return MaterialResponse.ProjectMaterialState.from(projectMaterialState, inboundCount);
+	}
+
+	/**
+	 * 프로젝트에 입고된 모든 자재 조회 후, 도번 기준으로 수량 정리
+	 * @param projectId 프로젝트 PK
+	 * @return Map<도번, 수량>
+	 */
+	public Map<String, Long> getAllProjectMaterial(Long projectId) {
+		List<MaterialInboundEntity> findMaterialList = materialInboundRepository.findByProjectId(projectId);
+		return findMaterialList.stream()
+			.collect(Collectors.groupingBy(
+				MaterialInboundEntity::getDrawingNumber,
+				Collectors.summingLong(MaterialInboundEntity::getQuantity)
+			));
 	}
 }

@@ -193,4 +193,14 @@ public class ProjectController {
 			.headers(headers)
 			.body(response.getExcelBytes());
 	}
+
+	@GetMapping("/{projectId}/branch/capacity")
+	@Operation(summary = "프로젝트의 분기레일의 생산 가능한 수량 확인")
+	public BaseResponse<List<ProjectResponse.ProjectBranchCapacity>> getProjectBranchCapacity(
+		@PathVariable("projectId") Long projectId
+	) {
+		List<ProjectResponse.ProjectBranchCapacity> projectBranchCapacityList =
+			projectFacade.getProjectBranchCapacity(projectId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_BRANCH_CAPACITY, projectBranchCapacityList);
+	}
 }
