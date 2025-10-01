@@ -1,9 +1,11 @@
 package baekgwa.suhoserver.domain.branch.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
+import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
@@ -175,5 +178,112 @@ public class BranchReadService {
 
 		// 4) 이 메서드 역할은 3가지만 채우고 나머지는 파사드에서 with로 덧씌움
 		return MaterialResponse.ProjectMaterialState.from(unitKindCount, totalCount, usedCount);
+	}
+
+	/**
+	 * 각 분기레일의 케파시티를 계산해서 반환
+	 * @param inboundedMaterialMap 프로젝트에 입고된 자재 목록 (사용하였더라도, 수량은 들어가있음)
+	 * @param projectBranchList 프로젝트에 할당된 분기레일 리스트
+	 * @return List<ProjectResponse.ProjectBranchCapacity>
+	 */
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.ProjectBranchCapacity> getBranchCapacity(
+		Map<String, Long> inboundedMaterialMap, List<ProjectBranchEntity> projectBranchList
+	) {
+		// 1. 분기레일에 할당된 BOM List 조회
+		List<Long> branchTypeIdList = projectBranchList.stream()
+			.map(pb -> pb.getBranchType().getId())
+			.distinct()
+			.toList();
+		List<BranchBomEntity> branchBomList = branchBomRepository.findAllByBranchTypeIds(branchTypeIdList);
+
+		// 2. inboundedMaterialMap 정리
+		// 현재, 사용 완료한 수량도 포함되어 있기 때문에, 사용한 갯수는 차감 필요.
+		Map<String, Long> availableMaterialMap =
+			calcAvailableInboundMaterialMap(inboundedMaterialMap, projectBranchList, branchBomList);
+
+		// 3. 분기 타입별로 BOM 그룹핑
+		Map<Long, List<BranchBomEntity>> bomListByTypeMap = branchBomList.stream()
+			.collect(Collectors.groupingBy(b -> b.getBranchTypeEntity().getId()));
+
+		return projectBranchList.stream()
+			.map(pb -> {
+				long remainingTarget = Math.max(0L, pb.getTotalQuantity() - pb.getCompletedQuantity());
+				List<BranchBomEntity> need = bomListByTypeMap.get(pb.getBranchType().getId());
+
+				if (remainingTarget == 0L || need.isEmpty()) {
+					return ProjectResponse.ProjectBranchCapacity.of(pb, 0L, List.of());
+				}
+
+				long calcCapacity = need.stream()
+					.mapToLong(bom -> {
+						Long unit = bom.getUnitQuantity();
+						long avail = availableMaterialMap.getOrDefault(bom.getDrawingNumber(), 0L);
+						return avail / unit;
+					})
+					.min()
+					.orElse(0L);
+
+				long finalCapacity = Math.min(calcCapacity, remainingTarget);
+
+				// 4-2) 병목 리스트 산출 (각 항목별 상세)
+				List<ProjectResponse.BranchBomShortage> branchBomShortageList = need.stream()
+					.map(b -> {
+						long avail = availableMaterialMap.getOrDefault(b.getDrawingNumber(), 0L);
+						return ProjectResponse.BranchBomShortage.of(b, avail, remainingTarget);
+					})
+					.filter(Objects::nonNull)
+					.toList();
+
+				return ProjectResponse.ProjectBranchCapacity.of(pb, finalCapacity, branchBomShortageList);
+			})
+			.sorted(
+				Comparator
+					.comparing(
+						ProjectResponse.ProjectBranchCapacity::getCode,
+						Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+					)
+					.thenComparing(ProjectResponse.ProjectBranchCapacity::getBranchTypeId,
+						Comparator.nullsLast(Comparator.naturalOrder()))
+			)
+			.toList();
+	}
+
+	private Map<String, Long> calcAvailableInboundMaterialMap(
+		Map<String, Long> inboundedMaterialMap,
+		List<ProjectBranchEntity> projectBranchList,
+		List<BranchBomEntity> branchBomList
+	) {
+		// 1. 분기 타입별, 완료된 수량 추출
+		Map<Long, Long> completedByBranchTypeId = projectBranchList.stream()
+			.collect(Collectors.groupingBy(
+				pb -> pb.getBranchType().getId(),
+				Collectors.summingLong(ProjectBranchEntity::getCompletedQuantity)
+			));
+
+		// 1-1. 완료된게 없다면, 바로 return. 사용한게 없는 케이스
+		if (completedByBranchTypeId.isEmpty()) {
+			return inboundedMaterialMap;
+		}
+
+		// 2. 사용된 자재 수량 합산, <DrawingNumber, 사용된 수량>
+		Map<String, Long> usedByDrawing = branchBomList.stream()
+			.filter(bom -> completedByBranchTypeId.containsKey(bom.getBranchTypeEntity().getId()))
+			.collect(Collectors.groupingBy(
+				BranchBomEntity::getDrawingNumber,
+				Collectors.summingLong(bom ->
+					bom.getUnitQuantity() * completedByBranchTypeId.getOrDefault(bom.getBranchTypeEntity().getId(), 0L)
+				)
+			));
+
+		// 3. 사용된만큼 차감 진행. 다 사용한 경우(x <= 0) 삭제 처리
+		return inboundedMaterialMap.entrySet().stream()
+			.map(e -> {
+				long used = usedByDrawing.getOrDefault(e.getKey(), 0L);
+				long remain = e.getValue() - used;
+				return Map.entry(e.getKey(), remain);
+			})
+			.filter(e -> e.getValue() > 0) // 1개 이상만 처리
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 }

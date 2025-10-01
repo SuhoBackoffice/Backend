@@ -3,6 +3,8 @@ package baekgwa.suhoserver.model.material.inbound.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -21,4 +23,7 @@ import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 public interface MaterialInboundRepository extends JpaRepository<MaterialInboundEntity, Long>, MaterialInboundRepositoryCustom {
 
 	List<MaterialInboundEntity> findByProject(ProjectEntity findProject);
+
+	@Query("SELECT m FROM MaterialInboundEntity m WHERE m.project.id = :projectId")
+	List<MaterialInboundEntity> findByProjectId(@Param("projectId") Long projectId);
 }

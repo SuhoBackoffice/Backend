@@ -30,4 +30,7 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 
 	@Query("SELECT pb.branchType.id FROM ProjectBranchEntity pb WHERE pb.project.id = :projectId ORDER BY pb.id ASC")
 	List<Long> findIdListByProjectId(@Param("projectId") Long projectId);
+
+	@Query("SELECT pb FROM ProjectBranchEntity pb WHERE pb.project.id = :projectId")
+	List<ProjectBranchEntity> findByProjectId(@Param("projectId") Long projectId);
 }
