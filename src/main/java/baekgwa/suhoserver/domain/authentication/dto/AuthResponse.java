@@ -1,6 +1,8 @@
 package baekgwa.suhoserver.domain.authentication.dto;
 
+import baekgwa.suhoserver.model.user.entity.UserEntity;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,15 +21,24 @@ import lombok.NoArgsConstructor;
 public class AuthResponse {
 
 	@Getter
-	public static class LoginResponse {
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class LoginDto {
 		private final String accessToken;
+		private final LoginResponse loginResponse;
 
-		private LoginResponse(String accessToken) {
-			this.accessToken = accessToken;
+		public static LoginDto from(String accessToken, LoginResponse loginResponse) {
+			return new LoginDto(accessToken, loginResponse);
 		}
+	}
 
-		public static LoginResponse from(String accessToken) {
-			return new LoginResponse(accessToken);
+	@Getter
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class LoginResponse {
+		private final String username;
+		private final String role;
+
+		public static LoginResponse of(UserEntity user) {
+			return new LoginResponse(user.getUsername(), user.getRole().name());
 		}
 	}
 }

@@ -33,11 +33,11 @@ public class AuthService {
 	private final JwtUtil jwtUtil;
 
 	@Transactional(readOnly = true)
-	public AuthResponse.LoginResponse login(AuthRequest.LoginDto loginDto) {
+	public AuthResponse.LoginDto login(AuthRequest.LoginDto loginDto) {
 
 		// 1. 사용자 정보 조회
-		UserEntity findUser = userRepository.findByLoginId(loginDto.getLoginId()).orElseThrow(
-			() -> new GlobalException(ErrorCode.INVALID_LOGIN_INFO));
+		UserEntity findUser = userRepository.findByLoginId(loginDto.getLoginId())
+			.orElseThrow(() -> new GlobalException(ErrorCode.INVALID_LOGIN_INFO));
 
 		// 2. 패스워드 검증
 		if (!passwordEncoder.matches(loginDto.getPassword(), findUser.getPassword())) {
@@ -48,6 +48,7 @@ public class AuthService {
 		String accessToken = jwtUtil.createJwt(findUser.getId(), findUser.getRole());
 
 		// 4. 반환
-		return AuthResponse.LoginResponse.from(accessToken);
+		AuthResponse.LoginResponse loginResponse = AuthResponse.LoginResponse.of(findUser);
+		return AuthResponse.LoginDto.from(accessToken, loginResponse);
 	}
 }

@@ -43,23 +43,32 @@ public class AuthController {
 
 	@PostMapping("/login")
 	@Operation(summary = "로그인")
-	public BaseResponse<Void> login(
-		@Valid @RequestBody AuthRequest.LoginDto loginDto,
+	public BaseResponse<AuthResponse.LoginResponse> login(
+		@Valid @RequestBody AuthRequest.LoginDto request,
 		HttpServletResponse response
 	) {
-		AuthResponse.LoginResponse loginResponse = authService.login(loginDto);
+		AuthResponse.LoginDto loginDto = authService.login(request);
 		ResponseUtil.addCookie(
 			response,
 			ACCESS_TOKEN_COOKIE_NAME,
-			loginResponse.getAccessToken(),
+			loginDto.getAccessToken(),
 			jwtProperties.getTokenExpirationMin().intValue() * 60);
-		return BaseResponse.success(SuccessCode.LOGIN_SUCCESS);
+
+		// 회원 정보 (Role) 값의 유효 기간은 로그인 정보와 동일하게 관리
+		ResponseUtil.addCookie(
+			response,
+			COOKIE_USER_ROLE,
+			loginDto.getLoginResponse().getRole(),
+			jwtProperties.getTokenExpirationMin().intValue() * 60);
+
+		return BaseResponse.success(SuccessCode.LOGIN_SUCCESS, loginDto.getLoginResponse());
 	}
 
 	@PostMapping("/logout")
 	@Operation(summary = "로그아웃")
 	public BaseResponse<Void> logout(HttpServletResponse response) {
 		ResponseUtil.removeCookie(response, ACCESS_TOKEN_COOKIE_NAME);
+		ResponseUtil.removeCookie(response, COOKIE_USER_ROLE);
 		return BaseResponse.success(SuccessCode.LOGOUT_SUCCESS);
 	}
 
