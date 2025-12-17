@@ -21,15 +21,13 @@ import lombok.NoArgsConstructor;
 public class AuthResponse {
 
 	@Getter
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class LoginDto {
 		private final String accessToken;
+		private final LoginResponse loginResponse;
 
-		private LoginDto(String accessToken) {
-			this.accessToken = accessToken;
-		}
-
-		public static LoginDto from(String accessToken) {
-			return new LoginDto(accessToken);
+		public static LoginDto from(String accessToken, LoginResponse loginResponse) {
+			return new LoginDto(accessToken, loginResponse);
 		}
 	}
 

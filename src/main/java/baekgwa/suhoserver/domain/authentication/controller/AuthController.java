@@ -43,17 +43,18 @@ public class AuthController {
 
 	@PostMapping("/login")
 	@Operation(summary = "로그인")
-	public BaseResponse<Void> login(
-		@Valid @RequestBody AuthRequest.LoginDto loginDto,
+	public BaseResponse<AuthResponse.LoginResponse> login(
+		@Valid @RequestBody AuthRequest.LoginDto request,
 		HttpServletResponse response
 	) {
-		AuthResponse.LoginDto loginResponse = authService.login(loginDto);
+		AuthResponse.LoginDto loginDto = authService.login(request);
 		ResponseUtil.addCookie(
 			response,
 			ACCESS_TOKEN_COOKIE_NAME,
-			loginResponse.getAccessToken(),
+			loginDto.getAccessToken(),
 			jwtProperties.getTokenExpirationMin().intValue() * 60);
-		return BaseResponse.success(SuccessCode.LOGIN_SUCCESS);
+
+		return BaseResponse.success(SuccessCode.LOGIN_SUCCESS, loginDto.getLoginResponse());
 	}
 
 	@PostMapping("/logout")
