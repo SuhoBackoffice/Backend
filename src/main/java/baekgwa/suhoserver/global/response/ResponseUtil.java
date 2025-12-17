@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ResponseUtil {
 
-	private static final String COOKIE_DOMAIN = ".suhotech.co.kr";
+	private static final String COOKIE_DOMAIN = "suhotech.co.kr";
 
 	public static void addCookie(HttpServletResponse response, String name, String value, int maxAgeSeconds, boolean isProd) {
 		Cookie cookie = new Cookie(name, value);
