@@ -2,6 +2,9 @@ package baekgwa.suhoserver.domain.authentication.controller;
 
 import static baekgwa.suhoserver.global.security.constant.JwtConstant.*;
 
+import java.util.Arrays;
+
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +43,7 @@ public class AuthController {
 
 	private final AuthService authService;
 	private final JwtProperties jwtProperties;
+	private final Environment environment;
 
 	@PostMapping("/login")
 	@Operation(summary = "로그인")
@@ -52,14 +56,18 @@ public class AuthController {
 			response,
 			ACCESS_TOKEN_COOKIE_NAME,
 			loginDto.getAccessToken(),
-			jwtProperties.getTokenExpirationMin().intValue() * 60);
+			jwtProperties.getTokenExpirationMin().intValue() * 60,
+			isProdProfile()
+		);
 
 		// 회원 정보 (Role) 값의 유효 기간은 로그인 정보와 동일하게 관리
 		ResponseUtil.addCookie(
 			response,
 			COOKIE_USER_ROLE,
 			loginDto.getLoginResponse().getRole(),
-			jwtProperties.getTokenExpirationMin().intValue() * 60);
+			jwtProperties.getTokenExpirationMin().intValue() * 60,
+			isProdProfile()
+		);
 
 		return BaseResponse.success(SuccessCode.LOGIN_SUCCESS, loginDto.getLoginResponse());
 	}
@@ -67,8 +75,8 @@ public class AuthController {
 	@PostMapping("/logout")
 	@Operation(summary = "로그아웃")
 	public BaseResponse<Void> logout(HttpServletResponse response) {
-		ResponseUtil.removeCookie(response, ACCESS_TOKEN_COOKIE_NAME);
-		ResponseUtil.removeCookie(response, COOKIE_USER_ROLE);
+		ResponseUtil.removeCookie(response, ACCESS_TOKEN_COOKIE_NAME, isProdProfile());
+		ResponseUtil.removeCookie(response, COOKIE_USER_ROLE, isProdProfile());
 		return BaseResponse.success(SuccessCode.LOGOUT_SUCCESS);
 	}
 
@@ -88,5 +96,9 @@ public class AuthController {
 	@Operation(summary = "로그인 유무 확인")
 	public BaseResponse<Void> isLogin() {
 		return BaseResponse.success(SuccessCode.REQUEST_SUCCESS);
+	}
+
+	private boolean isProdProfile() {
+		return Arrays.asList(environment.getActiveProfiles()).contains("prod");
 	}
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,6 +42,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 	private final ObjectMapper objectMapper;
+	private final Environment environment;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -69,7 +71,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 			// expired 되었다면, 로그인 만료 응답 진행
 			ResponseUtil.errorResponse(response, ErrorCode.EXPIRED_INVALID_TOKEN, objectMapper);
 			// 혹시 모를 쿠키 token 쿠키 삭제 처리
-			ResponseUtil.removeCookie(response, ACCESS_TOKEN_COOKIE_NAME);
+			ResponseUtil.removeCookie(response, ACCESS_TOKEN_COOKIE_NAME, isProdProfile());
 			return;
 		}
 
@@ -85,5 +87,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
 		// 6. 완료 후, 다음 filter 로 이동
 		filterChain.doFilter(request, response);
+	}
+
+	private boolean isProdProfile() {
+		return Arrays.asList(environment.getActiveProfiles()).contains("prod");
 	}
 }
