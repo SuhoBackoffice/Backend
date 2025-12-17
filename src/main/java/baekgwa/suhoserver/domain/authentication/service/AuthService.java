@@ -33,7 +33,7 @@ public class AuthService {
 	private final JwtUtil jwtUtil;
 
 	@Transactional(readOnly = true)
-	public AuthResponse.LoginResponse login(AuthRequest.LoginDto loginDto) {
+	public AuthResponse.LoginDto login(AuthRequest.LoginDto loginDto) {
 
 		// 1. 사용자 정보 조회
 		UserEntity findUser = userRepository.findByLoginId(loginDto.getLoginId()).orElseThrow(
@@ -48,6 +48,6 @@ public class AuthService {
 		String accessToken = jwtUtil.createJwt(findUser.getId(), findUser.getRole());
 
 		// 4. 반환
-		return AuthResponse.LoginResponse.from(accessToken);
+		return AuthResponse.LoginDto.from(accessToken);
 	}
 }

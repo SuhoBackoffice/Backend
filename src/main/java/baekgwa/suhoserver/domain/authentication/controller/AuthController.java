@@ -47,7 +47,7 @@ public class AuthController {
 		@Valid @RequestBody AuthRequest.LoginDto loginDto,
 		HttpServletResponse response
 	) {
-		AuthResponse.LoginResponse loginResponse = authService.login(loginDto);
+		AuthResponse.LoginDto loginResponse = authService.login(loginDto);
 		ResponseUtil.addCookie(
 			response,
 			ACCESS_TOKEN_COOKIE_NAME,
