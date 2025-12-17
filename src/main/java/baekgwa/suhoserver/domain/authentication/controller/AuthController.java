@@ -54,6 +54,12 @@ public class AuthController {
 			loginDto.getAccessToken(),
 			jwtProperties.getTokenExpirationMin().intValue() * 60);
 
+		ResponseUtil.addCookie(
+			response,
+			COOKIE_USER_ROLE,
+			loginDto.getLoginResponse().getRole(),
+			jwtProperties.getTokenExpirationMin().intValue() * 60);
+
 		return BaseResponse.success(SuccessCode.LOGIN_SUCCESS, loginDto.getLoginResponse());
 	}
 

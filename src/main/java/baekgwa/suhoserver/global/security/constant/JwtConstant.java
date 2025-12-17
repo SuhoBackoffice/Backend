@@ -20,4 +20,5 @@ public class JwtConstant {
 	public static final String CLAIM_KEY_USER_ID = "id";
 
 	public static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
+	public static final String COOKIE_USER_ROLE = "userRole";
 }
