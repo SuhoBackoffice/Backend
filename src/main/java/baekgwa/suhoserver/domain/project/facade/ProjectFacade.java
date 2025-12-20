@@ -209,4 +209,9 @@ public class ProjectFacade {
 		// 3. 분기레일별로 생산 가능량 조회
 		return branchReadService.getBranchCapacity(inboundedMaterialMap, projectBranchList);
 	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.OnGoingProjectInfo> getOnGoingProjectInfo() {
+		return projectReadService.getOnGoingProjectInfoList();
+	}
 }

@@ -41,7 +41,7 @@ public class UserService {
 
 		// 2. 새로운 회원 데이터 생성
 		UserEntity newUser = UserEntity.createNewUser(signupDto.getLoginId(),
-			passwordEncoder.encode(signupDto.getPassword()), signupDto.getUsername(), UserRole.USER);
+			passwordEncoder.encode(signupDto.getPassword()), signupDto.getUsername(), UserRole.WORKER);
 
 		// 3. 데이터 저장
 		userRepository.save(newUser);

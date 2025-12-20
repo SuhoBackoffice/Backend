@@ -113,4 +113,10 @@ public class ProjectReadService {
 	public List<ProjectBranchEntity> getBranchTypeList(Long projectId) {
 		return projectBranchRepository.findByProjectId(projectId);
 	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.OnGoingProjectInfo> getOnGoingProjectInfoList() {
+		return projectRepository.findOnGoingProjectList()
+			.stream().map(ProjectResponse.OnGoingProjectInfo::of).toList();
+	}
 }

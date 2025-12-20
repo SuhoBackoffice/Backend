@@ -203,4 +203,13 @@ public class ProjectController {
 			projectFacade.getProjectBranchCapacity(projectId);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_BRANCH_CAPACITY, projectBranchCapacityList);
 	}
+
+	@GetMapping("/ongoing")
+	@Operation(summary = "현재 진행중인 프로젝트 목록")
+	public BaseResponse<List<ProjectResponse.OnGoingProjectInfo>> getOnGoingProjectList() {
+
+		List<ProjectResponse.OnGoingProjectInfo> response = projectFacade.getOnGoingProjectInfo();
+
+		return BaseResponse.success(SuccessCode.GET_ON_GOING_PROJECT_INFO, response);
+	}
 }

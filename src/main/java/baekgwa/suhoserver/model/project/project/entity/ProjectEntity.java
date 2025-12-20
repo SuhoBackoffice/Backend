@@ -77,5 +77,4 @@ public class ProjectEntity extends TemporalEntity {
 			.endDate(endDate)
 			.build();
 	}
-
 }

@@ -1,9 +1,12 @@
 package baekgwa.suhoserver.model.project.project.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 
 /**
  * PackageName : baekgwa.suhoserver.model.project.project.repository
@@ -19,4 +22,6 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 public interface ProjectRepositoryCustom {
 
 	Page<ProjectResponse.ProjectInfo> searchProjectList(ProjectRequest.GetProjectInfo dto);
+
+	List<ProjectEntity> findOnGoingProjectList();
 }
