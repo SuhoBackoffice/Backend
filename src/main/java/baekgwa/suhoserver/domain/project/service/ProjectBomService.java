@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.infra.download.ImageDownloader;
 import baekgwa.suhoserver.infra.excel.util.ExcelMerges;
@@ -423,8 +424,11 @@ public class ProjectBomService {
 				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
 				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
 				r.createCell(STRAIGHT_COL_PROC).setCellValue(String.valueOf(e.getStraightInfo().getHolePosition()));
-				r.createCell(STRAIGHT_COL_NUM)
-					.setCellValue("LR-" + e.getLength() + "-" + e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_NUM).setCellValue(ProductSerialFactory.generateStraightSerial(
+					e.getLength(),
+					e.getIsLoopRail(),
+					e.getStraightType().getType()
+				));
 				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
 				r.createCell(6).setCellValue(toDouble(e.getStraightInfo().getLitzwire1()));
 				r.createCell(7).setCellValue(toDouble(e.getStraightInfo().getLitzwire2()));
@@ -484,8 +488,11 @@ public class ProjectBomService {
 				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
 				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
 				r.createCell(STRAIGHT_COL_PROC).setCellValue("");
-				r.createCell(STRAIGHT_COL_NUM)
-					.setCellValue("SR-" + e.getLength() + "-" + e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_NUM).setCellValue(ProductSerialFactory.generateStraightSerial(
+					e.getLength(),
+					e.getIsLoopRail(),
+					e.getStraightType().getType()
+				));
 				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
 				r.createCell(6).setCellValue(toDouble(e.getStraightInfo().getLitzwire1()));
 				r.createCell(7).setCellValue(toDouble(e.getStraightInfo().getLitzwire2()));
