@@ -1,4 +1,4 @@
-package baekgwa.suhoserver.model.project.straight.entity;
+package baekgwa.suhoserver.model.project.straight.straight.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -19,11 +19,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * PackageName : baekgwa.suhoserver.model.project.straight.entity
+ * PackageName : baekgwa.suhoserver.model.project.straight.straight.entity
  * FileName    : ProjectStraightEntity
  * Author      : Baekgwa
  * Date        : 2025-08-08
- * Description : 
+ * Description : 프로젝트에 할당된 직선레일 정보 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
@@ -78,7 +78,8 @@ public class ProjectStraightEntity extends TemporalEntity {
 	}
 
 	public static ProjectStraightEntity createNewStraight(
-		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length, StraightInfoEntity straightInfo
+		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length,
+		StraightInfoEntity straightInfo
 	) {
 		return ProjectStraightEntity
 			.builder()

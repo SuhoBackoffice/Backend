@@ -8,7 +8,7 @@ import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
