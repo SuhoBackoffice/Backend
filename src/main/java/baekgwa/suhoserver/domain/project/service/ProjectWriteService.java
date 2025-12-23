@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,8 @@ import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
+import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
@@ -45,6 +48,7 @@ public class ProjectWriteService {
 	private final ProjectRepository projectRepository;
 	private final ProjectBranchRepository projectBranchRepository;
 	private final ProjectStraightRepository projectStraightRepository;
+	private final ProjectStraightSerialRepository projectStraightSerialRepository;
 
 	/**
 	 * 신규 프로젝트 생성 메서드
@@ -115,7 +119,7 @@ public class ProjectWriteService {
 	 * @param straightInfoMap 직선레일 정보 [가공 위치, LitzWire 6개] 를 담은 Map
 	 */
 	@Transactional
-	public void registerProjectStraightOrThrow(
+	public List<ProjectStraightEntity> registerProjectStraightOrThrow(
 		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
 		ProjectEntity findProject,
 		Map<Long, StraightTypeEntity> findStraightTypeMap,
@@ -152,8 +156,8 @@ public class ProjectWriteService {
 				})
 			.toList();
 
-		// 전체 저장
-		projectStraightRepository.saveAll(newProjectStraightList);
+		// 3. 직선레일 전체 저장
+		return projectStraightRepository.saveAll(newProjectStraightList);
 	}
 
 	/**
@@ -225,6 +229,17 @@ public class ProjectWriteService {
 
 		// 2. 업데이트 처리
 		findProjectBranch.patchProjectBranch(dto.getTotalQuantity());
+	}
+
+	@Transactional
+	public void registerProjectStraightSerial(List<ProjectStraightEntity> projectStraightList) {
+		List<ProjectStraightSerialEntity> projectStraightSerialList = projectStraightList.stream()
+			.flatMap(ps -> LongStream.rangeClosed(1L, ps.getTotalQuantity())
+				.mapToObj(seq -> ProjectStraightSerialEntity.of(ps, seq))
+			)
+			.toList();
+
+		projectStraightSerialRepository.saveAll(projectStraightSerialList);
 	}
 
 	private void validateDuplicationStraight(

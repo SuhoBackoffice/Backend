@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.model.project.straight.serial.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.ProductInactiveReason;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
@@ -16,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -45,7 +47,7 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 	private String serial;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "project_straight_id")
+	@JoinColumn(name = "project_straight_id", nullable = false)
 	private ProjectStraightEntity projectStraight;
 
 	@Enumerated(EnumType.STRING)
@@ -55,4 +57,36 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "reason", nullable = false)
 	private ProductInactiveReason reason;
+
+	@Builder(access = AccessLevel.PRIVATE)
+	private ProjectStraightSerialEntity(String serial, ProjectStraightEntity projectStraight, ProductSerialState state,
+		ProductInactiveReason reason) {
+		this.serial = serial;
+		this.projectStraight = projectStraight;
+		this.state = state;
+		this.reason = reason;
+	}
+
+	/**
+	 * 프로젝트에 할당된 직선레일의 serial Entity 생성 정적 팩터리 메서드
+	 * @param projectStraight 프로젝트에 할당된 직선레일
+	 * @param number 시퀸스 번호
+	 * @return ProjectStraightSerialEntity
+	 */
+	public static ProjectStraightSerialEntity of(ProjectStraightEntity projectStraight, long number) {
+
+		String serial = ProductSerialFactory.generateStraightSerial(
+			projectStraight.getLength(),
+			projectStraight.getIsLoopRail(),
+			projectStraight.getStraightType().getType(),
+			number
+		);
+
+		return ProjectStraightSerialEntity
+			.builder()
+			.serial(serial)
+			.projectStraight(projectStraight)
+			.state(ProductSerialState.ACTIVE)
+			.build();
+	}
 }

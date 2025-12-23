@@ -119,8 +119,15 @@ public class ProjectFacade {
 			);
 
 		// 3. 신규 직선레일 생성 및 등록
-		projectWriteService.registerProjectStraightOrThrow(postProjectStraightInfoList, findProject,
-			findStraightTypeMap, straightInfoMap);
+		List<ProjectStraightEntity> saveProjectStraightList = projectWriteService.registerProjectStraightOrThrow(
+			postProjectStraightInfoList,
+			findProject,
+			findStraightTypeMap,
+			straightInfoMap
+		);
+
+		// 4. 신규 등록된 직선레일 Serial 등록
+		projectWriteService.registerProjectStraightSerial(saveProjectStraightList);
 	}
 
 	@Transactional(readOnly = true)
