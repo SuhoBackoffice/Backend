@@ -129,8 +129,7 @@ public class ProjectFacade {
 		);
 
 		// 4. 신규 등록된 직선레일 Serial 등록
-		// todo: straightSerialWriteService 로 이전 처리
-		projectWriteService.registerProjectStraightSerial(saveProjectStraightList);
+		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
 	}
 
 	@Transactional(readOnly = true)

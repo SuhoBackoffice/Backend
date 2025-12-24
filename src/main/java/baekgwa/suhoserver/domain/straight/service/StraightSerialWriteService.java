@@ -45,6 +45,21 @@ public class StraightSerialWriteService {
 		}
 	}
 
+	/**
+	 * 프로젝트에 할당된 직선레일에 serial 정보를 할당합니다.
+	 * @param projectStraightList
+	 */
+	@Transactional
+	public void registerProjectStraightSerial(List<ProjectStraightEntity> projectStraightList) {
+		List<ProjectStraightSerialEntity> projectStraightSerialList = projectStraightList.stream()
+			.flatMap(ps -> LongStream.rangeClosed(1L, ps.getTotalQuantity())
+				.mapToObj(seq -> ProjectStraightSerialEntity.of(ps, seq))
+			)
+			.toList();
+
+		projectStraightSerialRepository.saveAll(projectStraightSerialList);
+	}
+
 	private void increaseSerials(ProjectStraightEntity projectStraight, List<ProjectStraightSerialEntity> serials,
 		Long newQuantity) {
 		serials.stream()
