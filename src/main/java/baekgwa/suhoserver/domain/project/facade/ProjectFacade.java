@@ -16,6 +16,7 @@ import baekgwa.suhoserver.domain.project.service.ProjectBomService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightReadService;
+import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
@@ -55,6 +56,7 @@ public class ProjectFacade {
 	private final StraightWriteService straightWriteService;
 
 	private final MaterialReadService materialReadService;
+	private final StraightSerialWriteService straightSerialWriteService;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -127,6 +129,7 @@ public class ProjectFacade {
 		);
 
 		// 4. 신규 등록된 직선레일 Serial 등록
+		// todo: straightSerialWriteService 로 이전 처리
 		projectWriteService.registerProjectStraightSerial(saveProjectStraightList);
 	}
 
@@ -183,7 +186,13 @@ public class ProjectFacade {
 		Long projectStraightId,
 		ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
 	) {
-		projectWriteService.patchProjectStraightOrThrow(projectStraightId, patchProjectStraightDto);
+		ProjectStraightEntity findStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
+		Long oldQuantity = findStraight.getTotalQuantity();
+		Long newQuantity = patchProjectStraightDto.getTotalQuantity();
+
+		projectWriteService.patchProjectStraightOrThrow(findStraight, newQuantity);
+
+		straightSerialWriteService.patchProjectStraightSerial(findStraight, oldQuantity, newQuantity);
 	}
 
 	@Transactional

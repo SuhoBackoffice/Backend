@@ -95,9 +95,11 @@ public class ProjectStraightEntity extends TemporalEntity {
 
 	/**
 	 * 프로젝트 직선레일 정보 업데이트용 편의 메서드
-	 * - 현재, 수량만 변경 가능하도록 구성.
+	 * 수량만 변경 가능하도록 구성.
+	 * 변경된 수량만큼 return
+	 * @param changeQuantity 변경할 수량
 	 */
-	public void patchProjectStraight(Long totalQuantity) {
-		this.totalQuantity = totalQuantity;
+	public void patchProjectStraight(Long changeQuantity) {
+		this.totalQuantity = changeQuantity;
 	}
 }

@@ -185,20 +185,15 @@ public class ProjectWriteService {
 
 	/**
 	 * 프로젝트에 할당된 직선레일 수정
-	 * @param projectStraightId 프로젝트에 할당된 직선레일 PK
-	 * @param dto 수정할 data
+	 * 추가적으로 Straight 의 Serial 관련 정보도 업데이트(soft delete or create) 처리
+	 * @param projectStraight 프로젝트에 할당된 직선레일 Entity
+	 * @param newQuantity 신규 수량
 	 */
 	@Transactional
 	public void patchProjectStraightOrThrow(
-		Long projectStraightId,
-		ProjectRequest.PatchProjectStraightDto dto
+		ProjectStraightEntity projectStraight, Long newQuantity
 	) {
-		// 1. projectStraight Entity 조회
-		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
-			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
-
-		// 2. 업데이트 처리
-		findProjectStraight.patchProjectStraight(dto.getTotalQuantity());
+		projectStraight.patchProjectStraight(newQuantity);
 	}
 
 	/**

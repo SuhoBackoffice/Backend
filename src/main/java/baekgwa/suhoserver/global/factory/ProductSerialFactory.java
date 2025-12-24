@@ -21,12 +21,12 @@ public class ProductSerialFactory {
 	 * @param length 길이
 	 * @param isLoop 루프 여부
 	 * @param straightType 레일 타입
-	 * @param number 순서
+	 * @param sequence 순서
 	 * @return 식별용 시리얼 번호
 	 */
-	public static String generateStraightSerial(Long length, Boolean isLoop, String straightType, long number) {
+	public static String generateStraightSerial(Long length, Boolean isLoop, String straightType, long sequence) {
 		String prefix = isLoop == Boolean.FALSE ? "SR" : "LR";
-		String seq = String.format("%02d", number);
+		String seq = String.format("%02d", sequence);
 		return prefix + length + straightType + "-" + seq;
 	}
 

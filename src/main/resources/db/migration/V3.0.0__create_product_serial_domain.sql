@@ -16,8 +16,10 @@ CREATE TABLE `project_straight_serial`
     `project_straight_id` BIGINT                NOT NULL,
     `state`               VARCHAR(50)           NOT NULL,
     `reason`              VARCHAR(50)           NULL,
+    `sequence`            BIGINT                NOT NULL,
     `created_at`          DATETIME              NOT NULL,
     `modified_at`         DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
-    CONSTRAINT `fk_project_straight_serial_project_straight_id` FOREIGN KEY (`project_straight_id`) REFERENCES suho_server.`project_straight` (`id`)
+    CONSTRAINT `fk_project_straight_serial_project_straight_id`
+        FOREIGN KEY (`project_straight_id`) REFERENCES `project_straight` (`id`) ON DELETE CASCADE
 )

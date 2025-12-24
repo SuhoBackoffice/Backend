@@ -105,7 +105,7 @@ public class ProjectReadService {
 	}
 
 	/**
-	 * 프로젝트에 할당된 분기레일 종류 List 조회ㅏ
+	 * 프로젝트에 할당된 분기레일 종류 List 조회
 	 * @param projectId 프로젝트 PK
 	 * @return List<ProjectBranchEntity>
 	 */
@@ -118,5 +118,16 @@ public class ProjectReadService {
 	public List<ProjectResponse.OnGoingProjectInfo> getOnGoingProjectInfoList() {
 		return projectRepository.findOnGoingProjectList()
 			.stream().map(ProjectResponse.OnGoingProjectInfo::of).toList();
+	}
+
+	/**
+	 * 특정 프로젝트에 할당된 직선레일의 Entity 를 반환
+	 * @param projectStraightId pk
+	 * @return find ProjectStraightEntity
+	 */
+	@Transactional(readOnly = true)
+	public ProjectStraightEntity getProjectStraightOrThrow(Long projectStraightId) {
+		return projectStraightRepository.findById(projectStraightId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
 	}
 }

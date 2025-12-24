@@ -58,28 +58,32 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 	@Column(name = "reason", nullable = false)
 	private ProductInactiveReason reason;
 
+	@Column(name = "sequence", nullable = false)
+	private Long sequence;
+
 	@Builder(access = AccessLevel.PRIVATE)
 	private ProjectStraightSerialEntity(String serial, ProjectStraightEntity projectStraight, ProductSerialState state,
-		ProductInactiveReason reason) {
+		ProductInactiveReason reason, Long sequence) {
 		this.serial = serial;
 		this.projectStraight = projectStraight;
 		this.state = state;
 		this.reason = reason;
+		this.sequence = sequence;
 	}
 
 	/**
 	 * 프로젝트에 할당된 직선레일의 serial Entity 생성 정적 팩터리 메서드
 	 * @param projectStraight 프로젝트에 할당된 직선레일
-	 * @param number 시퀸스 번호
+	 * @param sequence 시퀸스 번호
 	 * @return ProjectStraightSerialEntity
 	 */
-	public static ProjectStraightSerialEntity of(ProjectStraightEntity projectStraight, long number) {
+	public static ProjectStraightSerialEntity of(ProjectStraightEntity projectStraight, long sequence) {
 
 		String serial = ProductSerialFactory.generateStraightSerial(
 			projectStraight.getLength(),
 			projectStraight.getIsLoopRail(),
 			projectStraight.getStraightType().getType(),
-			number
+			sequence
 		);
 
 		return ProjectStraightSerialEntity
@@ -87,6 +91,25 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 			.serial(serial)
 			.projectStraight(projectStraight)
 			.state(ProductSerialState.ACTIVE)
+			.sequence(sequence)
 			.build();
+	}
+
+	/**
+	 * Serial 의 상태를 비활성화 하는 메서드
+	 * @param reason 비활성화 사유
+	 */
+	public void deactivate(ProductInactiveReason reason) {
+		this.state = ProductSerialState.INACTIVE;
+		this.reason = reason;
+	}
+
+	/**
+	 * Serial 의 상태를 활성화 하는 메서드
+	 * 기존에 있던, 비활성화 사유 this.reason 은 null 처리
+	 */
+	public void activate() {
+		this.state = ProductSerialState.ACTIVE;
+		this.reason = null;
 	}
 }
