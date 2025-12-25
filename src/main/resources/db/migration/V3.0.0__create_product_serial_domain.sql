@@ -22,4 +22,19 @@ CREATE TABLE `project_straight_serial`
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_project_straight_serial_project_straight_id`
         FOREIGN KEY (`project_straight_id`) REFERENCES `project_straight` (`id`) ON DELETE CASCADE
-)
+);
+
+CREATE TABLE `project_branch_serial`
+(
+    `id`                  BIGINT AUTO_INCREMENT NOT NULL,
+    `serial`              VARCHAR(255)          NOT NULL COMMENT '시리얼 번호',
+    `project_branch_id` BIGINT                NOT NULL,
+    `state`               VARCHAR(50)           NOT NULL,
+    `reason`              VARCHAR(50)           NULL,
+    `sequence`            BIGINT                NOT NULL,
+    `created_at`          DATETIME              NOT NULL,
+    `modified_at`         DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_project_branch_serial_project_straight_id`
+        FOREIGN KEY (`project_branch_id`) REFERENCES `project_branch` (`id`) ON DELETE CASCADE
+);

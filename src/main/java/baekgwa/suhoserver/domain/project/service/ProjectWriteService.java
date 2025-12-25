@@ -79,7 +79,7 @@ public class ProjectWriteService {
 	 * @param findBranchTypeMap 분기레일 정보 Map <PK, Entity>
 	 */
 	@Transactional
-	public void registerProjectBranchOrThrow(
+	public List<ProjectBranchEntity> registerProjectBranchOrThrow(
 		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList,
 		ProjectEntity findProject,
 		Map<Long, BranchTypeEntity> findBranchTypeMap
@@ -106,7 +106,7 @@ public class ProjectWriteService {
 			}).toList();
 
 		// 3. 프로젝트 분기레일 등록
-		projectBranchRepository.saveAll(newProjectBranchList);
+		return projectBranchRepository.saveAll(newProjectBranchList);
 	}
 
 	/**

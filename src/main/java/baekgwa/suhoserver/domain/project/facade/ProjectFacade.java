@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.branch.service.BranchReadService;
+import baekgwa.suhoserver.domain.branch.service.BranchSerialWriteService;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
@@ -57,6 +58,7 @@ public class ProjectFacade {
 
 	private final MaterialReadService materialReadService;
 	private final StraightSerialWriteService straightSerialWriteService;
+	private final BranchSerialWriteService branchSerialWriteService;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -84,17 +86,17 @@ public class ProjectFacade {
 	public ProjectResponse.NewProjectDto registerProjectBranch(
 		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList, Long projectId
 	) {
-		// 1. 프로젝트 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. Branch 정보 조회
 		Set<Long> branchIdSet = postProjectBranchInfoList.stream()
 			.map(ProjectRequest.PostProjectBranchInfo::getBranchTypeId)
 			.collect(Collectors.toSet());
 		Map<Long, BranchTypeEntity> findBranchTypeMap = branchReadService.getBranchTypeListOrThrow(branchIdSet);
 
-		// 3. 신규 ProjectBranch 생성
-		projectWriteService.registerProjectBranchOrThrow(postProjectBranchInfoList, findProject, findBranchTypeMap);
+		List<ProjectBranchEntity> saveProjectBranchList = projectWriteService.registerProjectBranchOrThrow(
+			postProjectBranchInfoList, findProject, findBranchTypeMap);
+
+		branchSerialWriteService.registerProjectBranchSerial(saveProjectBranchList);
 
 		return new ProjectResponse.NewProjectDto(projectId);
 	}

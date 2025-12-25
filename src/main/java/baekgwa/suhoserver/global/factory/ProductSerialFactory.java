@@ -41,4 +41,15 @@ public class ProductSerialFactory {
 		String prefix = isLoop == Boolean.FALSE ? "SR" : "LR";
 		return prefix + length + straightType;
 	}
+
+	/**
+	 * 분기레일 식별 시리얼 번호 생성 팩토리
+	 * @param code 분기레일 코드
+	 * @param sequence 순서
+	 * @return 식별용 시리얼 번호 ex)B401-01
+	 */
+	public static String generateBranchSerial(String code, long sequence) {
+		String seq = String.format("%02d", sequence);
+		return "B" + code + "-" + seq;
+	}
 }
