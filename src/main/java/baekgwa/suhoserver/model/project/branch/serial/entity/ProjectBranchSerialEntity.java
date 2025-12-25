@@ -82,4 +82,22 @@ public class ProjectBranchSerialEntity extends TemporalEntity {
 			.sequence(sequence)
 			.build();
 	}
+
+	/**
+	 * Serial 의 상태를 활성화 하는 메서드
+	 * 기존에 있던, 비활성화 사유 this.reason 은 null 처리
+	 */
+	public void activate() {
+		this.state = ProductSerialState.ACTIVE;
+		this.reason = null;
+	}
+
+	/**
+	 * Serial 의 상태를 비활성화 하는 메서드
+	 * @param productInactiveReason 비활성화 사유
+	 */
+	public void deactivate(ProductInactiveReason productInactiveReason) {
+		this.state = ProductSerialState.INACTIVE;
+		this.reason = productInactiveReason;
+	}
 }

@@ -130,4 +130,15 @@ public class ProjectReadService {
 		return projectStraightRepository.findById(projectStraightId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
 	}
+
+	/**
+	 * 특정 프로젝트에 할당된 직선레일의 Entity 를 반환
+	 * @param projectBranchId pk
+	 * @return find ProjectBranchEntity or Throw Exception
+	 */
+	@Transactional(readOnly = true)
+	public ProjectBranchEntity getProjectBranchOrThrow(Long projectBranchId) {
+		return projectBranchRepository.findById(projectBranchId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
+	}
 }

@@ -203,7 +203,16 @@ public class ProjectFacade {
 
 	@Transactional
 	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto patchProjectBranchDto) {
-		projectWriteService.patchProjectBranchOrThrow(projectBranchId, patchProjectBranchDto);
+
+		ProjectBranchEntity findProjectBranch =
+			projectReadService.getProjectBranchOrThrow(projectBranchId);
+
+		Long oldQuantity = findProjectBranch.getTotalQuantity();
+		Long newQuantity = patchProjectBranchDto.getTotalQuantity();
+
+		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, patchProjectBranchDto.getTotalQuantity());
+
+		branchSerialWriteService.patchProjectBranchSerial(findProjectBranch, oldQuantity, newQuantity);
 	}
 
 	@Transactional(readOnly = true)

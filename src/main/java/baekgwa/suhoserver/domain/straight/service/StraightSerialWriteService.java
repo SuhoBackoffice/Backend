@@ -30,6 +30,15 @@ public class StraightSerialWriteService {
 
 	private final ProjectStraightSerialRepository projectStraightSerialRepository;
 
+	/**
+	 * 수량의 변동에 따라, 기존 레일 제품의 serial 의 정보를 업데이트
+	 * 만약 기존보다 많이 할당되면, 새로운 serial 할당
+	 * 		단, 이전에 이미 비활성화 처리되어있는 serial 이 있다면 해당 serial 부터 활성화
+	 * 현재 수량보다 적다면, 내림차순으로 비활성화 처리
+	 * @param projectStraight
+	 * @param oldQuantity
+	 * @param newQuantity
+	 */
 	@Transactional
 	public void patchProjectStraightSerial(ProjectStraightEntity projectStraight, Long oldQuantity, Long newQuantity) {
 		if (oldQuantity.equals(newQuantity))

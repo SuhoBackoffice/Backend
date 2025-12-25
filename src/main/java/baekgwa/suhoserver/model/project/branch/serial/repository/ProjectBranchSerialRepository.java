@@ -1,7 +1,10 @@
 package baekgwa.suhoserver.model.project.branch.serial.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 
 /**
@@ -16,4 +19,5 @@ import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerial
  * 25. 12. 25.     Baekgwa               Initial creation
  */
 public interface ProjectBranchSerialRepository extends JpaRepository<ProjectBranchSerialEntity, Long> {
+	List<ProjectBranchSerialEntity> findByProjectBranchOrderBySequenceDesc(ProjectBranchEntity projectBranch);
 }

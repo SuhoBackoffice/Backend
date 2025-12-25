@@ -208,17 +208,12 @@ public class ProjectWriteService {
 
 	/**
 	 * 프로젝트에 할당된 분기레일 수정
-	 * @param projectBranchId 프로젝트에 할당된 분기레일 PK
-	 * @param dto 수정할 data
+	 * @param projectBranch 프로젝트에 할당된 분기레일 Entity
+	 * @param updateQuantity 업데이트 할 수량
 	 */
 	@Transactional
-	public void patchProjectBranchOrThrow(Long projectBranchId, ProjectRequest.PatchProjectBranchDto dto) {
-		// 1. projectBranch Entity 조회
-		ProjectBranchEntity findProjectBranch = projectBranchRepository.findById(projectBranchId)
-			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
-
-		// 2. 업데이트 처리
-		findProjectBranch.patchProjectBranch(dto.getTotalQuantity());
+	public void patchProjectBranchOrThrow(ProjectBranchEntity projectBranch, Long updateQuantity) {
+		projectBranch.patchProjectBranch(updateQuantity);
 	}
 
 	private void validateDuplicationStraight(
