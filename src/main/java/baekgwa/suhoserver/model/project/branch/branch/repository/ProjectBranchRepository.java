@@ -1,4 +1,4 @@
-package baekgwa.suhoserver.model.project.branch.repository;
+package baekgwa.suhoserver.model.project.branch.branch.repository;
 
 import java.util.List;
 
@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 
 /**
- * PackageName : baekgwa.suhoserver.model.project.branch.repository
+ * PackageName : baekgwa.suhoserver.model.project.branch.branch.repository
  * FileName    : ProjectBranchRepository
  * Author      : Baekgwa
  * Date        : 2025-08-07

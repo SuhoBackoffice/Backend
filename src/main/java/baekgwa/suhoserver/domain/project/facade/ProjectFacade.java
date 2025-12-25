@@ -21,7 +21,7 @@ import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;

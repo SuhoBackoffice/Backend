@@ -1,4 +1,4 @@
-package baekgwa.suhoserver.model.project.branch.entity;
+package baekgwa.suhoserver.model.project.branch.branch.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * PackageName : baekgwa.suhoserver.model.project.branch.entity
+ * PackageName : baekgwa.suhoserver.model.project.branch.branch.entity
  * FileName    : ProjectBranchEntity
  * Author      : Baekgwa
  * Date        : 2025-08-07
