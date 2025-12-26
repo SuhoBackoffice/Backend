@@ -25,6 +25,7 @@ import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightUpdatedEvent;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -219,7 +220,8 @@ public class ProjectFacade {
 	@Transactional
 	public void patchProjectStraight(
 		Long projectStraightId,
-		ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
+		ProjectRequest.PatchProjectStraightDto patchProjectStraightDto,
+		Long userId
 	) {
 		ProjectStraightEntity findStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 		Long oldQuantity = findStraight.getTotalQuantity();
@@ -228,6 +230,18 @@ public class ProjectFacade {
 		projectWriteService.patchProjectStraightOrThrow(findStraight, newQuantity);
 
 		straightSerialWriteService.patchProjectStraightSerial(findStraight, oldQuantity, newQuantity);
+
+		ProjectStraightUpdatedEvent event = new ProjectStraightUpdatedEvent(
+			findStraight.getProject().getId(),
+			userId,
+			findStraight.getId(),
+			findStraight.getLength(),
+			findStraight.getIsLoopRail(),
+			findStraight.getStraightType().getType(),
+			oldQuantity,
+			newQuantity
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional

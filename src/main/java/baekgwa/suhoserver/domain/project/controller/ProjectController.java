@@ -153,9 +153,10 @@ public class ProjectController {
 	@Operation(summary = "프로젝트의 직선레일 정보 수정")
 	public BaseResponse<Void> patchProjectStraight(
 		@PathVariable("projectStraightId") Long projectStraightId,
-		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
+		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto);
+		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto, userId);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
 	}
 
