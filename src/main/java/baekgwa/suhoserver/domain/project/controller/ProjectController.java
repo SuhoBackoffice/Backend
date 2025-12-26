@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -81,9 +82,10 @@ public class ProjectController {
 	@Operation(summary = "프로젝트 직선 레일 정보 등록")
 	public BaseResponse<Void> registerProjectStraight(
 		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
-		@PathVariable("projectId") Long projectId
+		@PathVariable("projectId") Long projectId,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId);
+		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId, userId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
 	}

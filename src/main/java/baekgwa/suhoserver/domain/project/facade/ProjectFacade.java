@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,8 @@ import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -59,6 +62,8 @@ public class ProjectFacade {
 	private final MaterialReadService materialReadService;
 	private final StraightSerialWriteService straightSerialWriteService;
 	private final BranchSerialWriteService branchSerialWriteService;
+
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -103,7 +108,7 @@ public class ProjectFacade {
 
 	@Transactional
 	public void registerProjectStraight(
-		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId
+		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId, Long userId
 	) {
 		// 1. 프로젝트 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
@@ -132,6 +137,24 @@ public class ProjectFacade {
 
 		// 4. 신규 등록된 직선레일 Serial 등록
 		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
+
+		// 5. history 등록
+		List<ProjectStraightCreatedEventDto> eventDtoList = saveProjectStraightList.stream()
+			.map(ps -> new ProjectStraightCreatedEventDto(
+				ps.getId(),
+				ps.getLength(),
+				ps.getIsLoopRail(),
+				ps.getStraightType().getType(),
+				ps.getTotalQuantity()
+			))
+			.toList();
+		ProjectStraightCreatedEvent createdEvent =
+			new ProjectStraightCreatedEvent(
+				findProject.getId(),
+				userId,
+				eventDtoList
+			);
+		applicationEventPublisher.publishEvent(createdEvent);
 	}
 
 	@Transactional(readOnly = true)
