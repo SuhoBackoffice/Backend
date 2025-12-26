@@ -83,7 +83,6 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 	 * @param projectId 프로젝트 pk
 	 * @param projectStraightId 프로젝트 직선레일 pk
 	 * @param straightSerial 직선레일 식별자
-	 * @param beforeQuantity 이전 수량
 	 * @param afterQuantity 이후 수량
 	 * @return new ProjectStraightHistoryEntity
 	 */
@@ -93,7 +92,6 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 		Long projectId,
 		Long projectStraightId,
 		String straightSerial,
-		Long beforeQuantity,
 		Long afterQuantity
 	) {
 		return ProjectStraightHistoryEntity
@@ -103,9 +101,30 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 			.projectId(projectId)
 			.projectStraightId(projectStraightId)
 			.straightSerial(straightSerial)
-			.beforeQuantity(beforeQuantity)
+			.beforeQuantity(0L)
 			.afterQuantity(afterQuantity)
 			.action(ProjectProductAction.CREATED)
+			.build();
+	}
+
+	public static ProjectStraightHistoryEntity delete(
+		Long userId,
+		String userName,
+		Long projectId,
+		Long projectStraightId,
+		String straightSerial,
+		Long beforeQuantity
+	) {
+		return ProjectStraightHistoryEntity
+			.builder()
+			.changeUserId(userId)
+			.changeUserName(userName)
+			.projectId(projectId)
+			.projectStraightId(projectStraightId)
+			.straightSerial(straightSerial)
+			.beforeQuantity(beforeQuantity)
+			.afterQuantity(0L)
+			.action(ProjectProductAction.DELETED)
 			.build();
 	}
 }

@@ -24,6 +24,7 @@ import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -197,12 +198,22 @@ public class ProjectFacade {
 	}
 
 	@Transactional
-	public void deleteProjectStraight(Long projectStraightId) {
-		// 1. 프로젝트에 직선레일 특정 삭제
-		Long straightInfoId = projectWriteService.deleteProjectStraightOrThrow(projectStraightId);
+	public void deleteProjectStraight(Long projectStraightId, Long userId) {
+		ProjectStraightEntity findProjectStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 
-		// 2. 직선레일 정보 삭제
-		straightWriteService.deleteStraightInfoOrThrow(straightInfoId);
+		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
+		straightWriteService.deleteStraightInfoOrThrow(findProjectStraight.getStraightInfo().getId());
+
+		ProjectStraightDeletedEvent event = new ProjectStraightDeletedEvent(
+			findProjectStraight.getProject().getId(),
+			userId,
+			findProjectStraight.getId(),
+			findProjectStraight.getLength(),
+			findProjectStraight.getIsLoopRail(),
+			findProjectStraight.getStraightType().getType(),
+			findProjectStraight.getTotalQuantity()
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional

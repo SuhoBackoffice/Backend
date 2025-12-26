@@ -142,9 +142,10 @@ public class ProjectController {
 	@DeleteMapping("/straight/{projectStraightId}")
 	@Operation(summary = "프로젝트의 직선레일 삭제")
 	public BaseResponse<Void> deleteProjectStraight(
-		@PathVariable("projectStraightId") Long projectStraightId
+		@PathVariable("projectStraightId") Long projectStraightId,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.deleteProjectStraight(projectStraightId);
+		projectFacade.deleteProjectStraight(projectStraightId, userId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
 

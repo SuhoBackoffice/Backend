@@ -10,6 +10,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
 import baekgwa.suhoserver.model.project.straight.history.entity.ProjectStraightHistoryEntity;
 import baekgwa.suhoserver.model.project.straight.history.repository.ProjectStraightHistoryRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
@@ -61,11 +62,34 @@ public class ProjectStraightHistoryListener {
 					ps.isLoopRail(),
 					ps.straightType()
 				),
-				0L,
 				ps.totalQuantity()
 			))
 			.toList();
 
 		projectStraightHistoryRepository.saveAll(straightHistoryList);
+	}
+
+	@Async
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void deleteProjectStraightHistory(ProjectStraightDeletedEvent event) {
+		log.debug("{} Deleting Project Straight History", LOG_PREFIX);
+
+		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
+		if (optionalFindUser.isEmpty()) {
+			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
+			return;
+		}
+		UserEntity findUser = optionalFindUser.get();
+
+		ProjectStraightHistoryEntity history = ProjectStraightHistoryEntity.delete(
+			findUser.getId(),
+			findUser.getUsername(),
+			event.projectId(),
+			event.projectStraightId(),
+			ProductSerialFactory.generateStraightSerial(event.length(), event.isLoopRail(), event.straightType()),
+			event.totalQuantity()
+		);
+
+		projectStraightHistoryRepository.saveAndFlush(history);
 	}
 }

@@ -160,22 +160,11 @@ public class ProjectWriteService {
 
 	/**
 	 * 프로젝트에 할당된 특정 직선레일 할당 해제
-	 * @param projectStraightId 프로젝트에 할당된 직선레일 PK
-	 * @return 추가로 삭제할 Straight Info PK
+	 * @param projectStraight 삭제할 프로젝트 직선레일 Entity
 	 */
 	@Transactional
-	public Long deleteProjectStraightOrThrow(Long projectStraightId) {
-		// 1. 삭제할 ProjectStraight Entity 조회
-		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
-			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
-
-		// 2. straightInfoId 사전 추출
-		Long straightInfoId = findProjectStraight.getStraightInfo().getId();
-
-		// 3. 삭제 진행
-		projectStraightRepository.delete(findProjectStraight);
-
-		return straightInfoId;
+	public void deleteProjectStraightOrThrow(ProjectStraightEntity projectStraight) {
+		projectStraightRepository.delete(projectStraight);
 	}
 
 	/**
