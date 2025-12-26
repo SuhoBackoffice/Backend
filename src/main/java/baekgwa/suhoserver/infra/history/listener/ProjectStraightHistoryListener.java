@@ -41,6 +41,7 @@ public class ProjectStraightHistoryListener {
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void registerProjectStraightHistory(ProjectStraightCreatedEvent event) {
+		log.debug("{} Registering Project Straight History", LOG_PREFIX);
 
 		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
 		if (optionalFindUser.isEmpty()) {
