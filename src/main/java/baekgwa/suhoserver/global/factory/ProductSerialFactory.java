@@ -52,4 +52,13 @@ public class ProductSerialFactory {
 		String seq = String.format("%02d", sequence);
 		return "B" + code + "-" + seq;
 	}
+
+	/**
+	 * 분기레일 식별 시리얼 번호 생성 팩토리
+	 * @param code 분기레일 코드
+	 * @return 식별용 시리얼 번호 ex)B401
+	 */
+	public static String generateBranchSerial(String code) {
+		return "B" + code;
+	}
 }

@@ -22,6 +22,8 @@ import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
@@ -91,7 +93,7 @@ public class ProjectFacade {
 
 	@Transactional
 	public ProjectResponse.NewProjectDto registerProjectBranch(
-		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList, Long projectId
+		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList, Long projectId, Long userId
 	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
@@ -104,6 +106,17 @@ public class ProjectFacade {
 			postProjectBranchInfoList, findProject, findBranchTypeMap);
 
 		branchSerialWriteService.registerProjectBranchSerial(saveProjectBranchList);
+
+		List<ProjectBranchCreatedEventDto> eventDtoList = saveProjectBranchList.stream().map(
+				pb -> new ProjectBranchCreatedEventDto(
+					pb.getId(),
+					pb.getBranchType().getId(),
+					pb.getTotalQuantity(),
+					pb.getBranchType().getCode()))
+			.toList();
+		ProjectBranchCreatedEvent event =
+			new ProjectBranchCreatedEvent(findProject.getId(), userId, eventDtoList);
+		applicationEventPublisher.publishEvent(event);
 
 		return new ProjectResponse.NewProjectDto(projectId);
 	}

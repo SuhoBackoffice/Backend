@@ -61,10 +61,11 @@ public class ProjectController {
 	@Operation(summary = "프로젝트 분기 정보 등록")
 	public BaseResponse<ProjectResponse.NewProjectDto> registerProjectBranch(
 		@RequestBody @Valid List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList,
-		@PathVariable("projectId") Long projectId
+		@PathVariable("projectId") Long projectId,
+		@AuthenticationPrincipal Long userId
 	) {
 		ProjectResponse.NewProjectDto newProjectDto =
-			projectFacade.registerProjectBranch(postProjectBranchInfoList, projectId);
+			projectFacade.registerProjectBranch(postProjectBranchInfoList, projectId, userId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_BRANCH_SUCCESS, newProjectDto);
 	}
