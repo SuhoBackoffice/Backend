@@ -113,6 +113,17 @@ public class ProjectBranchHistoryEntity extends TemporalEntity {
 			.build();
 	}
 
+	/**
+	 * 프로젝트 분기레일 삭제(할당 해제) History 생성자 팩토리 메서드
+	 * @param changeUserId 회원PK
+	 * @param changeUserName 회원 이름
+	 * @param projectId 프로젝트 PK
+	 * @param projectBranchId 프로젝트 분기레일 PK
+	 * @param branchTypeId 분기레일 타입 PK
+	 * @param branchSerial 분기레일 serial
+	 * @param beforeQuantity 삭제 전 수량
+	 * @return new ProjectBranchHistoryEntity
+	 */
 	public static ProjectBranchHistoryEntity delete(
 		Long changeUserId,
 		String changeUserName,
@@ -133,6 +144,42 @@ public class ProjectBranchHistoryEntity extends TemporalEntity {
 			.action(ProjectProductAction.DELETED)
 			.beforeQuantity(beforeQuantity)
 			.afterQuantity(0L)
+			.build();
+	}
+
+	/**
+	 * 프로젝트 분기레일 업데이트 History 생성자 팩토리 메서드
+	 * @param changeUserId 회원PK
+	 * @param changeUserName 회원 이름
+	 * @param projectId 프로젝트 PK
+	 * @param projectBranchId 프로젝트 분기레일 PK
+	 * @param branchTypeId 분기레일 타입 PK
+	 * @param branchSerial 분기레일 serial
+	 * @param beforeQuantity 업데이트 전 수량
+	 * @param afterQuantity 업데이트 후 수량
+	 * @return new ProjectBranchHistoryEntity
+	 */
+	public static ProjectBranchHistoryEntity update(
+		Long changeUserId,
+		String changeUserName,
+		Long projectId,
+		Long projectBranchId,
+		Long branchTypeId,
+		String branchSerial,
+		Long beforeQuantity,
+		Long afterQuantity
+	) {
+		return ProjectBranchHistoryEntity
+			.builder()
+			.changeUserId(changeUserId)
+			.changeUserName(changeUserName)
+			.projectId(projectId)
+			.projectBranchId(projectBranchId)
+			.branchTypeId(branchTypeId)
+			.branchSerial(branchSerial)
+			.action(ProjectProductAction.UPDATED)
+			.beforeQuantity(beforeQuantity)
+			.afterQuantity(afterQuantity)
 			.build();
 	}
 }

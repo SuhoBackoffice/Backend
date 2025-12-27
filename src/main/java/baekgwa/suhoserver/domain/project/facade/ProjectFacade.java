@@ -25,6 +25,7 @@ import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchDeletedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchUpdatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
@@ -276,17 +277,27 @@ public class ProjectFacade {
 	}
 
 	@Transactional
-	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto patchProjectBranchDto) {
-
+	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto request, Long userId) {
 		ProjectBranchEntity findProjectBranch =
 			projectReadService.getProjectBranchOrThrow(projectBranchId);
 
 		Long oldQuantity = findProjectBranch.getTotalQuantity();
-		Long newQuantity = patchProjectBranchDto.getTotalQuantity();
+		Long newQuantity = request.getTotalQuantity();
 
-		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, patchProjectBranchDto.getTotalQuantity());
+		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, request.getTotalQuantity());
 
 		branchSerialWriteService.patchProjectBranchSerial(findProjectBranch, oldQuantity, newQuantity);
+
+		ProjectBranchUpdatedEvent event = new ProjectBranchUpdatedEvent(
+			findProjectBranch.getProject().getId(),
+			userId,
+			findProjectBranch.getId(),
+			findProjectBranch.getBranchType().getId(),
+			oldQuantity,
+			newQuantity,
+			findProjectBranch.getBranchType().getCode()
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional(readOnly = true)

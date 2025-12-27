@@ -11,6 +11,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchDeletedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchUpdatedEvent;
 import baekgwa.suhoserver.model.project.branch.history.entity.ProjectBranchHistoryEntity;
 import baekgwa.suhoserver.model.project.branch.history.repository.ProjectBranchHistoryRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
@@ -86,6 +87,32 @@ public class ProjectBranchHistoryListener {
 			event.branchTypeId(),
 			ProductSerialFactory.generateBranchSerial(event.code()),
 			event.beforeQuantity()
+		);
+
+		projectBranchHistoryRepository.save(history);
+	}
+
+	@Async
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void updateProjectBranchHistory(ProjectBranchUpdatedEvent event) {
+		log.debug("{} Updating Project Branch History", LOG_PREFIX);
+
+		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
+		if (optionalFindUser.isEmpty()) {
+			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
+			return;
+		}
+		UserEntity findUser = optionalFindUser.get();
+
+		ProjectBranchHistoryEntity history = ProjectBranchHistoryEntity.update(
+			findUser.getId(),
+			findUser.getUsername(),
+			event.projectId(),
+			event.projectBranchId(),
+			event.branchTypeId(),
+			ProductSerialFactory.generateBranchSerial(event.code()),
+			event.beforeQuantity(),
+			event.afterQuantity()
 		);
 
 		projectBranchHistoryRepository.save(history);

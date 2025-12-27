@@ -175,9 +175,10 @@ public class ProjectController {
 	@Operation(summary = "프로젝트의 특정 분기레일 정보 수정")
 	public BaseResponse<Void> patchProjectBranch(
 		@PathVariable("projectBranchId") Long projectBranchId,
-		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto
+		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.patchProjectBranch(projectBranchId, patchProjectBranchDto);
+		projectFacade.patchProjectBranch(projectBranchId, patchProjectBranchDto, userId);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
 	}
 
