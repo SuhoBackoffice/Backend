@@ -112,4 +112,27 @@ public class ProjectBranchHistoryEntity extends TemporalEntity {
 			.afterQuantity(afterQuantity)
 			.build();
 	}
+
+	public static ProjectBranchHistoryEntity delete(
+		Long changeUserId,
+		String changeUserName,
+		Long projectId,
+		Long projectBranchId,
+		Long branchTypeId,
+		String branchSerial,
+		Long beforeQuantity
+	) {
+		return ProjectBranchHistoryEntity
+			.builder()
+			.changeUserId(changeUserId)
+			.changeUserName(changeUserName)
+			.projectId(projectId)
+			.projectBranchId(projectBranchId)
+			.branchTypeId(branchTypeId)
+			.branchSerial(branchSerial)
+			.action(ProjectProductAction.DELETED)
+			.beforeQuantity(beforeQuantity)
+			.afterQuantity(0L)
+			.build();
+	}
 }

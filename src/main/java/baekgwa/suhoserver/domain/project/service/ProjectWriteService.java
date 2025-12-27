@@ -182,17 +182,11 @@ public class ProjectWriteService {
 
 	/**
 	 * 프로젝트에 할당된 분기레일 삭제
-	 * @param projectBranchId 프로젝트에 할당된 분기레일 PK
+	 * @param projectBranch 프로젝트에 할당된 분기레일 Entity
 	 */
 	@Transactional
-	public void deleteProjectBranchOrThrow(Long projectBranchId) {
-		// 1. 유효성 확인
-		if (!projectBranchRepository.existsById(projectBranchId)) {
-			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH);
-		}
-
-		// 2. 삭제 진행
-		projectBranchRepository.deleteById(projectBranchId);
+	public void deleteProjectBranch(ProjectBranchEntity projectBranch) {
+		projectBranchRepository.delete(projectBranch);
 	}
 
 	/**

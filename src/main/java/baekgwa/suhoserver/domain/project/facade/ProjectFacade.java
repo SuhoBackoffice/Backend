@@ -24,6 +24,7 @@ import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEventDto;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchDeletedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
@@ -258,8 +259,20 @@ public class ProjectFacade {
 	}
 
 	@Transactional
-	public void deleteProjectBranch(Long projectBranchId) {
-		projectWriteService.deleteProjectBranchOrThrow(projectBranchId);
+	public void deleteProjectBranch(Long projectBranchId, Long userId) {
+		ProjectBranchEntity findProjectBranch = projectReadService.getProjectBranchOrThrow(projectBranchId);
+
+		projectWriteService.deleteProjectBranch(findProjectBranch);
+
+		ProjectBranchDeletedEvent event = new ProjectBranchDeletedEvent(
+			findProjectBranch.getProject().getId(),
+			userId,
+			findProjectBranch.getId(),
+			findProjectBranch.getBranchType().getId(),
+			findProjectBranch.getTotalQuantity(),
+			findProjectBranch.getBranchType().getCode()
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional

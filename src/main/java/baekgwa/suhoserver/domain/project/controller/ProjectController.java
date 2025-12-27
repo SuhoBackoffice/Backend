@@ -164,9 +164,10 @@ public class ProjectController {
 	@DeleteMapping("/branch/{projectBranchId}")
 	@Operation(summary = "프로젝트 분기레일 삭제")
 	public BaseResponse<Void> deleteProjectBranch(
-		@PathVariable("projectBranchId") Long projectBranchId
+		@PathVariable("projectBranchId") Long projectBranchId,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.deleteProjectBranch(projectBranchId);
+		projectFacade.deleteProjectBranch(projectBranchId, userId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
 
