@@ -66,6 +66,16 @@ public enum ErrorCode {
 	// Material : 7000 ~ 7999
 	INVALID_MATERIAL_KEYWORD_OVER_2(HttpStatus.BAD_REQUEST, "7000", "키워드는 2글자 이상이어야 합니다."),
 
+	// Work : 8000 ~ 8999
+	ALREADY_EXIST_DAILY_REPORT(HttpStatus.BAD_REQUEST, "8000", "이미 해당일에 업무 보고를 진행하였습니다."),
+	NOT_MATCH_STRAIGHT_PRODUCTION_SERIAL_COUNT(HttpStatus.BAD_REQUEST, "8001", "생산 수량과 시리얼 개수가 일치하지 않습니다."),
+	DUPLICATION_PRODUCTION_STRAIGHT_SERIAL(HttpStatus.BAD_REQUEST, "8002", "중복된 시리얼 번호가 포함되어 있습니다."),
+	NOT_REGISTERED_PROJECT_STRAIGHT(HttpStatus.BAD_REQUEST, "8003", "해당 프로젝트에 없는 직선레일 입니다. 다시 확인해 주세요."),
+	INVALID_STRAIGHT_SERIAL(HttpStatus.BAD_REQUEST, "8004", "해당 프로젝트에 없는 직선레일 시리얼 번호 입니다. 다시 확인해 주세요."),
+	INACTIVE_STRAIGHT_SERIAL(HttpStatus.BAD_REQUEST, "8005", "해당 직선레일 시리얼은 비활성화 상태입니다. 다시 확인해 주세요."),
+	ALREADY_PRODUCED_SERIAL(HttpStatus.BAD_REQUEST, "8006", "해당 직선레일 시리얼은 이미 생산 완료되었습니다. 다시 확인해 주세요."),
+	ALREADY_USED_STRAIGHT_SERIAL(HttpStatus.BAD_REQUEST, "8007", "이미 작업 완료 보고된 직선레일 시리얼 입니다."),
+
 	//Common: 9000 ~ 9999
 	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
 	NOT_SUPPORTED_METHOD(HttpStatus.METHOD_NOT_ALLOWED, "9002", "요청 메서드를 찾을 수 없습니다."),

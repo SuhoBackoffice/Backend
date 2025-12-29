@@ -38,7 +38,6 @@ public enum SuccessCode {
 	GET_LATEST_BRANCH_BOM_SUCCESS(HttpStatus.OK, "해당 버전 최신 분기 레일 조회 성공"),
 	GET_BRANCH_BOM_SUCCESS(HttpStatus.OK, "분기레일 BOM 리스트 조회 성공"),
 
-
 	// Straight
 	CREATE_NEW_STRAIGHT_TYPE_SUCCESS(HttpStatus.CREATED, "신규 직선레일 타입 추가 완료"),
 	GET_ALL_STRAIGHT_TYPE_LIST_SUCCESS(HttpStatus.OK, "직선 레일 타입 조회 성공"),
@@ -70,6 +69,9 @@ public enum SuccessCode {
 	GET_MATERIAL_HISTORY_LIST_SUCCESS(HttpStatus.OK, "자재 입고 이력 목록 불러오기 성공"),
 	GET_MATERIAL_HISTORY_DETAIL_SUCCESS(HttpStatus.OK, "자재 입고 이력 상세 불러오기 성공"),
 	GET_MATERIAL_STATE_SUCCESS(HttpStatus.OK, "프로젝트 자재 현황 로드 성공"),
+
+	// Report
+	POST_WORK_REPORT_SUCCESS(HttpStatus.OK, "업무 보고가 완료되었습니다. 수고하셨습니다."),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");

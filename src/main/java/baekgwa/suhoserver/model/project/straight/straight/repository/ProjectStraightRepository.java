@@ -27,4 +27,6 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 	@Query("SELECT ps FROM ProjectStraightEntity ps JOIN FETCH ps.straightType st WHERE ps.project = :project AND ps.isLoopRail = :isLoopRail ORDER BY ps.length DESC , st.type ASC")
 	List<ProjectStraightEntity> findSortedWithType(@Param("project") ProjectEntity project,
 		@Param("isLoopRail") Boolean isLoopRail);
+
+	boolean existsByIdAndProjectId(Long projectStraightId, Long id);
 }

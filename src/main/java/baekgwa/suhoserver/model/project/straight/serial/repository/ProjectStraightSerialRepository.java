@@ -21,4 +21,6 @@ import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraight
 public interface ProjectStraightSerialRepository extends JpaRepository<ProjectStraightSerialEntity, Long> {
 
 	List<ProjectStraightSerialEntity> findByProjectStraightOrderBySequenceDesc(ProjectStraightEntity projectStraight);
+
+	List<ProjectStraightSerialEntity> findAllByIdIn(List<Long> serialIds);
 }

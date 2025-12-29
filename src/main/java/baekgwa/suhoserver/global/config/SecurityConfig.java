@@ -133,6 +133,9 @@ public class SecurityConfig {
 				.requestMatchers(GET, "/material/history/{projectId}").hasRole(WORKER.name())
 				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(WORKER.name())
 
+				// Worker
+				.requestMatchers(GET, "/work/report/project/{projectId}").hasRole(WORKER.name())
+
 				.anyRequest().authenticated());
 
 		// ❗ 인증 Filter 추가

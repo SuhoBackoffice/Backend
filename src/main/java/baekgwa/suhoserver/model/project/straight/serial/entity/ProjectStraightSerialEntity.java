@@ -1,8 +1,11 @@
 package baekgwa.suhoserver.model.project.straight.serial.entity;
 
+import java.time.LocalDateTime;
+
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.ProductInactiveReason;
+import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import jakarta.persistence.Column;
@@ -55,6 +58,13 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 	private ProductSerialState state;
 
 	@Enumerated(EnumType.STRING)
+	@Column(name = "production_state", nullable = false)
+	private ProductProductionState productionState;
+
+	@Column(name = "produced_at")
+	private LocalDateTime producedAt;
+
+	@Enumerated(EnumType.STRING)
 	@Column(name = "reason", nullable = false)
 	private ProductInactiveReason reason;
 
@@ -63,10 +73,12 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 
 	@Builder(access = AccessLevel.PRIVATE)
 	private ProjectStraightSerialEntity(String serial, ProjectStraightEntity projectStraight, ProductSerialState state,
-		ProductInactiveReason reason, Long sequence) {
+		ProductProductionState productionState, LocalDateTime producedAt, ProductInactiveReason reason, Long sequence) {
 		this.serial = serial;
 		this.projectStraight = projectStraight;
 		this.state = state;
+		this.productionState = productionState;
+		this.producedAt = producedAt;
 		this.reason = reason;
 		this.sequence = sequence;
 	}
@@ -92,6 +104,7 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 			.projectStraight(projectStraight)
 			.state(ProductSerialState.ACTIVE)
 			.sequence(sequence)
+			.productionState(ProductProductionState.NOT_PRODUCED)
 			.build();
 	}
 
