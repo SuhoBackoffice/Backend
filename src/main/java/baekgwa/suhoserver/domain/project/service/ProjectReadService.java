@@ -11,10 +11,13 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
+import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +40,7 @@ public class ProjectReadService {
 	private final ProjectRepository projectRepository;
 	private final ProjectBranchRepository projectBranchRepository;
 	private final ProjectStraightRepository projectStraightRepository;
+	private final ProjectStraightSerialRepository projectStraightSerialRepository;
 
 	/**
 	 * projectId 로, 프로젝트 정보 조회
@@ -150,5 +154,15 @@ public class ProjectReadService {
 	@Transactional(readOnly = true)
 	public List<ProjectStraightEntity> getUnCompletedProjectStraightList(ProjectEntity findProject) {
 		return projectStraightRepository.findUnCompletedByProject(findProject);
+	}
+
+	/**
+	 * 활성화 된 직선레일 시리얼 번호 목록 반환
+	 * @param straightId 프로젝트에 할당된 직선레일 PK
+	 * @return find List<ProjectStraightSerialEntity>
+	 */
+	@Transactional(readOnly = true)
+	public List<ProjectStraightSerialEntity> getProjectStraightSerialList(Long straightId) {
+		return projectStraightSerialRepository.findProjectStraightSerialList(straightId, ProductSerialState.ACTIVE);
 	}
 }

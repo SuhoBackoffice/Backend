@@ -61,4 +61,17 @@ public class WorkReportReadService {
 				Collectors.summingLong(WorkReportStraightEntity::getProductionQuantity)
 			));
 	}
+
+	/**
+	 * 프로젝트에 이미 보고된 특정 직선레일의 Serial 들 중 Pending 상태로 completed 수량에 포함되지 않은 직선레일 시리얼 PK List 조회
+	 * @param projectStraightId 프로젝트 직선레일 PK
+	 * @return Pending state ProjectStraightSerial PK List
+	 */
+	@Transactional(readOnly = true)
+	public List<Long> getPendingProjectStraightSerialList(Long projectStraightId) {
+		return workReportStraightRepository.findPendingSerialIdList(
+			WorkReportStatus.PENDING,
+			projectStraightId
+		);
+	}
 }

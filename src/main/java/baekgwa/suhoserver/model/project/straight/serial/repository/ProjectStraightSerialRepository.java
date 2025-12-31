@@ -3,7 +3,10 @@ package baekgwa.suhoserver.model.project.straight.serial.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 
@@ -23,4 +26,10 @@ public interface ProjectStraightSerialRepository extends JpaRepository<ProjectSt
 	List<ProjectStraightSerialEntity> findByProjectStraightOrderBySequenceDesc(ProjectStraightEntity projectStraight);
 
 	List<ProjectStraightSerialEntity> findAllByIdIn(List<Long> serialIds);
+
+	@Query("SELECT pss FROM ProjectStraightSerialEntity pss "
+		+ "WHERE pss.projectStraight.id = :straightId "
+		+ "AND pss.state = :state")
+	List<ProjectStraightSerialEntity> findProjectStraightSerialList(
+		@Param("straightId") Long straightId, @Param("state") ProductSerialState state);
 }

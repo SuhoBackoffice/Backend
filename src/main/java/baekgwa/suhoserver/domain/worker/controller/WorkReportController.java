@@ -62,4 +62,15 @@ public class WorkReportController {
 
 		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_LIST_SUCCESS, response);
 	}
+
+	@GetMapping("/project/{projectId}/straight/{straightId}/serial")
+	public BaseResponse<List<WorkReportResponse.GetProjectStraightSerial>> getAbleReportStraightSerialList(
+		@PathVariable("projectId") Long projectId,
+		@PathVariable("straightId") Long straightId
+	) {
+		List<WorkReportResponse.GetProjectStraightSerial> response =
+			workReportFacade.getAbleReportStraightSerialList(straightId);
+
+		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_SERIAL_LIST_SUCCESS, response);
+	}
 }

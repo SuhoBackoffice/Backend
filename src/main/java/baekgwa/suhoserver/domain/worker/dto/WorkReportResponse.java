@@ -1,5 +1,6 @@
 package baekgwa.suhoserver.domain.worker.dto;
 
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -63,13 +64,31 @@ public class WorkReportResponse {
 			}
 
 			return GetProjectStraight.builder()
-					.projectStraightId(straight.getId())
-					.straightSerial(straightSerial)
-					.totalQuantity(total)
-					.completedQuantity(completed)
-					.pendingQuantity(pendingQuantity)
-					.availableQuantity(available)
-					.build();
+				.projectStraightId(straight.getId())
+				.straightSerial(straightSerial)
+				.totalQuantity(total)
+				.completedQuantity(completed)
+				.pendingQuantity(pendingQuantity)
+				.availableQuantity(available)
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class GetProjectStraightSerial {
+		private Long projectStraightId;
+		private String serial;
+
+		public static GetProjectStraightSerial from(
+			ProjectStraightSerialEntity projectStraightSerial
+		) {
+			return GetProjectStraightSerial
+				.builder()
+				.projectStraightId(projectStraightSerial.getId())
+				.serial(projectStraightSerial.getSerial())
+				.build();
 		}
 	}
 }

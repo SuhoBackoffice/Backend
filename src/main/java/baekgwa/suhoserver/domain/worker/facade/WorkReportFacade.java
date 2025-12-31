@@ -15,6 +15,7 @@ import baekgwa.suhoserver.domain.worker.service.WorkReportReadService;
 import baekgwa.suhoserver.domain.worker.service.WorkReportWriteService;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
@@ -86,6 +87,22 @@ public class WorkReportFacade {
 					ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(), straight.getStraightType().getType())
 				))
 			.filter(Objects::nonNull)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<WorkReportResponse.GetProjectStraightSerial> getAbleReportStraightSerialList(
+		Long projectStraightId
+	) {
+		List<ProjectStraightSerialEntity> allSerialList =
+			projectReadService.getProjectStraightSerialList(projectStraightId);
+
+		List<Long> pendingSerialPKList =
+			workReportReadService.getPendingProjectStraightSerialList(projectStraightId);
+
+		return allSerialList.stream()
+			.filter(serial -> !pendingSerialPKList.contains(serial.getId()))
+			.map(WorkReportResponse.GetProjectStraightSerial::from)
 			.toList();
 	}
 }
