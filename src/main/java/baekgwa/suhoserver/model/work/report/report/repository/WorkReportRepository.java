@@ -1,11 +1,14 @@
 package baekgwa.suhoserver.model.work.report.report.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 
 /**
@@ -30,4 +33,6 @@ public interface WorkReportRepository extends JpaRepository<WorkReportEntity, Lo
 		@Param("projectId") Long projectId,
 		@Param("workDate") LocalDate workDate
 	);
+
+	List<WorkReportEntity> findByProjectAndStatus(ProjectEntity project, WorkReportStatus status);
 }

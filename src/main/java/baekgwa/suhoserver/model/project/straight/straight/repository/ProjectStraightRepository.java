@@ -29,4 +29,11 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 		@Param("isLoopRail") Boolean isLoopRail);
 
 	boolean existsByIdAndProjectId(Long projectStraightId, Long id);
+
+	@Query("SELECT ps "
+		+ "FROM ProjectStraightEntity ps "
+		+ "JOIN FETCH ps.straightType "
+		+ "WHERE ps.project = :project "
+		+ "AND ps.completedQuantity < ps.totalQuantity")
+	List<ProjectStraightEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
 }

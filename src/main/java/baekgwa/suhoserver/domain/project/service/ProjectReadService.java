@@ -141,4 +141,14 @@ public class ProjectReadService {
 		return projectBranchRepository.findById(projectBranchId)
 			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
 	}
+
+	/**
+	 * 아직 생산이 완료되지 않은 Project Straight Entity List 반환
+	 * @param findProject 검색 프로젝트 Entity
+	 * @return find ProjectStraightEntity List
+	 */
+	@Transactional(readOnly = true)
+	public List<ProjectStraightEntity> getUnCompletedProjectStraightList(ProjectEntity findProject) {
+		return projectStraightRepository.findUnCompletedByProject(findProject);
+	}
 }

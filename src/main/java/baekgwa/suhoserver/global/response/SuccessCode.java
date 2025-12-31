@@ -72,6 +72,7 @@ public enum SuccessCode {
 
 	// Report
 	POST_WORK_REPORT_SUCCESS(HttpStatus.OK, "업무 보고가 완료되었습니다. 수고하셨습니다."),
+	GET_ABLE_REPORT_STRAIGHT_LIST_SUCCESS(HttpStatus.OK, "직선레일 목록 조회 성공"),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");

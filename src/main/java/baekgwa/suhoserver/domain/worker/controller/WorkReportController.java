@@ -1,6 +1,9 @@
 package baekgwa.suhoserver.domain.worker.controller;
 
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,5 +50,16 @@ public class WorkReportController {
 			workReportFacade.createDailyReport(request, projectId, userId);
 
 		return BaseResponse.success(SuccessCode.POST_WORK_REPORT_SUCCESS, response);
+	}
+
+	@GetMapping("/project/{projectId}/straight")
+	@Operation(summary = "프로젝트에서 보고 가능한 직선 레일 목록 반환")
+	public BaseResponse<List<WorkReportResponse.GetProjectStraight>> getAbleReportStraightList(
+		@PathVariable("projectId") Long projectId
+	) {
+		List<WorkReportResponse.GetProjectStraight> response =
+			workReportFacade.getAbleReportStraightList(projectId);
+
+		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_LIST_SUCCESS, response);
 	}
 }

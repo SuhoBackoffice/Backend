@@ -1,5 +1,9 @@
 package baekgwa.suhoserver.domain.worker.facade;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -7,8 +11,11 @@ import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.user.service.UserService;
 import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.domain.worker.dto.WorkReportResponse;
+import baekgwa.suhoserver.domain.worker.service.WorkReportReadService;
 import baekgwa.suhoserver.domain.worker.service.WorkReportWriteService;
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +39,7 @@ public class WorkReportFacade {
 
 	private final UserService userService;
 	private final ProjectReadService projectReadService;
+	private final WorkReportReadService workReportReadService;
 
 	@Transactional
 	public WorkReportResponse.PostNewWorkReport createDailyReport(
@@ -59,5 +67,25 @@ public class WorkReportFacade {
 			.builder()
 			.workReportId(savedWorkReport.getId())
 			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public List<WorkReportResponse.GetProjectStraight> getAbleReportStraightList(Long projectId) {
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+
+		Map<Long, Long> pendingQuantityMap =
+			workReportReadService.getPendingQuantityByProjectStraight(findProject);
+
+		List<ProjectStraightEntity> unCompletedStraightList =
+			projectReadService.getUnCompletedProjectStraightList(findProject);
+
+		return unCompletedStraightList.stream()
+			.map(straight -> WorkReportResponse.GetProjectStraight.of(
+					straight,
+					pendingQuantityMap.getOrDefault(straight.getId(), 0L),
+					ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(), straight.getStraightType().getType())
+				))
+			.filter(Objects::nonNull)
+			.toList();
 	}
 }
