@@ -44,20 +44,27 @@ public class WorkReportStraightSerialEntity extends TemporalEntity {
 	@Column(name = "project_straight_serial_id", nullable = false)
 	private Long projectStraightSerialId;
 
+	@Column(name = "project_straight_serial", nullable = false)
+	private String serial;
+
 	@Builder(access = AccessLevel.PRIVATE)
-	private WorkReportStraightSerialEntity(WorkReportStraightEntity workReportStraight, Long projectStraightSerialId) {
+	private WorkReportStraightSerialEntity(WorkReportStraightEntity workReportStraight, Long projectStraightSerialId,
+		String serial) {
 		this.workReportStraight = workReportStraight;
 		this.projectStraightSerialId = projectStraightSerialId;
+		this.serial = serial;
 	}
 
 	public static WorkReportStraightSerialEntity of(
 		WorkReportStraightEntity workReportStraight,
-		Long projectStraightSerialId
+		Long projectStraightSerialId,
+		String serial
 	) {
 		return WorkReportStraightSerialEntity
 			.builder()
 			.workReportStraight(workReportStraight)
 			.projectStraightSerialId(projectStraightSerialId)
+			.serial(serial)
 			.build();
 	}
 }

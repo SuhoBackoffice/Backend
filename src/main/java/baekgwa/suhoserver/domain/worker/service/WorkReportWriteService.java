@@ -2,6 +2,7 @@ package baekgwa.suhoserver.domain.worker.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -9,12 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
@@ -74,18 +77,28 @@ public class WorkReportWriteService {
 	@Transactional
 	public void createNewStraightWorkReport(
 		WorkReportEntity savedWorkReport,
-		WorkReportRequest.PostNewWorkReport request
+		WorkReportRequest.PostNewWorkReport request,
+		Map<Long, Map<Long, String>> straightSerialSnapshot,
+		Map<Long, ProjectStraightEntity> projectStraightMap
 	) {
 		for (WorkReportRequest.PostNewWorkStraightReport straightReport : request.getStraightReportList()) {
 
 			validateProjectStraight(savedWorkReport, straightReport);
+
+			ProjectStraightEntity ps = projectStraightMap.get(straightReport.getProjectStraightId());
+			String serial = ProductSerialFactory.generateStraightSerial(
+				ps.getLength(),
+				ps.getIsLoopRail(),
+				ps.getStraightType().getType()
+			);
 
 			WorkReportStraightEntity workReportStraight =
 				workReportStraightRepository.save(
 					WorkReportStraightEntity.of(
 						savedWorkReport,
 						straightReport.getProjectStraightId(),
-						straightReport.getProductionQuantity()
+						straightReport.getProductionQuantity(),
+						serial
 					)
 				);
 
@@ -103,9 +116,19 @@ public class WorkReportWriteService {
 				straightReport.getProjectStraightSerialIdList()
 			);
 
-			List<WorkReportStraightSerialEntity> straightSerialList = straightReport.getProjectStraightSerialIdList().stream()
-				.map(l -> WorkReportStraightSerialEntity.of(workReportStraight, l))
-				.toList();
+			Map<Long, String> serialSnapshot =
+				straightSerialSnapshot.get(straightReport.getProjectStraightId());
+
+			List<WorkReportStraightSerialEntity> straightSerialList =
+				straightReport.getProjectStraightSerialIdList().stream()
+					.map(serialId ->
+						WorkReportStraightSerialEntity.of(
+							workReportStraight,
+							serialId,
+							serialSnapshot.get(serialId)
+						)
+					)
+					.toList();
 
 			workReportStraightSerialRepository.saveAll(straightSerialList);
 		}

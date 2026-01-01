@@ -31,8 +31,9 @@ CREATE TABLE `work_report_straight`
     `work_report_id`      BIGINT                NOT NULL,
     `project_straight_id` BIGINT                NOT NULL,
     `production_quantity` BIGINT                NOT NULL,
-    `created_at`       DATETIME              NOT NULL,
-    `modified_at`      DATETIME              NOT NULL,
+    `snapshot_serial`     VARCHAR(50)           NOT NULL,
+    `created_at`          DATETIME              NOT NULL,
+    `modified_at`         DATETIME              NOT NULL,
     PRIMARY KEY (`id`)
 );
 
@@ -41,8 +42,9 @@ CREATE TABLE `work_report_straight_serial`
     `id`                         BIGINT AUTO_INCREMENT NOT NULL,
     `work_report_straight_id`    BIGINT                NOT NULL,
     `project_straight_serial_id` BIGINT                NOT NULL,
-    `created_at`       DATETIME              NOT NULL,
-    `modified_at`      DATETIME              NOT NULL,
+    `project_straight_serial`    VARCHAR(50)           NOT NULL,
+    `created_at`                 DATETIME              NOT NULL,
+    `modified_at`                DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_straight_serial_work_report_straight_id`
         FOREIGN KEY (`work_report_straight_id`) REFERENCES `work_report_straight` (`id`) ON DELETE CASCADE

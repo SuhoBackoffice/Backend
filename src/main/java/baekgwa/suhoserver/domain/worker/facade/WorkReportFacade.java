@@ -19,6 +19,8 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -36,11 +38,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class WorkReportFacade {
 
-	private final WorkReportWriteService workReportWriteService;
-
 	private final UserService userService;
 	private final ProjectReadService projectReadService;
 	private final WorkReportReadService workReportReadService;
+	private final WorkReportWriteService workReportWriteService;
 
 	@Transactional
 	public WorkReportResponse.PostNewWorkReport createDailyReport(
@@ -57,9 +58,17 @@ public class WorkReportFacade {
 			request
 		);
 
+		Map<Long, Map<Long, String>> straightSerialSnapshot =
+			projectReadService.getStraightSerialSnapshot(request);
+
+		Map<Long, ProjectStraightEntity> projectStraightMap =
+			projectReadService.getProjectStraightMap(request);
+
 		workReportWriteService.createNewStraightWorkReport(
 			savedWorkReport,
-			request
+			request,
+			straightSerialSnapshot,
+			projectStraightMap
 		);
 
 		// todo : 관리자에게 알림 발송
@@ -104,5 +113,34 @@ public class WorkReportFacade {
 			.filter(serial -> !pendingSerialPKList.contains(serial.getId()))
 			.map(WorkReportResponse.GetProjectStraightSerial::from)
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public WorkReportResponse.GetWorkReportDetail getWorkReportDetail(Long reportId, Long userId) {
+		UserEntity loginUser = userService.getUserEntityOrThrow(userId);
+
+		WorkReportEntity findWorkReport = workReportReadService.getWorkReportOrThrow(reportId);
+
+		List<WorkReportStraightEntity> straightReports =
+			workReportReadService.getWorkReportStraight(findWorkReport);
+
+		Map<Long, List<WorkReportStraightSerialEntity>> straightSerialMap =
+			workReportReadService.getWorkReportStraightSerialMap(straightReports);
+
+		List<WorkReportResponse.WorkReportStraight> workReportStraightList = straightReports.stream()
+			.map(straight -> {
+				List<WorkReportResponse.WorkReportStraightSerial> serialList =
+					straightSerialMap.getOrDefault(straight.getId(), List.of())
+						.stream()
+						.map(WorkReportResponse.WorkReportStraightSerial::from)
+						.toList();
+
+				return WorkReportResponse.WorkReportStraight.of(straight, serialList);
+			})
+			.toList();
+
+		return WorkReportResponse.GetWorkReportDetail.of(
+			findWorkReport, loginUser, workReportStraightList
+		);
 	}
 }

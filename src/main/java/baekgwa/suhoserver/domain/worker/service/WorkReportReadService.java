@@ -7,12 +7,16 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.report.repository.WorkReportRepository;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
 import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightRepository;
+import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +38,7 @@ public class WorkReportReadService {
 
 	private final WorkReportRepository workReportRepository;
 	private final WorkReportStraightRepository workReportStraightRepository;
+	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
 
 	/**
 	 * 프로젝트에 이미 보고된 직선레일 중, pending 상태로 completed 수량에 포함되지 않은 수량 조회
@@ -73,5 +78,48 @@ public class WorkReportReadService {
 			WorkReportStatus.PENDING,
 			projectStraightId
 		);
+	}
+
+	/**
+	 * 보고서 정보를 조회합니다.
+	 * @param reportId 보고서 PK
+	 * @return new WorkReportEntity
+	 */
+	@Transactional(readOnly = true)
+	public WorkReportEntity getWorkReportOrThrow(Long reportId) {
+		return workReportRepository.findWithProjectById(reportId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_FOUND_WORK_REPORT));
+	}
+
+	/**
+	 * 보고서에 할당된 직선레일 목록을 조회.
+	 * @param findWorkReport 보고서 Entity
+	 * @return 보고된 직선레일 리스트
+	 */
+	@Transactional(readOnly = true)
+	public List<WorkReportStraightEntity> getWorkReportStraight(WorkReportEntity findWorkReport) {
+		return workReportStraightRepository.findByWorkReport(findWorkReport);
+	}
+
+	/**
+	 * 업무보고에 해당하는 직선레일의 시리얼을 조회
+	 * @param straightReports 업무보고 직선레일 목록
+	 * @return key: WorkReportStraight PK value: StraightSerialList
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, List<WorkReportStraightSerialEntity>> getWorkReportStraightSerialMap(
+		List<WorkReportStraightEntity> straightReports
+	) {
+		List<Long> striaghtIdList = straightReports.stream()
+			.map(WorkReportStraightEntity::getId)
+			.toList();
+
+		List<WorkReportStraightSerialEntity> serials =
+			workReportStraightSerialRepository.findAllByStraightIds(striaghtIdList);
+
+		return serials.stream()
+			.collect(Collectors.groupingBy(
+				s-> s.getWorkReportStraight().getId()
+			));
 	}
 }

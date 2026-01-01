@@ -1,6 +1,10 @@
 package baekgwa.suhoserver.domain.project.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -8,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
+import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
@@ -164,5 +169,55 @@ public class ProjectReadService {
 	@Transactional(readOnly = true)
 	public List<ProjectStraightSerialEntity> getProjectStraightSerialList(Long straightId) {
 		return projectStraightSerialRepository.findProjectStraightSerialList(straightId, ProductSerialState.ACTIVE);
+	}
+
+	/**
+	 * 직선레일 시리얼 ID 를 기반으로 serial 이름을 찾아오는 메서드
+	 * @param request
+	 * @return Map<프로젝트에 할당된 직선레일 PK, Map<직선레일 시리얼 PK, 직선레일 시리얼 이름>>
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, Map<Long, String>> getStraightSerialSnapshot(
+		WorkReportRequest.PostNewWorkReport request
+	) {
+		List<Long> allSerialIds = request.getStraightReportList().stream()
+			.flatMap(r -> r.getProjectStraightSerialIdList().stream())
+			.distinct()
+			.toList();
+
+		List<ProjectStraightSerialEntity> serialEntities =
+			projectStraightSerialRepository.findAllByIdIn(allSerialIds);
+
+		Map<Long, String> serialMap = serialEntities.stream()
+			.collect(Collectors.toMap(
+				ProjectStraightSerialEntity::getId,
+				ProjectStraightSerialEntity::getSerial
+			));
+
+		Map<Long, Map<Long, String>> result = new HashMap<>();
+
+		for (WorkReportRequest.PostNewWorkStraightReport straight : request.getStraightReportList()) {
+			Map<Long, String> map = new HashMap<>();
+			for (Long serialId : straight.getProjectStraightSerialIdList()) {
+				map.put(serialId, serialMap.get(serialId));
+			}
+			result.put(straight.getProjectStraightId(), map);
+		}
+
+		return result;
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, ProjectStraightEntity> getProjectStraightMap(
+		WorkReportRequest.PostNewWorkReport request
+	) {
+		List<Long> psIdList = request.getStraightReportList().stream()
+			.map(WorkReportRequest.PostNewWorkStraightReport::getProjectStraightId)
+			.toList();
+
+		return projectStraightRepository.findAllByIdIn(psIdList)
+			.stream().collect(Collectors.toMap(
+				ProjectStraightEntity::getId,
+				Function.identity()));
 	}
 }

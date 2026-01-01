@@ -35,4 +35,6 @@ public interface WorkReportStraightRepository extends JpaRepository<WorkReportSt
 		@Param("status") WorkReportStatus status,
 		@Param("projectStraightId") Long projectStraightId
 	);
+
+	List<WorkReportStraightEntity> findByWorkReport(WorkReportEntity workReport);
 }

@@ -2,7 +2,9 @@ package baekgwa.suhoserver.model.work.report.report.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,4 +37,7 @@ public interface WorkReportRepository extends JpaRepository<WorkReportEntity, Lo
 	);
 
 	List<WorkReportEntity> findByProjectAndStatus(ProjectEntity project, WorkReportStatus status);
+
+	@EntityGraph(attributePaths = "project")
+	Optional<WorkReportEntity> findWithProjectById(Long id);
 }

@@ -36,4 +36,6 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 		+ "WHERE ps.project = :project "
 		+ "AND ps.completedQuantity < ps.totalQuantity")
 	List<ProjectStraightEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
+
+	List<ProjectStraightEntity> findAllByIdIn(List<Long> projectStraightIds);
 }

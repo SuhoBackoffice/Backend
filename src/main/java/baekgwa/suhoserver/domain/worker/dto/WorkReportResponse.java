@@ -1,7 +1,15 @@
 package baekgwa.suhoserver.domain.worker.dto;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.user.entity.UserEntity;
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
+import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +31,82 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WorkReportResponse {
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class GetWorkReportDetail {
+		private final boolean isOwner;
+		private final String reportUserName;
+		private final String workSummary;
+		private final LocalDate workDate;
+		private final WorkReportStatus status;
+		private final Long projectId;
+		private final String region;
+		private final String projectName;
+
+		private final List<WorkReportStraight> straightReports;
+		// todo: 분기레일 정보 추가
+		// private final List<WorkReportBranch> branchReports;
+
+		public static GetWorkReportDetail of(
+			WorkReportEntity workReport,
+			UserEntity loginUser,
+			List<WorkReportStraight> straightReports
+		) {
+			return GetWorkReportDetail
+				.builder()
+				.isOwner(loginUser.getId().equals(workReport.getReportUserId()))
+				.reportUserName(workReport.getReportUserName())
+				.workSummary(workReport.getWorkSummary())
+				.workDate(workReport.getWorkDate())
+				.status(workReport.getStatus())
+				.projectId(workReport.getProject().getId())
+				.region(workReport.getProject().getRegion())
+				.projectName(workReport.getProject().getName())
+				.straightReports(straightReports)
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class WorkReportStraight {
+		private final String serial;
+		private final Long projectStraightId;
+		private final Long productionQuantity;
+		private final List<WorkReportStraightSerial> productionSerials;
+
+		public static WorkReportStraight of(
+			WorkReportStraightEntity reportedStraight,
+			List<WorkReportStraightSerial> serialList
+		) {
+			return WorkReportStraight
+				.builder()
+				.serial(reportedStraight.getSerial())
+				.projectStraightId(reportedStraight.getProjectStraightId())
+				.productionQuantity(reportedStraight.getProductionQuantity())
+				.productionSerials(serialList)
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class WorkReportStraightSerial {
+		private final Long projectStraightSerialId;
+		private final String serial;
+
+		public static WorkReportStraightSerial from(WorkReportStraightSerialEntity serial) {
+			return WorkReportStraightSerial
+				.builder()
+				.projectStraightSerialId(serial.getProjectStraightSerialId())
+				.serial(serial.getSerial())
+				.build();
+		}
+	}
 
 	@Getter
 	public static class PostNewWorkReport {

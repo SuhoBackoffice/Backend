@@ -39,6 +39,18 @@ public class WorkReportController {
 
 	private final WorkReportFacade workReportFacade;
 
+	@GetMapping("/{reportId}")
+	@Operation(summary = "일일 업무 보고 상세 조회")
+	public BaseResponse<WorkReportResponse.GetWorkReportDetail> getDailyReport(
+		@PathVariable("reportId") Long reportId,
+		@AuthenticationPrincipal Long userId
+	) {
+		WorkReportResponse.GetWorkReportDetail response =
+			workReportFacade.getWorkReportDetail(reportId, userId);
+
+		return BaseResponse.success(SuccessCode.GET_WORK_REPORT_DETAIL_SUCCESS, response);
+	}
+
 	@PostMapping("/project/{projectId}/")
 	@Operation(summary = "일일 프로젝트 업무 보고")
 	public BaseResponse<WorkReportResponse.PostNewWorkReport> newDailyReport(
@@ -64,6 +76,7 @@ public class WorkReportController {
 	}
 
 	@GetMapping("/project/{projectId}/straight/{straightId}/serial")
+	@Operation(summary = "프로젝트에서 보고 가능한 직선 레일의 시리얼 목록 반환")
 	public BaseResponse<List<WorkReportResponse.GetProjectStraightSerial>> getAbleReportStraightSerialList(
 		@PathVariable("projectId") Long projectId,
 		@PathVariable("straightId") Long straightId
