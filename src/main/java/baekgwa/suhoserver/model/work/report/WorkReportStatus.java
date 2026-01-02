@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum WorkReportStatus {
 
-	PENDING("제출 / 미승인"),
+	PENDING("승인 대기"),
 	APPROVED("승인"),
 	REJECTED("반려");
 

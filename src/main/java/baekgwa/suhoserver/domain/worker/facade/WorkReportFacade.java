@@ -18,6 +18,7 @@ import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
@@ -142,5 +143,18 @@ public class WorkReportFacade {
 		return WorkReportResponse.GetWorkReportDetail.of(
 			findWorkReport, loginUser, workReportStraightList
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public List<WorkReportResponse.GetProjectWorkReport> getWorkReportList(Long projectId, WorkReportStatus status) {
+		ProjectEntity project =
+			projectReadService.getProjectOrThrow(projectId);
+
+		List<WorkReportEntity> findWorkReportList =
+			workReportReadService.getWorkReportListByProject(project, status);
+
+		return findWorkReportList.stream()
+			.map(WorkReportResponse.GetProjectWorkReport::from)
+			.toList();
 	}
 }

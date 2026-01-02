@@ -35,6 +35,28 @@ public class WorkReportResponse {
 	@Getter
 	@Builder(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class GetProjectWorkReport {
+		private final Long workReportId;
+		private final String reportUserName;
+		private final String workSummary;
+		private final LocalDate workDate;
+		private final String status;
+
+		public static GetProjectWorkReport from(WorkReportEntity workReport) {
+			return GetProjectWorkReport
+				.builder()
+				.workReportId(workReport.getId())
+				.reportUserName(workReport.getReportUserName())
+				.workSummary(workReport.getWorkSummary())
+				.workDate(workReport.getWorkDate())
+				.status(workReport.getStatus().getDescription())
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class GetWorkReportDetail {
 		private final boolean isOwner;
 		private final String reportUserName;

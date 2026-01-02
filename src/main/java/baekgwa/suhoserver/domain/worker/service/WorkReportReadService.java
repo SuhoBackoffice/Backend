@@ -52,7 +52,7 @@ public class WorkReportReadService {
 		List<WorkReportEntity> pendingReportList =
 			workReportRepository.findByProjectAndStatus(findProject, WorkReportStatus.PENDING);
 
-		if(pendingReportList.isEmpty()) {
+		if (pendingReportList.isEmpty()) {
 			log.debug("미승인 된, 업무 보고가 없습니다.");
 			return Map.of();
 		}
@@ -119,7 +119,21 @@ public class WorkReportReadService {
 
 		return serials.stream()
 			.collect(Collectors.groupingBy(
-				s-> s.getWorkReportStraight().getId()
+				s -> s.getWorkReportStraight().getId()
 			));
+	}
+
+	@Transactional(readOnly = true)
+	public List<WorkReportEntity> getWorkReportListByProject(ProjectEntity project, WorkReportStatus status) {
+
+		List<WorkReportEntity> result;
+
+		if (status == null) {
+			result = workReportRepository.findByProject(project);
+		} else {
+			result = workReportRepository.findByProjectAndStatus(project, status);
+		}
+
+		return result;
 	}
 }

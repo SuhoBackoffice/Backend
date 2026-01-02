@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
@@ -15,6 +16,7 @@ import baekgwa.suhoserver.domain.worker.dto.WorkReportResponse;
 import baekgwa.suhoserver.domain.worker.facade.WorkReportFacade;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -49,6 +51,18 @@ public class WorkReportController {
 			workReportFacade.getWorkReportDetail(reportId, userId);
 
 		return BaseResponse.success(SuccessCode.GET_WORK_REPORT_DETAIL_SUCCESS, response);
+	}
+
+	@GetMapping("/project/{projectId}")
+	@Operation(summary = "프로젝트의 업무 보고 목록 보기")
+	public BaseResponse<List<WorkReportResponse.GetProjectWorkReport>> getProjectWorkReport(
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(value = "status", required = false) WorkReportStatus status
+	) {
+		List<WorkReportResponse.GetProjectWorkReport> response =
+			workReportFacade.getWorkReportList(projectId, status);
+
+		return BaseResponse.success(SuccessCode.GET_PROJECT_WORK_REPORT_SUCCESS, response);
 	}
 
 	@PostMapping("/project/{projectId}/")

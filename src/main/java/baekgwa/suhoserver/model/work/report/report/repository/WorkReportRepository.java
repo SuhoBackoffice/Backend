@@ -40,4 +40,6 @@ public interface WorkReportRepository extends JpaRepository<WorkReportEntity, Lo
 
 	@EntityGraph(attributePaths = "project")
 	Optional<WorkReportEntity> findWithProjectById(Long id);
+
+	List<WorkReportEntity> findByProject(ProjectEntity project);
 }
