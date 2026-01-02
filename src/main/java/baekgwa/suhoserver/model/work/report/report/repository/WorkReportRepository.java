@@ -36,10 +36,12 @@ public interface WorkReportRepository extends JpaRepository<WorkReportEntity, Lo
 		@Param("workDate") LocalDate workDate
 	);
 
-	List<WorkReportEntity> findByProjectAndStatus(ProjectEntity project, WorkReportStatus status);
-
 	@EntityGraph(attributePaths = "project")
 	Optional<WorkReportEntity> findWithProjectById(Long id);
 
-	List<WorkReportEntity> findByProject(ProjectEntity project);
+	List<WorkReportEntity> findByProjectAndStatus(ProjectEntity project, WorkReportStatus status);
+
+	List<WorkReportEntity> findByProjectAndStatusOrderByWorkDateDesc(ProjectEntity project, WorkReportStatus status);
+
+	List<WorkReportEntity> findByProjectOrderByWorkDateDesc(ProjectEntity project);
 }

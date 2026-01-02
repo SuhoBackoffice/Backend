@@ -129,9 +129,9 @@ public class WorkReportReadService {
 		List<WorkReportEntity> result;
 
 		if (status == null) {
-			result = workReportRepository.findByProject(project);
+			result = workReportRepository.findByProjectOrderByWorkDateDesc(project);
 		} else {
-			result = workReportRepository.findByProjectAndStatus(project, status);
+			result = workReportRepository.findByProjectAndStatusOrderByWorkDateDesc(project, status);
 		}
 
 		return result;
