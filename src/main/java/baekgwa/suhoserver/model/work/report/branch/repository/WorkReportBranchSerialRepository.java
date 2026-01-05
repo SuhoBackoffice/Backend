@@ -1,5 +1,7 @@
 package baekgwa.suhoserver.model.work.report.branch.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
@@ -17,4 +19,6 @@ import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerial
  */
 public interface WorkReportBranchSerialRepository extends JpaRepository<WorkReportBranchSerialEntity, Long> {
 	boolean existsByProjectBranchSerialId(Long projectBranchSerialId);
+
+	boolean existsByProjectBranchSerialIdIn(List<Long> serialIdList);
 }

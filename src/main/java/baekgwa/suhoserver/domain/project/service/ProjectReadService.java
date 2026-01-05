@@ -30,6 +30,7 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
 import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -54,6 +55,7 @@ public class ProjectReadService {
 	private final ProjectStraightSerialRepository projectStraightSerialRepository;
 	private final ProjectBranchSerialRepository projectBranchSerialRepository;
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
+	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
 
 	/**
 	 * projectId 로, 프로젝트 정보 조회
@@ -211,7 +213,13 @@ public class ProjectReadService {
 	 * @return Map key: ProjectBranch PK, value: ProjectBranch Entity
 	 */
 	@Transactional(readOnly = true)
-	public Map<Long, ProjectBranchEntity> getProjectBranchMap(WorkReportRequest.PostNewWorkReport request) {
+	public Map<Long, ProjectBranchEntity> getProjectBranchMap(
+		WorkReportRequest.PostNewWorkReport request
+	) {
+		if (request.getBranchReportList().isEmpty()) {
+			return Map.of();
+		}
+
 		List<Long> projectBranchIdList = request.getBranchReportList()
 			.stream()
 			.map(WorkReportRequest.PostNewWorkBranchReport::getProjectBranchId)
@@ -220,8 +228,12 @@ public class ProjectReadService {
 		List<ProjectBranchEntity> findProjectBranchList =
 			projectBranchRepository.findAllById(projectBranchIdList);
 
-		return findProjectBranchList
-			.stream().collect(Collectors.toMap(
+		if (findProjectBranchList.size() != request.getBranchReportList().size()) {
+			throw new GlobalException(ErrorCode.NOT_REGISTERED_PROJECT_BRANCH);
+		}
+
+		return findProjectBranchList.stream()
+			.collect(Collectors.toMap(
 				ProjectBranchEntity::getId,
 				Function.identity()
 			));
@@ -326,27 +338,85 @@ public class ProjectReadService {
 	 * @param request
 	 * @return Map<프로젝트에 할당된 분기레일 PK, Map<분기레일 시리얼 PK, 분기레일 시리얼 이름>>
 	 */
+	@Transactional(readOnly = true)
 	public Map<Long, Map<Long, String>> getBranchSerialSnapshot(
 		WorkReportRequest.PostNewWorkReport request
 	) {
+		if (request.getBranchReportList().isEmpty()) {
+			return Map.of();
+		}
+
 		List<Long> allSerialIds = request.getBranchReportList().stream()
 			.flatMap(b -> b.getProjectBranchSerialIdList().stream())
 			.distinct()
 			.toList();
 
-		List<ProjectBranchSerialEntity> serialList =
+		List<ProjectBranchSerialEntity> serialEntities =
 			projectBranchSerialRepository.findAllById(allSerialIds);
 
-		Map<Long, String> serialMap = serialList.stream()
-			.collect(Collectors.toMap(
-				ProjectBranchSerialEntity::getId,
-				ProjectBranchSerialEntity::getSerial
-			));
+		if (serialEntities.size() != allSerialIds.size()) {
+			throw new GlobalException(ErrorCode.INVALID_BRANCH_SERIAL);
+		}
+
+		Map<Long, Set<Long>> dbSerialMap =
+			serialEntities.stream()
+				.collect(Collectors.groupingBy(
+					s -> s.getProjectBranch().getId(),
+					Collectors.mapping(ProjectBranchSerialEntity::getId, Collectors.toSet())
+				));
+
+		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
+
+			Set<Long> requestedSerialIds =
+				new HashSet<>(branch.getProjectBranchSerialIdList());
+
+			Set<Long> actualSerialIds =
+				dbSerialMap.getOrDefault(branch.getProjectBranchId(), Set.of());
+
+			if (!actualSerialIds.containsAll(requestedSerialIds)) {
+				throw new GlobalException(ErrorCode.INVALID_BRANCH_SERIAL);
+			}
+
+			if (requestedSerialIds.size() != branch.getProductionQuantity()) {
+				throw new GlobalException(ErrorCode.NOT_MATCH_BRANCH_PRODUCTION_SERIAL_COUNT);
+			}
+		}
+
+		if (serialEntities.stream()
+			.anyMatch(s -> s.getState() != ProductSerialState.ACTIVE)) {
+			throw new GlobalException(ErrorCode.INACTIVE_BRANCH_SERIAL);
+		}
+
+		if (serialEntities.stream()
+			.anyMatch(s -> s.getProductionState() != ProductProductionState.NOT_PRODUCED)) {
+			throw new GlobalException(ErrorCode.ALREADY_PRODUCED_BRANCH_SERIAL);
+		}
+
+		List<Long> serialIdList = serialEntities.stream()
+			.map(ProjectBranchSerialEntity::getId)
+			.toList();
+
+		boolean alreadyUsed =
+			workReportBranchSerialRepository
+				.existsByProjectBranchSerialIdIn(serialIdList);
+
+		if (alreadyUsed) {
+			throw new GlobalException(ErrorCode.ALREADY_USED_BRANCH_SERIAL);
+		}
+
+		Map<Long, String> serialMap =
+			serialEntities.stream()
+				.collect(Collectors.toMap(
+					ProjectBranchSerialEntity::getId,
+					ProjectBranchSerialEntity::getSerial
+				));
 
 		Map<Long, Map<Long, String>> result = new HashMap<>();
 
 		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
+
 			Map<Long, String> map = new HashMap<>();
+
 			for (Long serialId : branch.getProjectBranchSerialIdList()) {
 				map.put(serialId, serialMap.get(serialId));
 			}

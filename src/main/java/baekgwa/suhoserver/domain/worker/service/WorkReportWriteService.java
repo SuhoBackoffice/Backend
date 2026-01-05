@@ -1,9 +1,7 @@
 package baekgwa.suhoserver.domain.worker.service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,11 +10,8 @@ import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
-import baekgwa.suhoserver.model.project.ProductProductionState;
-import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
-import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.branch.serial.repository.ProjectBranchSerialRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
@@ -141,8 +136,6 @@ public class WorkReportWriteService {
 		Map<Long, Map<Long, String>> branchSerialSnapshot
 	) {
 		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
-			validateProjectBranch(savedWorkReport, branch);
-
 			ProjectBranchEntity pb = projectBranchMap.get(branch.getProjectBranchId());
 			String serial = ProductSerialFactory.generateBranchSerial(pb.getBranchType().getCode());
 
@@ -155,20 +148,6 @@ public class WorkReportWriteService {
 						serial
 					)
 				);
-
-			Set<Long> unique = new HashSet<>(branch.getProjectBranchSerialIdList());
-			if (unique.size() != branch.getProjectBranchSerialIdList().size()) {
-				throw new GlobalException(ErrorCode.DUPLICATION_PRODUCTION_BRANCH_SERIAL);
-			}
-
-			if (branch.getProductionQuantity() != branch.getProjectBranchSerialIdList().size()) {
-				throw new GlobalException(ErrorCode.NOT_MATCH_BRANCH_PRODUCTION_SERIAL_COUNT);
-			}
-
-			validateBranchSerial(
-				branch.getProjectBranchId(),
-				branch.getProjectBranchSerialIdList()
-			);
 
 			Map<Long, String> serialSnapshot =
 				branchSerialSnapshot.get(branch.getProjectBranchId());
@@ -185,54 +164,6 @@ public class WorkReportWriteService {
 					.toList();
 
 			workReportBranchSerialRepository.saveAll(branchSerialList);
-		}
-	}
-
-	private void validateProjectBranch(
-		WorkReportEntity workReport,
-		WorkReportRequest.PostNewWorkBranchReport request
-	) {
-		boolean exists = projectBranchRepository.existsByIdAndProject(
-			request.getProjectBranchId(),
-			workReport.getProject()
-		);
-
-		if (!exists) {
-			throw new GlobalException(ErrorCode.NOT_REGISTERED_PROJECT_BRANCH);
-		}
-	}
-
-	private void validateBranchSerial(
-		Long projectBranchId,
-		List<Long> serialIds
-	) {
-		List<ProjectBranchSerialEntity> serialEntities =
-			projectBranchSerialRepository.findAllById(serialIds);
-
-		if (serialEntities.size() != serialIds.size()) {
-			throw new GlobalException(ErrorCode.INVALID_BRANCH_SERIAL);
-		}
-
-		for (ProjectBranchSerialEntity serial : serialEntities) {
-			if (!serial.getProjectBranch().getId().equals(projectBranchId)) {
-				throw new GlobalException(ErrorCode.INVALID_BRANCH_SERIAL);
-			}
-
-			if (serial.getState() != ProductSerialState.ACTIVE) {
-				throw new GlobalException(ErrorCode.INACTIVE_BRANCH_SERIAL);
-			}
-
-			if (serial.getProductionState() != ProductProductionState.NOT_PRODUCED) {
-				throw new GlobalException(ErrorCode.ALREADY_PRODUCED_BRANCH_SERIAL);
-			}
-
-			boolean alreadyUsed =
-				workReportBranchSerialRepository
-					.existsByProjectBranchSerialId(serial.getId());
-
-			if (alreadyUsed) {
-				throw new GlobalException(ErrorCode.ALREADY_USED_BRANCH_SERIAL);
-			}
 		}
 	}
 }
