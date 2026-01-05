@@ -1,8 +1,10 @@
 package baekgwa.suhoserver.domain.project.service;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,7 @@ import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
@@ -27,6 +30,7 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -49,6 +53,7 @@ public class ProjectReadService {
 	private final ProjectStraightRepository projectStraightRepository;
 	private final ProjectStraightSerialRepository projectStraightSerialRepository;
 	private final ProjectBranchSerialRepository projectBranchSerialRepository;
+	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
 
 	/**
 	 * projectId 로, 프로젝트 정보 조회
@@ -178,14 +183,26 @@ public class ProjectReadService {
 	public Map<Long, ProjectStraightEntity> getProjectStraightMap(
 		WorkReportRequest.PostNewWorkReport request
 	) {
+		if (request.getStraightReportList().isEmpty()) {
+			return Map.of();
+
+		}
 		List<Long> psIdList = request.getStraightReportList().stream()
 			.map(WorkReportRequest.PostNewWorkStraightReport::getProjectStraightId)
 			.toList();
 
-		return projectStraightRepository.findAllByIdIn(psIdList)
-			.stream().collect(Collectors.toMap(
+		List<ProjectStraightEntity> findProjectStraightList =
+			projectStraightRepository.findAllById(psIdList);
+
+		if (findProjectStraightList.size() != request.getStraightReportList().size()) {
+			throw new GlobalException(ErrorCode.NOT_REGISTERED_PROJECT_STRAIGHT);
+		}
+
+		return findProjectStraightList.stream()
+			.collect(Collectors.toMap(
 				ProjectStraightEntity::getId,
-				Function.identity()));
+				Function.identity())
+			);
 	}
 
 	/**
@@ -219,6 +236,10 @@ public class ProjectReadService {
 	public Map<Long, Map<Long, String>> getStraightSerialSnapshot(
 		WorkReportRequest.PostNewWorkReport request
 	) {
+		if (request.getStraightReportList().isEmpty()) {
+			return Map.of();
+		}
+
 		List<Long> allSerialIds = request.getStraightReportList().stream()
 			.flatMap(r -> r.getProjectStraightSerialIdList().stream())
 			.distinct()
@@ -227,19 +248,73 @@ public class ProjectReadService {
 		List<ProjectStraightSerialEntity> serialEntities =
 			projectStraightSerialRepository.findAllByIdIn(allSerialIds);
 
-		Map<Long, String> serialMap = serialEntities.stream()
-			.collect(Collectors.toMap(
-				ProjectStraightSerialEntity::getId,
-				ProjectStraightSerialEntity::getSerial
-			));
+		if (serialEntities.size() != allSerialIds.size()) {
+			throw new GlobalException(ErrorCode.INVALID_STRAIGHT_SERIAL);
+		}
+
+		Map<Long, Set<Long>> dbSerialMap =
+			serialEntities.stream()
+				.collect(Collectors.groupingBy(
+					s -> s.getProjectStraight().getId(),
+					Collectors.mapping(ProjectStraightSerialEntity::getId, Collectors.toSet())
+				));
+
+		for (WorkReportRequest.PostNewWorkStraightReport straight : request.getStraightReportList()) {
+
+			Set<Long> requestedSerialIds =
+				new HashSet<>(straight.getProjectStraightSerialIdList());
+
+			Set<Long> actualSerialIds =
+				dbSerialMap.getOrDefault(straight.getProjectStraightId(), Set.of());
+
+			if (!actualSerialIds.containsAll(requestedSerialIds)) {
+				throw new GlobalException(ErrorCode.INVALID_STRAIGHT_SERIAL);
+			}
+
+			if (requestedSerialIds.size() != straight.getProductionQuantity()) {
+				throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_PRODUCTION_SERIAL_COUNT);
+			}
+		}
+
+		if (serialEntities.stream()
+			.anyMatch(s -> s.getState() != ProductSerialState.ACTIVE)) {
+			throw new GlobalException(ErrorCode.INACTIVE_STRAIGHT_SERIAL);
+		}
+
+		if (serialEntities.stream()
+			.anyMatch(s -> s.getProductionState() != ProductProductionState.NOT_PRODUCED)) {
+			throw new GlobalException(ErrorCode.ALREADY_PRODUCED_STRAIGHT_SERIAL);
+		}
+
+		List<Long> serialIdList = serialEntities.stream()
+			.map(ProjectStraightSerialEntity::getId)
+			.toList();
+
+		boolean alreadyUsed =
+			workReportStraightSerialRepository
+				.existsByProjectStraightSerialIdIn(serialIdList);
+
+		if (alreadyUsed) {
+			throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
+		}
+
+		Map<Long, String> serialMap =
+			serialEntities.stream()
+				.collect(Collectors.toMap(
+					ProjectStraightSerialEntity::getId,
+					ProjectStraightSerialEntity::getSerial
+				));
 
 		Map<Long, Map<Long, String>> result = new HashMap<>();
 
 		for (WorkReportRequest.PostNewWorkStraightReport straight : request.getStraightReportList()) {
+
 			Map<Long, String> map = new HashMap<>();
+
 			for (Long serialId : straight.getProjectStraightSerialIdList()) {
 				map.put(serialId, serialMap.get(serialId));
 			}
+
 			result.put(straight.getProjectStraightId(), map);
 		}
 

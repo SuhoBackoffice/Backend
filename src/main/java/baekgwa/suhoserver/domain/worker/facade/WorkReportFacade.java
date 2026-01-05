@@ -60,11 +60,11 @@ public class WorkReportFacade {
 			request
 		);
 
-		Map<Long, Map<Long, String>> straightSerialSnapshot =
-			projectReadService.getStraightSerialSnapshot(request);
-
 		Map<Long, ProjectStraightEntity> projectStraightMap =
 			projectReadService.getProjectStraightMap(request);
+
+		Map<Long, Map<Long, String>> straightSerialSnapshot =
+			projectReadService.getStraightSerialSnapshot(request);
 
 		workReportWriteService.createNewStraightWorkReport(
 			savedWorkReport,

@@ -20,7 +20,7 @@ import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSe
  * 25. 12. 29.     Baekgwa               Initial creation
  */
 public interface WorkReportStraightSerialRepository extends JpaRepository<WorkReportStraightSerialEntity, Long> {
-	boolean existsByProjectStraightSerialId(Long projectStraightSerialId);
+	boolean existsByProjectStraightSerialIdIn(List<Long> projectStraightSerialIds);
 
 	@Query("SELECT wrss "
 		+ "FROM WorkReportStraightSerialEntity wrss "

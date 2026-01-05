@@ -19,7 +19,6 @@ import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRe
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.branch.serial.repository.ProjectBranchSerialRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
@@ -75,7 +74,8 @@ public class WorkReportWriteService {
 		ProjectEntity project,
 		WorkReportRequest.PostNewWorkReport request
 	) {
-		boolean existReport = workReportRepository.existsDailyReport(user.getId(), project.getId(), request.getWorkDate());
+		boolean existReport = workReportRepository.existsDailyReport(user.getId(), project.getId(),
+			request.getWorkDate());
 		if (existReport) {
 			throw new GlobalException(ErrorCode.ALREADY_EXIST_DAILY_REPORT);
 		}
@@ -93,10 +93,11 @@ public class WorkReportWriteService {
 		Map<Long, Map<Long, String>> straightSerialSnapshot,
 		Map<Long, ProjectStraightEntity> projectStraightMap
 	) {
+		if (request.getStraightReportList().isEmpty()) {
+			return;
+		}
+
 		for (WorkReportRequest.PostNewWorkStraightReport straightReport : request.getStraightReportList()) {
-
-			validateProjectStraight(savedWorkReport, straightReport);
-
 			ProjectStraightEntity ps = projectStraightMap.get(straightReport.getProjectStraightId());
 			String serial = ProductSerialFactory.generateStraightSerial(
 				ps.getLength(),
@@ -113,20 +114,6 @@ public class WorkReportWriteService {
 						serial
 					)
 				);
-
-			Set<Long> unique = new HashSet<>(straightReport.getProjectStraightSerialIdList());
-			if (unique.size() != straightReport.getProjectStraightSerialIdList().size()) {
-				throw new GlobalException(ErrorCode.DUPLICATION_PRODUCTION_STRAIGHT_SERIAL);
-			}
-
-			if (straightReport.getProductionQuantity() != straightReport.getProjectStraightSerialIdList().size()) {
-				throw new GlobalException(ErrorCode.NOT_MATCH_STRAIGHT_PRODUCTION_SERIAL_COUNT);
-			}
-
-			validateStraightSerial(
-				straightReport.getProjectStraightId(),
-				straightReport.getProjectStraightSerialIdList()
-			);
 
 			Map<Long, String> serialSnapshot =
 				straightSerialSnapshot.get(straightReport.getProjectStraightId());
@@ -201,20 +188,6 @@ public class WorkReportWriteService {
 		}
 	}
 
-	private void validateProjectStraight(
-		WorkReportEntity workReport,
-		WorkReportRequest.PostNewWorkStraightReport request
-	) {
-		boolean exists = projectStraightRepository.existsByIdAndProjectId(
-				request.getProjectStraightId(),
-				workReport.getProject().getId()
-			);
-
-		if (!exists) {
-			throw new GlobalException(ErrorCode.NOT_REGISTERED_PROJECT_STRAIGHT);
-		}
-	}
-
 	private void validateProjectBranch(
 		WorkReportEntity workReport,
 		WorkReportRequest.PostNewWorkBranchReport request
@@ -259,40 +232,6 @@ public class WorkReportWriteService {
 
 			if (alreadyUsed) {
 				throw new GlobalException(ErrorCode.ALREADY_USED_BRANCH_SERIAL);
-			}
-		}
-	}
-
-	private void validateStraightSerial(
-		Long projectStraightId,
-		List<Long> serialIds
-	) {
-		List<ProjectStraightSerialEntity> serialEntities =
-			projectStraightSerialRepository.findAllByIdIn(serialIds);
-
-		if (serialEntities.size() != serialIds.size()) {
-			throw new GlobalException(ErrorCode.INVALID_STRAIGHT_SERIAL);
-		}
-
-		for (ProjectStraightSerialEntity serial : serialEntities) {
-			if (!serial.getProjectStraight().getId().equals(projectStraightId)) {
-				throw new GlobalException(ErrorCode.INVALID_STRAIGHT_SERIAL);
-			}
-
-			if (serial.getState() != ProductSerialState.ACTIVE) {
-				throw new GlobalException(ErrorCode.INACTIVE_STRAIGHT_SERIAL);
-			}
-
-			if (serial.getProductionState() != ProductProductionState.NOT_PRODUCED) {
-				throw new GlobalException(ErrorCode.ALREADY_PRODUCED_STRAIGHT_SERIAL);
-			}
-
-			boolean alreadyUsed =
-				workReportStraightSerialRepository
-					.existsByProjectStraightSerialId(serial.getId());
-
-			if (alreadyUsed) {
-				throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
 			}
 		}
 	}
