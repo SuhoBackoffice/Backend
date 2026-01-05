@@ -8,6 +8,8 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
@@ -69,13 +71,13 @@ public class WorkReportResponse {
 		private final String projectName;
 
 		private final List<WorkReportStraight> straightReports;
-		// todo: 분기레일 정보 추가
-		// private final List<WorkReportBranch> branchReports;
+		private final List<WorkReportBranch> branchReports;
 
 		public static GetWorkReportDetail of(
 			WorkReportEntity workReport,
 			UserEntity loginUser,
-			List<WorkReportStraight> straightReports
+			List<WorkReportStraight> straightReports,
+			List<WorkReportBranch> branchReports
 		) {
 			return GetWorkReportDetail
 				.builder()
@@ -88,6 +90,30 @@ public class WorkReportResponse {
 				.region(workReport.getProject().getRegion())
 				.projectName(workReport.getProject().getName())
 				.straightReports(straightReports)
+				.branchReports(branchReports)
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class WorkReportBranch {
+		private final String branchSerial;
+		private final Long projectBranchId;
+		private final Long productionQuantity;
+		private final List<WorkReportBranchSerial> productionSerials;
+
+		public static WorkReportBranch of(
+			WorkReportBranchEntity reportedBranch,
+			List<WorkReportBranchSerial> serialList
+		) {
+			return WorkReportBranch
+				.builder()
+				.branchSerial(reportedBranch.getSerial())
+				.projectBranchId(reportedBranch.getProjectBranchId())
+				.productionQuantity(reportedBranch.getProductionQuantity())
+				.productionSerials(serialList)
 				.build();
 		}
 	}
@@ -96,7 +122,7 @@ public class WorkReportResponse {
 	@Builder(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class WorkReportStraight {
-		private final String serial;
+		private final String straightSerial;
 		private final Long projectStraightId;
 		private final Long productionQuantity;
 		private final List<WorkReportStraightSerial> productionSerials;
@@ -107,7 +133,7 @@ public class WorkReportResponse {
 		) {
 			return WorkReportStraight
 				.builder()
-				.serial(reportedStraight.getSerial())
+				.straightSerial(reportedStraight.getSerial())
 				.projectStraightId(reportedStraight.getProjectStraightId())
 				.productionQuantity(reportedStraight.getProductionQuantity())
 				.productionSerials(serialList)
@@ -126,6 +152,22 @@ public class WorkReportResponse {
 			return WorkReportStraightSerial
 				.builder()
 				.projectStraightSerialId(serial.getProjectStraightSerialId())
+				.serial(serial.getSerial())
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class WorkReportBranchSerial {
+		private final Long projectBranchSerialId;
+		private final String serial;
+
+		public static WorkReportBranchSerial from(WorkReportBranchSerialEntity serial) {
+			return WorkReportBranchSerial
+				.builder()
+				.projectBranchSerialId(serial.getProjectBranchSerialId())
 				.serial(serial.getSerial())
 				.build();
 		}

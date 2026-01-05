@@ -20,6 +20,8 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
@@ -174,8 +176,27 @@ public class WorkReportFacade {
 			})
 			.toList();
 
+		List<WorkReportBranchEntity> branchReports =
+			workReportReadService.getWorkReportBranch(findWorkReport);
+
+		Map<Long, List<WorkReportBranchSerialEntity>> branchSerialMap =
+			workReportReadService.getWorkReportBranchSerialMap(branchReports);
+
+		List<WorkReportResponse.WorkReportBranch> workReportBranchList = branchReports.stream()
+			.map(branch -> {
+				List<WorkReportResponse.WorkReportBranchSerial> serialList = branchSerialMap.getOrDefault(
+						branch.getId(),
+						List.of())
+					.stream()
+					.map(WorkReportResponse.WorkReportBranchSerial::from)
+					.toList();
+
+				return WorkReportResponse.WorkReportBranch.of(branch, serialList);
+			})
+			.toList();
+
 		return WorkReportResponse.GetWorkReportDetail.of(
-			findWorkReport, loginUser, workReportStraightList
+			findWorkReport, loginUser, workReportStraightList, workReportBranchList
 		);
 	}
 

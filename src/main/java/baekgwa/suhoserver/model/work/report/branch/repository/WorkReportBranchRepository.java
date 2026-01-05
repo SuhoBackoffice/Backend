@@ -21,4 +21,6 @@ import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 public interface WorkReportBranchRepository extends JpaRepository<WorkReportBranchEntity, Long> {
 
 	List<WorkReportBranchEntity> findByWorkReportIn(List<WorkReportEntity> pendingReportList);
+
+	List<WorkReportBranchEntity> findByWorkReport(WorkReportEntity findWorkReport);
 }

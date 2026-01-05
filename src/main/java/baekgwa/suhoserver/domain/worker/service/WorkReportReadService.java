@@ -12,7 +12,9 @@ import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
 import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchRepository;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.report.repository.WorkReportRepository;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
@@ -42,6 +44,7 @@ public class WorkReportReadService {
 	private final WorkReportStraightRepository workReportStraightRepository;
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
 	private final WorkReportBranchRepository workReportBranchRepository;
+	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
 
 	/**
 	 * 프로젝트에 이미 보고된 직선레일 중, pending 상태로 completed 수량에 포함되지 않은 수량 조회
@@ -132,6 +135,18 @@ public class WorkReportReadService {
 	}
 
 	/**
+	 * 보고서에 할당된 분기 레일 목록을 조회.
+	 * @param findWorkReport 보고서 Entity
+	 * @return 보고된 분기 레일 리스트
+	 */
+	@Transactional(readOnly = true)
+	public List<WorkReportBranchEntity> getWorkReportBranch(
+		WorkReportEntity findWorkReport
+	) {
+		return workReportBranchRepository.findByWorkReport(findWorkReport);
+	}
+
+	/**
 	 * 업무보고에 해당하는 직선레일의 시리얼을 조회
 	 * @param straightReports 업무보고 직선레일 목록
 	 * @return key: WorkReportStraight PK value: StraightSerialList
@@ -150,6 +165,27 @@ public class WorkReportReadService {
 		return serials.stream()
 			.collect(Collectors.groupingBy(
 				s -> s.getWorkReportStraight().getId()
+			));
+	}
+
+	/**
+	 * 업무보고에 해당하는 분기 레일의 시리얼을 조회
+	 * @param branchReports 업무보고 분기 레일 목록
+	 * @return key: WorkReportBranch PK value: BranchSerialList
+	 */
+	public Map<Long, List<WorkReportBranchSerialEntity>> getWorkReportBranchSerialMap(
+		List<WorkReportBranchEntity> branchReports
+	) {
+		List<Long> branchIdList = branchReports.stream()
+			.map(WorkReportBranchEntity::getId)
+			.toList();
+
+		List<WorkReportBranchSerialEntity> serials =
+			workReportBranchSerialRepository.findAllByBranchIds(branchIdList);
+
+		return serials.stream()
+			.collect(Collectors.groupingBy(
+				b -> b.getWorkReportBranch().getId()
 			));
 	}
 
