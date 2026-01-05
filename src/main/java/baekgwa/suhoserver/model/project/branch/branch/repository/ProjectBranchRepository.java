@@ -35,4 +35,11 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 	List<ProjectBranchEntity> findByProjectId(@Param("projectId") Long projectId);
 
 	boolean existsByIdAndProject(Long projectBranchId, ProjectEntity project);
+
+	@Query("SELECT pb "
+		+ "FROM ProjectBranchEntity pb "
+		+ "JOIN FETCH pb.branchType "
+		+ "WHERE pb.project = :project "
+		+ "AND pb.completedQuantity < pb.totalQuantity")
+	List<ProjectBranchEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
 }

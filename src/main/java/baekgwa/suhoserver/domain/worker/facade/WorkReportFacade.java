@@ -115,6 +115,26 @@ public class WorkReportFacade {
 	}
 
 	@Transactional(readOnly = true)
+	public List<WorkReportResponse.GetProjectBranch> getAbleReportBranchList(Long projectId) {
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+
+		Map<Long, Long> pendingQuantityMap =
+			workReportReadService.getPendingQuantityByProjectBranch(findProject);
+
+		List<ProjectBranchEntity> unCompletedBranchList =
+			projectReadService.getUnCompletedProjectBranchList(findProject);
+
+		return unCompletedBranchList.stream()
+			.map(branch -> WorkReportResponse.GetProjectBranch.of(
+				branch,
+				pendingQuantityMap.getOrDefault(branch.getId(), 0L),
+				ProductSerialFactory.generateBranchSerial(branch.getBranchType().getCode())
+			))
+			.filter(Objects::nonNull)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
 	public List<WorkReportResponse.GetProjectStraightSerial> getAbleReportStraightSerialList(
 		Long projectStraightId
 	) {

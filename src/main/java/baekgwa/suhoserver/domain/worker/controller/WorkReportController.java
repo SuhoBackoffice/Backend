@@ -100,4 +100,15 @@ public class WorkReportController {
 
 		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_SERIAL_LIST_SUCCESS, response);
 	}
+
+	@GetMapping("/project/{projectId}/branch")
+	@Operation(summary = "프로젝트에서 보고 가능한 분기 레일 목록 반환")
+	public BaseResponse<List<WorkReportResponse.GetProjectBranch>> getAbleReportBranchList(
+		@PathVariable("projectId") Long projectId
+	) {
+		List<WorkReportResponse.GetProjectBranch> response =
+			workReportFacade.getAbleReportBranchList(projectId);
+
+		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_LIST_SUCCESS, response);
+	}
 }

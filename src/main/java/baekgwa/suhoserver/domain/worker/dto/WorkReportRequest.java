@@ -1,7 +1,11 @@
 package baekgwa.suhoserver.domain.worker.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -32,8 +36,12 @@ public class WorkReportRequest {
 
 		@PastOrPresent(message = "업무 보고는 오늘 까지만 선택 가능합니다.")
 		private LocalDate workDate;
-		private List<PostNewWorkStraightReport> straightReportList;
-		private List<PostNewWorkBranchReport> branchReportList;
+
+		@JsonSetter(nulls = Nulls.AS_EMPTY)
+		private List<PostNewWorkStraightReport> straightReportList = new ArrayList<>();
+
+		@JsonSetter(nulls = Nulls.AS_EMPTY)
+		private List<PostNewWorkBranchReport> branchReportList = new ArrayList<>();
 	}
 
 	@Getter

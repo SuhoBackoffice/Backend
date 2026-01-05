@@ -172,6 +172,15 @@ public class ProjectReadService {
 	}
 
 	/**
+	 * 아직 생산이 완료되지 않은 Project Branch Entity List 반환
+	 * @param findProject 검색 프로젝트 Entity
+	 * @return find ProjectBranchEntity List
+	 */
+	public List<ProjectBranchEntity> getUnCompletedProjectBranchList(ProjectEntity findProject) {
+		return projectBranchRepository.findUnCompletedByProject(findProject);
+	}
+
+	/**
 	 * 활성화 된 직선레일 시리얼 번호 목록 반환
 	 * @param straightId 프로젝트에 할당된 직선레일 PK
 	 * @return find List<ProjectStraightSerialEntity>
@@ -187,8 +196,8 @@ public class ProjectReadService {
 	) {
 		if (request.getStraightReportList().isEmpty()) {
 			return Map.of();
-
 		}
+
 		List<Long> psIdList = request.getStraightReportList().stream()
 			.map(WorkReportRequest.PostNewWorkStraightReport::getProjectStraightId)
 			.toList();

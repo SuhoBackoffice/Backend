@@ -3,6 +3,7 @@ package baekgwa.suhoserver.domain.worker.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
@@ -143,13 +144,53 @@ public class WorkReportResponse {
 	@Getter
 	@Builder(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class GetProjectBranch {
+		private final Long projectBranchId;
+		private final String branchSerial;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final Long pendingQuantity;
+		private final Long availableQuantity;
+
+		public static GetProjectBranch of(
+			ProjectBranchEntity branch,
+			long pendingQuantity,
+			String branchSerial
+		) {
+			long total = branch.getTotalQuantity();
+			long completed = branch.getCompletedQuantity();
+			long available = total - completed - pendingQuantity;
+
+			if (available <= 0) {
+				log.debug("[분기레일] {}는 전체 {}개 중 {}개 생산 완료, {}개 승인 대기중으로 더이상 보고할 수 없습니다.",
+					branchSerial,
+					branch.getTotalQuantity(),
+					branch.getCompletedQuantity(),
+					pendingQuantity);
+				return null;
+			}
+
+			return GetProjectBranch.builder()
+				.projectBranchId(branch.getId())
+				.branchSerial(branchSerial)
+				.totalQuantity(total)
+				.completedQuantity(completed)
+				.pendingQuantity(pendingQuantity)
+				.availableQuantity(available)
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class GetProjectStraight {
-		private Long projectStraightId; // 프로젝트 직선레일 PK
-		private String straightSerial; // 직선레일 식별 번호
-		private Long totalQuantity; // 총 수량
-		private Long completedQuantity; // 완료 수량
-		private Long pendingQuantity; // 보고 후, 승인 대기중인 수량
-		private Long availableQuantity; // 보고 가능한 수량
+		private final Long projectStraightId; // 프로젝트 직선레일 PK
+		private final String straightSerial; // 직선레일 식별 번호
+		private final Long totalQuantity; // 총 수량
+		private final Long completedQuantity; // 완료 수량
+		private final Long pendingQuantity; // 보고 후, 승인 대기중인 수량
+		private final Long availableQuantity; // 보고 가능한 수량
 
 		public static GetProjectStraight of(
 			ProjectStraightEntity straight,
@@ -161,7 +202,7 @@ public class WorkReportResponse {
 			long available = total - completed - pendingQuantity;
 
 			if (available <= 0) {
-				log.debug("{}는 전체 {}개 중 {}개 생산 완료, {}개 승인 대기중으로 더이상 보고할 수 없습니다.",
+				log.debug("[직선레일] {}는 전체 {}개 중 {}개 생산 완료, {}개 승인 대기중으로 더이상 보고할 수 없습니다.",
 					straightSerial,
 					straight.getTotalQuantity(),
 					straight.getCompletedQuantity(),

@@ -1,5 +1,6 @@
 package baekgwa.suhoserver.model.work.report.branch.entity;
 
+import baekgwa.suhoserver.global.entity.TemporalEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -29,7 +30,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "work_report_branch_serial")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WorkReportBranchSerialEntity {
+public class WorkReportBranchSerialEntity extends TemporalEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

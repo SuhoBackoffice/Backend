@@ -1,8 +1,11 @@
 package baekgwa.suhoserver.model.work.report.branch.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 
 /**
  * PackageName : baekgwa.suhoserver.model.work.report.branch.repository
@@ -16,4 +19,6 @@ import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity
  * 26. 1. 2.     Baekgwa               Initial creation
  */
 public interface WorkReportBranchRepository extends JpaRepository<WorkReportBranchEntity, Long> {
+
+	List<WorkReportBranchEntity> findByWorkReportIn(List<WorkReportEntity> pendingReportList);
 }

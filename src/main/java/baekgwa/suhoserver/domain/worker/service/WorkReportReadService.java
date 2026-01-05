@@ -11,6 +11,8 @@ import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchRepository;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.report.repository.WorkReportRepository;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
@@ -39,6 +41,7 @@ public class WorkReportReadService {
 	private final WorkReportRepository workReportRepository;
 	private final WorkReportStraightRepository workReportStraightRepository;
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
+	private final WorkReportBranchRepository workReportBranchRepository;
 
 	/**
 	 * 프로젝트에 이미 보고된 직선레일 중, pending 상태로 completed 수량에 포함되지 않은 수량 조회
@@ -64,6 +67,33 @@ public class WorkReportReadService {
 			.collect(Collectors.groupingBy(
 				WorkReportStraightEntity::getProjectStraightId,
 				Collectors.summingLong(WorkReportStraightEntity::getProductionQuantity)
+			));
+	}
+
+	/**
+	 * 프로젝트에 이미 보고된 분기 레일 중, pending 상태로 completed 수량에 포함되지 않은 수량 조회
+	 * @param findProject 프로젝트 Entity
+	 * @return Map key:ProjectBranchId, value:승인 대기중 수량
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, Long> getPendingQuantityByProjectBranch(
+		ProjectEntity findProject
+	) {
+		List<WorkReportEntity> pendingReportList =
+			workReportRepository.findByProjectAndStatus(findProject, WorkReportStatus.PENDING);
+
+		if (pendingReportList.isEmpty()) {
+			log.debug("미승인 된, 업무 보고가 없습니다.");
+			return Map.of();
+		}
+
+		List<WorkReportBranchEntity> findWorkBranchList =
+			workReportBranchRepository.findByWorkReportIn(pendingReportList);
+
+		return findWorkBranchList.stream()
+			.collect(Collectors.groupingBy(
+				WorkReportBranchEntity::getProjectBranchId,
+				Collectors.summingLong(WorkReportBranchEntity::getProductionQuantity)
 			));
 	}
 
