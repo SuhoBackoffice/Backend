@@ -15,6 +15,7 @@ import baekgwa.suhoserver.domain.worker.service.WorkReportReadService;
 import baekgwa.suhoserver.domain.worker.service.WorkReportWriteService;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
@@ -141,7 +142,7 @@ public class WorkReportFacade {
 		Long projectStraightId
 	) {
 		List<ProjectStraightSerialEntity> allSerialList =
-			projectReadService.getProjectStraightSerialList(projectStraightId);
+			projectReadService.getActiveProjectStraightSerialList(projectStraightId);
 
 		List<Long> pendingSerialPKList =
 			workReportReadService.getPendingProjectStraightSerialList(projectStraightId);
@@ -149,6 +150,22 @@ public class WorkReportFacade {
 		return allSerialList.stream()
 			.filter(serial -> !pendingSerialPKList.contains(serial.getId()))
 			.map(WorkReportResponse.GetProjectStraightSerial::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<WorkReportResponse.GetProjectBranchSerial> getAbleReportBranchSerialList(
+		Long projectBranchId
+	) {
+		List<ProjectBranchSerialEntity> allSerialList =
+			projectReadService.getActiveProjectBranchSerialList(projectBranchId);
+
+		List<Long> pendingSerialPKList =
+			workReportReadService.getPendingProjectBranchSerialList(projectBranchId);
+
+		return allSerialList.stream()
+			.filter(serial -> !pendingSerialPKList.contains(serial.getId()))
+			.map(WorkReportResponse.GetProjectBranchSerial::from)
 			.toList();
 	}
 

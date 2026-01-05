@@ -101,6 +101,18 @@ public class WorkReportController {
 		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_SERIAL_LIST_SUCCESS, response);
 	}
 
+	@GetMapping("/project/{projectId}/branch/{branchId}/serial")
+	@Operation(summary = "프로젝트에서 보고 가능한 분기 레일의 시리얼 목록 반환")
+	public BaseResponse<List<WorkReportResponse.GetProjectBranchSerial>> getAbleReportBranchSerialList(
+		@PathVariable("projectId") Long projectId,
+		@PathVariable("branchId") Long branchId
+	) {
+		List<WorkReportResponse.GetProjectBranchSerial> response =
+			workReportFacade.getAbleReportBranchSerialList(branchId);
+
+		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_SERIAL_LIST_SUCCESS, response);
+	}
+
 	@GetMapping("/project/{projectId}/branch")
 	@Operation(summary = "프로젝트에서 보고 가능한 분기 레일 목록 반환")
 	public BaseResponse<List<WorkReportResponse.GetProjectBranch>> getAbleReportBranchList(
@@ -109,6 +121,6 @@ public class WorkReportController {
 		List<WorkReportResponse.GetProjectBranch> response =
 			workReportFacade.getAbleReportBranchList(projectId);
 
-		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_STRAIGHT_LIST_SUCCESS, response);
+		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_BRANCH_LIST_SUCCESS, response);
 	}
 }

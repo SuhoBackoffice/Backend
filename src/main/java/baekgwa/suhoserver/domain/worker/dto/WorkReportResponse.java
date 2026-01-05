@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
@@ -266,16 +267,34 @@ public class WorkReportResponse {
 	@Getter
 	@Builder(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class GetProjectBranchSerial {
+		private final Long branchSerialId;
+		private final String serial;
+
+		public static GetProjectBranchSerial from(
+			ProjectBranchSerialEntity projectBranchSerial
+		) {
+			return GetProjectBranchSerial
+				.builder()
+				.branchSerialId(projectBranchSerial.getId())
+				.serial(projectBranchSerial.getSerial())
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class GetProjectStraightSerial {
-		private Long projectStraightId;
-		private String serial;
+		private final Long straightSerialId;
+		private final String serial;
 
 		public static GetProjectStraightSerial from(
 			ProjectStraightSerialEntity projectStraightSerial
 		) {
 			return GetProjectStraightSerial
 				.builder()
-				.projectStraightId(projectStraightSerial.getId())
+				.straightSerialId(projectStraightSerial.getId())
 				.serial(projectStraightSerial.getSerial())
 				.build();
 		}

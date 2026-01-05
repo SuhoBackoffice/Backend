@@ -186,8 +186,18 @@ public class ProjectReadService {
 	 * @return find List<ProjectStraightSerialEntity>
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectStraightSerialEntity> getProjectStraightSerialList(Long straightId) {
+	public List<ProjectStraightSerialEntity> getActiveProjectStraightSerialList(Long straightId) {
 		return projectStraightSerialRepository.findProjectStraightSerialList(straightId, ProductSerialState.ACTIVE);
+	}
+
+	/**
+	 * 활성화 된 분기레일 시리얼 번호 목록 반환
+	 * @param projectBranchId 프로젝트에 할당된 분기레일 PK
+	 * @return find List<ProjectBranchSerialEntity>
+	 */
+	@Transactional(readOnly = true)
+	public List<ProjectBranchSerialEntity> getActiveProjectBranchSerialList(Long projectBranchId) {
+		return projectBranchSerialRepository.findProjectBranchSerialList(projectBranchId, ProductSerialState.ACTIVE);
 	}
 
 	@Transactional(readOnly = true)

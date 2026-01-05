@@ -114,6 +114,19 @@ public class WorkReportReadService {
 	}
 
 	/**
+	 * 프로젝트에 이미 보고된 특정 분기 레일의 Serial 들 중 Pending 상태로 completed 수량에 포함되지 않은 직선레일 시리얼 PK List 조회
+	 * @param projectBranchId 프로젝트 분기 레일 PK
+	 * @return Pending state ProjectBranchSerial PK List
+	 */
+	@Transactional(readOnly = true)
+	public List<Long> getPendingProjectBranchSerialList(Long projectBranchId) {
+		return workReportBranchRepository.findPendingSerialIdList(
+			WorkReportStatus.PENDING,
+			projectBranchId
+		);
+	}
+
+	/**
 	 * 보고서 정보를 조회합니다.
 	 * @param reportId 보고서 PK
 	 * @return new WorkReportEntity
