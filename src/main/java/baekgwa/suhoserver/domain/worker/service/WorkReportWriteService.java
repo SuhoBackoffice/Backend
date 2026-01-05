@@ -14,12 +14,20 @@ import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
+import baekgwa.suhoserver.model.project.branch.serial.repository.ProjectBranchSerialRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchRepository;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import baekgwa.suhoserver.model.work.report.report.repository.WorkReportRepository;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
@@ -48,6 +56,10 @@ public class WorkReportWriteService {
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
 	private final ProjectStraightRepository projectStraightRepository;
 	private final ProjectStraightSerialRepository projectStraightSerialRepository;
+	private final ProjectBranchRepository projectBranchRepository;
+	private final WorkReportBranchRepository workReportBranchRepository;
+	private final ProjectBranchSerialRepository projectBranchSerialRepository;
+	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
 
 	/**
 	 * 새로운 업무 보고서를 작성합니다.
@@ -134,6 +146,61 @@ public class WorkReportWriteService {
 		}
 	}
 
+	@Transactional
+	public void createNewBranchWorkReport(
+		WorkReportEntity savedWorkReport,
+		WorkReportRequest.PostNewWorkReport request,
+		Map<Long, ProjectBranchEntity> projectBranchMap,
+		Map<Long, Map<Long, String>> branchSerialSnapshot
+	) {
+		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
+			validateProjectBranch(savedWorkReport, branch);
+
+			ProjectBranchEntity pb = projectBranchMap.get(branch.getProjectBranchId());
+			String serial = ProductSerialFactory.generateBranchSerial(pb.getBranchType().getCode());
+
+			WorkReportBranchEntity workReportBranch =
+				workReportBranchRepository.save(
+					WorkReportBranchEntity.of(
+						savedWorkReport,
+						branch.getProjectBranchId(),
+						branch.getProductionQuantity(),
+						serial
+					)
+				);
+
+			Set<Long> unique = new HashSet<>(branch.getProjectBranchSerialIdList());
+			if (unique.size() != branch.getProjectBranchSerialIdList().size()) {
+				throw new GlobalException(ErrorCode.DUPLICATION_PRODUCTION_BRANCH_SERIAL);
+			}
+
+			if (branch.getProductionQuantity() != branch.getProjectBranchSerialIdList().size()) {
+				throw new GlobalException(ErrorCode.NOT_MATCH_BRANCH_PRODUCTION_SERIAL_COUNT);
+			}
+
+			validateBranchSerial(
+				branch.getProjectBranchId(),
+				branch.getProjectBranchSerialIdList()
+			);
+
+			Map<Long, String> serialSnapshot =
+				branchSerialSnapshot.get(branch.getProjectBranchId());
+
+			List<WorkReportBranchSerialEntity> branchSerialList =
+				branch.getProjectBranchSerialIdList().stream()
+					.map(serialId ->
+						WorkReportBranchSerialEntity.of(
+							workReportBranch,
+							serialId,
+							serialSnapshot.get(serialId)
+						)
+					)
+					.toList();
+
+			workReportBranchSerialRepository.saveAll(branchSerialList);
+		}
+	}
+
 	private void validateProjectStraight(
 		WorkReportEntity workReport,
 		WorkReportRequest.PostNewWorkStraightReport request
@@ -145,6 +212,54 @@ public class WorkReportWriteService {
 
 		if (!exists) {
 			throw new GlobalException(ErrorCode.NOT_REGISTERED_PROJECT_STRAIGHT);
+		}
+	}
+
+	private void validateProjectBranch(
+		WorkReportEntity workReport,
+		WorkReportRequest.PostNewWorkBranchReport request
+	) {
+		boolean exists = projectBranchRepository.existsByIdAndProject(
+			request.getProjectBranchId(),
+			workReport.getProject()
+		);
+
+		if (!exists) {
+			throw new GlobalException(ErrorCode.NOT_REGISTERED_PROJECT_BRANCH);
+		}
+	}
+
+	private void validateBranchSerial(
+		Long projectBranchId,
+		List<Long> serialIds
+	) {
+		List<ProjectBranchSerialEntity> serialEntities =
+			projectBranchSerialRepository.findAllById(serialIds);
+
+		if (serialEntities.size() != serialIds.size()) {
+			throw new GlobalException(ErrorCode.INVALID_BRANCH_SERIAL);
+		}
+
+		for (ProjectBranchSerialEntity serial : serialEntities) {
+			if (!serial.getProjectBranch().getId().equals(projectBranchId)) {
+				throw new GlobalException(ErrorCode.INVALID_BRANCH_SERIAL);
+			}
+
+			if (serial.getState() != ProductSerialState.ACTIVE) {
+				throw new GlobalException(ErrorCode.INACTIVE_BRANCH_SERIAL);
+			}
+
+			if (serial.getProductionState() != ProductProductionState.NOT_PRODUCED) {
+				throw new GlobalException(ErrorCode.ALREADY_PRODUCED_BRANCH_SERIAL);
+			}
+
+			boolean alreadyUsed =
+				workReportBranchSerialRepository
+					.existsByProjectBranchSerialId(serial.getId());
+
+			if (alreadyUsed) {
+				throw new GlobalException(ErrorCode.ALREADY_USED_BRANCH_SERIAL);
+			}
 		}
 	}
 
@@ -169,7 +284,7 @@ public class WorkReportWriteService {
 			}
 
 			if (serial.getProductionState() != ProductProductionState.NOT_PRODUCED) {
-				throw new GlobalException(ErrorCode.ALREADY_PRODUCED_SERIAL);
+				throw new GlobalException(ErrorCode.ALREADY_PRODUCED_STRAIGHT_SERIAL);
 			}
 
 			boolean alreadyUsed =

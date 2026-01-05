@@ -32,6 +32,7 @@ CREATE TABLE `project_branch_serial`
     `serial`            VARCHAR(255)          NOT NULL COMMENT '시리얼 번호',
     `project_branch_id` BIGINT                NOT NULL,
     `state`             VARCHAR(50)           NOT NULL,
+    `production_state`  VARCHAR(50)           NOT NULL,
     `reason`            VARCHAR(50)           NULL,
     `sequence`          BIGINT                NOT NULL,
     `created_at`        DATETIME              NOT NULL,

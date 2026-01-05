@@ -3,6 +3,7 @@ package baekgwa.suhoserver.model.project.branch.serial.entity;
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.ProductInactiveReason;
+import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import jakarta.persistence.Column;
@@ -55,18 +56,23 @@ public class ProjectBranchSerialEntity extends TemporalEntity {
 	private ProductSerialState state;
 
 	@Enumerated(EnumType.STRING)
+	@Column(name = "production_state", nullable = false)
+	private ProductProductionState productionState;
+
+	@Enumerated(EnumType.STRING)
 	@Column(name = "reason", nullable = false)
 	private ProductInactiveReason reason;
 
 	@Column(name = "sequence", nullable = false)
 	private Long sequence;
 
-	@Builder
+	@Builder(access = AccessLevel.PRIVATE)
 	private ProjectBranchSerialEntity(String serial, ProjectBranchEntity projectBranch, ProductSerialState state,
-		ProductInactiveReason reason, Long sequence) {
+		ProductProductionState productionState, ProductInactiveReason reason, Long sequence) {
 		this.serial = serial;
 		this.projectBranch = projectBranch;
 		this.state = state;
+		this.productionState = productionState;
 		this.reason = reason;
 		this.sequence = sequence;
 	}
@@ -79,6 +85,7 @@ public class ProjectBranchSerialEntity extends TemporalEntity {
 			.serial(serial)
 			.projectBranch(projectBranch)
 			.state(ProductSerialState.ACTIVE)
+			.productionState(ProductProductionState.NOT_PRODUCED)
 			.sequence(sequence)
 			.build();
 	}

@@ -19,6 +19,8 @@ import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
+import baekgwa.suhoserver.model.project.branch.serial.repository.ProjectBranchSerialRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
@@ -46,6 +48,7 @@ public class ProjectReadService {
 	private final ProjectBranchRepository projectBranchRepository;
 	private final ProjectStraightRepository projectStraightRepository;
 	private final ProjectStraightSerialRepository projectStraightSerialRepository;
+	private final ProjectBranchSerialRepository projectBranchSerialRepository;
 
 	/**
 	 * projectId 로, 프로젝트 정보 조회
@@ -171,6 +174,42 @@ public class ProjectReadService {
 		return projectStraightSerialRepository.findProjectStraightSerialList(straightId, ProductSerialState.ACTIVE);
 	}
 
+	@Transactional(readOnly = true)
+	public Map<Long, ProjectStraightEntity> getProjectStraightMap(
+		WorkReportRequest.PostNewWorkReport request
+	) {
+		List<Long> psIdList = request.getStraightReportList().stream()
+			.map(WorkReportRequest.PostNewWorkStraightReport::getProjectStraightId)
+			.toList();
+
+		return projectStraightRepository.findAllByIdIn(psIdList)
+			.stream().collect(Collectors.toMap(
+				ProjectStraightEntity::getId,
+				Function.identity()));
+	}
+
+	/**
+	 * 프로젝트에 할당된 분기레일 목록을 조회
+	 * @param request
+	 * @return Map key: ProjectBranch PK, value: ProjectBranch Entity
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, ProjectBranchEntity> getProjectBranchMap(WorkReportRequest.PostNewWorkReport request) {
+		List<Long> projectBranchIdList = request.getBranchReportList()
+			.stream()
+			.map(WorkReportRequest.PostNewWorkBranchReport::getProjectBranchId)
+			.toList();
+
+		List<ProjectBranchEntity> findProjectBranchList =
+			projectBranchRepository.findAllById(projectBranchIdList);
+
+		return findProjectBranchList
+			.stream().collect(Collectors.toMap(
+				ProjectBranchEntity::getId,
+				Function.identity()
+			));
+	}
+
 	/**
 	 * 직선레일 시리얼 ID 를 기반으로 serial 이름을 찾아오는 메서드
 	 * @param request
@@ -207,17 +246,39 @@ public class ProjectReadService {
 		return result;
 	}
 
-	@Transactional(readOnly = true)
-	public Map<Long, ProjectStraightEntity> getProjectStraightMap(
+	/**
+	 * 분기레일 시리얼 ID 를 기반으로 serial 이름 찾아오는 메서드
+	 * @param request
+	 * @return Map<프로젝트에 할당된 분기레일 PK, Map<분기레일 시리얼 PK, 분기레일 시리얼 이름>>
+	 */
+	public Map<Long, Map<Long, String>> getBranchSerialSnapshot(
 		WorkReportRequest.PostNewWorkReport request
 	) {
-		List<Long> psIdList = request.getStraightReportList().stream()
-			.map(WorkReportRequest.PostNewWorkStraightReport::getProjectStraightId)
+		List<Long> allSerialIds = request.getBranchReportList().stream()
+			.flatMap(b -> b.getProjectBranchSerialIdList().stream())
+			.distinct()
 			.toList();
 
-		return projectStraightRepository.findAllByIdIn(psIdList)
-			.stream().collect(Collectors.toMap(
-				ProjectStraightEntity::getId,
-				Function.identity()));
+		List<ProjectBranchSerialEntity> serialList =
+			projectBranchSerialRepository.findAllById(allSerialIds);
+
+		Map<Long, String> serialMap = serialList.stream()
+			.collect(Collectors.toMap(
+				ProjectBranchSerialEntity::getId,
+				ProjectBranchSerialEntity::getSerial
+			));
+
+		Map<Long, Map<Long, String>> result = new HashMap<>();
+
+		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
+			Map<Long, String> map = new HashMap<>();
+			for (Long serialId : branch.getProjectBranchSerialIdList()) {
+				map.put(serialId, serialMap.get(serialId));
+			}
+
+			result.put(branch.getProjectBranchId(), map);
+		}
+
+		return result;
 	}
 }

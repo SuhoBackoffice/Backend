@@ -14,6 +14,7 @@ import baekgwa.suhoserver.domain.worker.dto.WorkReportResponse;
 import baekgwa.suhoserver.domain.worker.service.WorkReportReadService;
 import baekgwa.suhoserver.domain.worker.service.WorkReportWriteService;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
@@ -70,6 +71,19 @@ public class WorkReportFacade {
 			request,
 			straightSerialSnapshot,
 			projectStraightMap
+		);
+
+		Map<Long, ProjectBranchEntity> projectBranchMap =
+			projectReadService.getProjectBranchMap(request);
+
+		Map<Long, Map<Long, String>> branchSerialSnapshot =
+			projectReadService.getBranchSerialSnapshot(request);
+
+		workReportWriteService.createNewBranchWorkReport(
+			savedWorkReport,
+			request,
+			projectBranchMap,
+			branchSerialSnapshot
 		);
 
 		// todo : 관리자에게 알림 발송
