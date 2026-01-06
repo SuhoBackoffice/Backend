@@ -134,10 +134,14 @@ public class SecurityConfig {
 				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(WORKER.name())
 
 				// Worker
-				.requestMatchers(GET, "/work/report/{reportId}").hasRole(WORKER.name())
 				.requestMatchers(POST, "/work/report/project/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/{reportId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{reportId}").hasRole(WORKER.name())
 				.requestMatchers(GET, "/work/report/project/{projectId}/straight").hasRole(WORKER.name())
 				.requestMatchers(GET, "/work/report/project/{projectId}/straight/{straightId}/serial").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{projectId}/branch").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{projectId}/branch/{branchId}/serial").hasRole(WORKER.name())
+				.requestMatchers(POST, "/work/report/{reportId}/status").hasRole(STAFF.name())
 
 				.anyRequest().authenticated());
 

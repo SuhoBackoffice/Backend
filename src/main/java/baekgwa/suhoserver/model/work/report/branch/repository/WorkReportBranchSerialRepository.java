@@ -28,4 +28,12 @@ public interface WorkReportBranchSerialRepository extends JpaRepository<WorkRepo
 		+ "FROM WorkReportBranchSerialEntity wrbs "
 		+ "WHERE wrbs.workReportBranch.id in :branchIds")
 	List<WorkReportBranchSerialEntity> findAllByBranchIds(@Param("branchIds") List<Long> branchIdList);
+
+	@Query("SELECT wrbs "
+		+ "FROM WorkReportBranchSerialEntity wrbs "
+		+ "WHERE wrbs.workReportBranch.id "
+		+ "IN :workReportBranchIdList")
+	List<WorkReportBranchSerialEntity> findAllByWorkReportBranchIn(
+		@Param("workReportBranchIdList") List<Long> workReportBranchIdList
+	);
 }

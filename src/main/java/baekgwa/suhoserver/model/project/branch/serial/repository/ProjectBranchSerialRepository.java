@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
@@ -26,9 +27,11 @@ public interface ProjectBranchSerialRepository extends JpaRepository<ProjectBran
 
 	@Query("SELECT pbs FROM ProjectBranchSerialEntity pbs "
 		+ "WHERE pbs.projectBranch.id = :projectId "
-		+ "AND pbs.state = :state")
+		+ "AND pbs.state = :state "
+		+ "AND pbs.productionState = :productionState")
 	List<ProjectBranchSerialEntity> findProjectBranchSerialList(
 		@Param("projectId") Long projectBranchId,
-		@Param("state") ProductSerialState productSerialState
+		@Param("state") ProductSerialState productSerialState,
+		@Param("productionState") ProductProductionState productionState
 	);
 }

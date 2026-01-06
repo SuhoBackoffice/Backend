@@ -78,6 +78,7 @@ public enum SuccessCode {
 	GET_ABLE_REPORT_BRANCH_SERIAL_LIST_SUCCESS(HttpStatus.OK, "보고가능 분기레일 시리얼 목록 조회 성공"),
 	GET_WORK_REPORT_DETAIL_SUCCESS(HttpStatus.OK, "업무 보고 상세 조회 성공"),
 	GET_PROJECT_WORK_REPORT_SUCCESS(HttpStatus.OK, "프로젝트 업무 보고 목록 조회 성공"),
+	POST_WORK_REPORT_STATUS_SUCCESS(HttpStatus.OK, "보고서 상태 변경 완료."),
 
 	// Common
 	REQUEST_SUCCESS(HttpStatus.OK, "요청 응답 성공.");

@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -28,6 +29,26 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WorkReportRequest {
+
+	@Getter
+	@NoArgsConstructor(access = AccessLevel.PROTECTED)
+	public static class PostDailyReport {
+		@NotNull
+		private WorkReportStatus status;
+		private String rejectReason;
+
+		public boolean isApproved() {
+			return this.status.equals(WorkReportStatus.APPROVED);
+		}
+
+		public boolean isRejected() {
+			return this.status.equals(WorkReportStatus.REJECTED);
+		}
+
+		public boolean isPending() {
+			return this.status.equals(WorkReportStatus.PENDING);
+		}
+	}
 
 	@Getter
 	@NoArgsConstructor(access = AccessLevel.PROTECTED)

@@ -186,8 +186,12 @@ public class ProjectReadService {
 	 * @return find List<ProjectStraightSerialEntity>
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectStraightSerialEntity> getActiveProjectStraightSerialList(Long straightId) {
-		return projectStraightSerialRepository.findProjectStraightSerialList(straightId, ProductSerialState.ACTIVE);
+	public List<ProjectStraightSerialEntity> getAbleReportProjectStraightSerialList(Long straightId) {
+		return projectStraightSerialRepository.findProjectStraightSerialList(
+			straightId,
+			ProductSerialState.ACTIVE,
+			ProductProductionState.NOT_PRODUCED
+		);
 	}
 
 	/**
@@ -196,8 +200,12 @@ public class ProjectReadService {
 	 * @return find List<ProjectBranchSerialEntity>
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectBranchSerialEntity> getActiveProjectBranchSerialList(Long projectBranchId) {
-		return projectBranchSerialRepository.findProjectBranchSerialList(projectBranchId, ProductSerialState.ACTIVE);
+	public List<ProjectBranchSerialEntity> getAbleReportProjectBranchSerialList(Long projectBranchId) {
+		return projectBranchSerialRepository.findProjectBranchSerialList(
+			projectBranchId,
+			ProductSerialState.ACTIVE,
+			ProductProductionState.NOT_PRODUCED
+		);
 	}
 
 	@Transactional(readOnly = true)

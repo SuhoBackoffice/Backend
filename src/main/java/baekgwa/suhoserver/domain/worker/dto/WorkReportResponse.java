@@ -8,7 +8,6 @@ import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerial
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
-import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
@@ -66,7 +65,8 @@ public class WorkReportResponse {
 		private final String reportUserName;
 		private final String workSummary;
 		private final LocalDate workDate;
-		private final WorkReportStatus status;
+		private final String status;
+		private final String rejectReason;
 		private final Long projectId;
 		private final String region;
 		private final String projectName;
@@ -86,7 +86,8 @@ public class WorkReportResponse {
 				.reportUserName(workReport.getReportUserName())
 				.workSummary(workReport.getWorkSummary())
 				.workDate(workReport.getWorkDate())
-				.status(workReport.getStatus())
+				.status(workReport.getStatus().name())
+				.rejectReason(workReport.getRejectReason())
 				.projectId(workReport.getProject().getId())
 				.region(workReport.getProject().getRegion())
 				.projectName(workReport.getProject().getName())

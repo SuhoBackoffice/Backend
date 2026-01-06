@@ -6,7 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import baekgwa.suhoserver.model.project.ProductProductionState;
+import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 
 /**
@@ -42,4 +45,16 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 		+ "WHERE pb.project = :project "
 		+ "AND pb.completedQuantity < pb.totalQuantity")
 	List<ProjectBranchEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
+
+	@Query("SELECT pbs "
+		+ "FROM ProjectBranchSerialEntity pbs "
+		+ "WHERE pbs.id "
+		+ "IN :projectBranchSerialIds "
+		+ "AND pbs.state = :state "
+		+ "AND pbs.productionState = :productionState")
+	List<ProjectBranchSerialEntity> findReportTargetSerialList(
+		@Param("projectBranchSerialIds") List<Long> projectBranchSerialIds,
+		@Param("state") ProductSerialState state,
+		@Param("productionState") ProductProductionState productionState
+	);
 }

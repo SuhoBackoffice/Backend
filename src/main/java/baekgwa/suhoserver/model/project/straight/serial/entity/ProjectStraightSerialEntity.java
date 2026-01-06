@@ -1,6 +1,6 @@
 package baekgwa.suhoserver.model.project.straight.serial.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
@@ -62,7 +62,7 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 	private ProductProductionState productionState;
 
 	@Column(name = "produced_at")
-	private LocalDateTime producedAt;
+	private LocalDate producedAt;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "reason", nullable = false)
@@ -73,7 +73,7 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 
 	@Builder(access = AccessLevel.PRIVATE)
 	private ProjectStraightSerialEntity(String serial, ProjectStraightEntity projectStraight, ProductSerialState state,
-		ProductProductionState productionState, LocalDateTime producedAt, ProductInactiveReason reason, Long sequence) {
+		ProductProductionState productionState, LocalDate producedAt, ProductInactiveReason reason, Long sequence) {
 		this.serial = serial;
 		this.projectStraight = projectStraight;
 		this.state = state;
@@ -124,5 +124,14 @@ public class ProjectStraightSerialEntity extends TemporalEntity {
 	public void activate() {
 		this.state = ProductSerialState.ACTIVE;
 		this.reason = null;
+	}
+
+	/**
+	 * Serial 의 상태를 생산 상태로 변경
+	 * 생산 시간은, 오늘로 고정
+	 */
+	public void markProduced() {
+		this.productionState = ProductProductionState.PRODUCED;
+		this.producedAt = LocalDate.now();
 	}
 }

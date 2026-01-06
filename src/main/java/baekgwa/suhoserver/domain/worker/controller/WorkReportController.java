@@ -123,4 +123,15 @@ public class WorkReportController {
 
 		return BaseResponse.success(SuccessCode.GET_ABLE_REPORT_BRANCH_LIST_SUCCESS, response);
 	}
+
+	@PostMapping("/{reportId}/status")
+	@Operation(summary = "보고서 승인 혹은 반려 처리 [APPROVED, REJECTED]")
+	public BaseResponse<Void> postDailyReport(
+		@PathVariable("reportId") Long reportId,
+		@Valid @RequestBody WorkReportRequest.PostDailyReport request
+	) {
+		workReportFacade.postDailyReport(reportId, request);
+
+		return BaseResponse.success(SuccessCode.POST_WORK_REPORT_STATUS_SUCCESS);
+	}
 }

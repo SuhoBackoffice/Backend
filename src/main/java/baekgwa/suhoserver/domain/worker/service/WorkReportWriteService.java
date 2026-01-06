@@ -166,4 +166,25 @@ public class WorkReportWriteService {
 			workReportBranchSerialRepository.saveAll(branchSerialList);
 		}
 	}
+
+	@Transactional
+	public void updateWorkReport(
+		WorkReportEntity findWorkReport,
+		WorkReportRequest.PostDailyReport request
+	) {
+		if(request.isApproved() && request.getRejectReason() != null) {
+			throw new GlobalException(ErrorCode.REPORT_APPROVED_BUT_REJECT_REASON_EXIST);
+		}
+
+		if(request.isRejected() && request.getRejectReason() == null) {
+			throw new GlobalException(ErrorCode.REPORT_REJECTED_BUT_REJECT_REASON_NOT_EXIST);
+		}
+
+		// 이미 반려된 작업 보고서는 수정이 불가능 합니다.
+		if(!findWorkReport.isEditable()) {
+			throw new GlobalException(ErrorCode.ALREADY_UPDATED_REPORT);
+		}
+
+		findWorkReport.updateStatus(request.getStatus(), request.getRejectReason());
+	}
 }

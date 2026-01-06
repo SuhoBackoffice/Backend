@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import baekgwa.suhoserver.model.project.ProductProductionState;
 import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
@@ -31,7 +32,23 @@ public interface ProjectStraightSerialRepository extends JpaRepository<ProjectSt
 
 	@Query("SELECT pss FROM ProjectStraightSerialEntity pss "
 		+ "WHERE pss.projectStraight.id = :straightId "
-		+ "AND pss.state = :state")
+		+ "AND pss.state = :state "
+		+ "AND pss.productionState = :productionState")
 	List<ProjectStraightSerialEntity> findProjectStraightSerialList(
-		@Param("straightId") Long straightId, @Param("state") ProductSerialState state);
+		@Param("straightId") Long straightId,
+		@Param("state") ProductSerialState state,
+		@Param("productionState") ProductProductionState productionState
+	);
+
+	@Query("SELECT pss "
+		+ "FROM ProjectStraightSerialEntity pss "
+		+ "WHERE pss.id "
+		+ "IN :projectStraightSerialIds "
+		+ "AND pss.state = :state "
+		+ "AND pss.productionState = :productionState")
+	List<ProjectStraightSerialEntity> findReportTargetSerialList(
+		@Param("projectStraightSerialIds") List<Long> projectStraightSerialIds,
+		@Param("state") ProductSerialState state,
+		@Param("productionState") ProductProductionState productionState
+	);
 }

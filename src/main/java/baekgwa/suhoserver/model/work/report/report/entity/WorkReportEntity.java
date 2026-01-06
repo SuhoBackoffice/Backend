@@ -64,6 +64,9 @@ public class WorkReportEntity extends TemporalEntity {
 	@Column(name = "status", nullable = false)
 	private WorkReportStatus status;
 
+	@Column(name = "reject_reason")
+	private String rejectReason;
+
 	@Builder(access = AccessLevel.PRIVATE)
 	private WorkReportEntity(Long reportUserId, String reportUserName, ProjectEntity project, String workSummary,
 		LocalDate workDate, WorkReportStatus status) {
@@ -85,5 +88,14 @@ public class WorkReportEntity extends TemporalEntity {
 			.workDate(workDate)
 			.status(WorkReportStatus.PENDING)
 			.build();
+	}
+
+	public void updateStatus(WorkReportStatus status, String rejectReason) {
+		this.status = status;
+		this.rejectReason = rejectReason;
+	}
+
+	public boolean isEditable() {
+		return this.status == WorkReportStatus.PENDING;
 	}
 }

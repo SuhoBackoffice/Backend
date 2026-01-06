@@ -18,6 +18,7 @@ CREATE TABLE `work_report`
     `work_summary`     TEXT                  NULL,
     `work_date`        DATE                  NOT NULL,
     `status`           VARCHAR(50)           NOT NULL,
+    `reject_reason`    VARCHAR(50)           NULL,
     `created_at`       DATETIME              NOT NULL,
     `modified_at`      DATETIME              NOT NULL,
     PRIMARY KEY (`id`),

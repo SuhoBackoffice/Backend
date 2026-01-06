@@ -27,4 +27,12 @@ public interface WorkReportStraightSerialRepository extends JpaRepository<WorkRe
 		+ "WHERE wrss.workReportStraight.id in :straightIds")
 	List<WorkReportStraightSerialEntity> findAllByStraightIds(
 		@Param("straightIds") List<Long> straightIds);
+
+	@Query("SELECT wrss "
+		+ "FROM WorkReportStraightSerialEntity wrss "
+		+ "WHERE wrss.workReportStraight.id "
+		+ "IN :workReportStraightIdList ")
+	List<WorkReportStraightSerialEntity> findAllByWorkReportStraightIn(
+		@Param("workReportStraightIdList") List<Long> workReportStraightIdList
+	);
 }
