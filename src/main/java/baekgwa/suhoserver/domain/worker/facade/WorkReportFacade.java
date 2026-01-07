@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,8 @@ import baekgwa.suhoserver.domain.worker.service.WorkReportWriteService;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
+import baekgwa.suhoserver.infra.notification.event.NotificationEvent;
+import baekgwa.suhoserver.model.notification.NotificationType;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -51,6 +54,7 @@ public class WorkReportFacade {
 	private final WorkReportReadService workReportReadService;
 	private final WorkReportWriteService workReportWriteService;
 	private final ProjectWriteService projectWriteService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public WorkReportResponse.PostNewWorkReport createDailyReport(
@@ -93,7 +97,11 @@ public class WorkReportFacade {
 			branchSerialSnapshot
 		);
 
-		// todo : 관리자에게 알림 발송
+		eventPublisher.publishEvent(new NotificationEvent(
+			"새로운 업무 보고가 등록되었습니다.",
+			"http://localhost:3000/report/" + savedWorkReport.getId(),
+			NotificationType.WORK_REPORT
+		));
 
 		return WorkReportResponse.PostNewWorkReport
 			.builder()

@@ -91,17 +91,20 @@ public enum ErrorCode {
 	REPORT_UPDATE_FAIL_PENDING_IMPOSSIBLE(BAD_REQUEST, "8019", "보고서는 승인 혹은 반려만 가능합니다."),
 	REPORT_PROJECT_BRANCH_NOT_FOUND(BAD_REQUEST, "8020", "보고서에 작성된 분기 레일은 더 이상 존재하지 않습니다."),
 
-	//Common: 9000 ~ 9999
-	NOT_FOUND_URL(HttpStatus.NOT_FOUND, "9001", "요청하신 URL 을 찾을 수 없습니다."),
-	NOT_SUPPORTED_METHOD(HttpStatus.METHOD_NOT_ALLOWED, "9002", "요청 메서드를 찾을 수 없습니다."),
-	VALIDATION_FAIL_ERROR(BAD_REQUEST, "9003", ""),
-	INVALID_INPUT_VALUE(BAD_REQUEST, "9004", "올바르지 않은 입력값입니다."),
-	HANDLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "9007", "요청이 거부되었습니다."),
-	METHOD_ARGUMENT_TYPE_MISS_MATCH(BAD_REQUEST, "9008", "요청 파라미터 타입 불일치. API 문서 확인해주세요."),
-	INVALID_PAGINATION_PARAMETER(BAD_REQUEST, "9009", "올바르지 않은 페이지 네이션 파라미터 요청입니다."),
-	INVALID_EXCEL_PARSE_ERROR(BAD_REQUEST, "9010", "올바르지 않은 Excel 데이터입니다. 관리자에게 문의해 주세요."),
-	UPLOAD_FILE_FAIL(BAD_REQUEST, "9011", "파일 업로드 실패."),
-	DELETE_FILE_FAIL(BAD_REQUEST, "9013", "파일 삭제 실패."),
+	//Notification: 9000 ~ 9499
+	NOT_FOUNT_NOTIFICATION(NOT_FOUND, "9000", "존재하지 않는 알림 입니다."),
+
+	//Common: 9500 ~ 9999
+	NOT_FOUND_URL(NOT_FOUND, "9500", "요청하신 URL 을 찾을 수 없습니다."),
+	NOT_SUPPORTED_METHOD(METHOD_NOT_ALLOWED, "9501", "요청 메서드를 찾을 수 없습니다."),
+	VALIDATION_FAIL_ERROR(BAD_REQUEST, "9502", ""),
+	INVALID_INPUT_VALUE(BAD_REQUEST, "9503", "올바르지 않은 입력값입니다."),
+	HANDLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "9504", "요청이 거부되었습니다."),
+	METHOD_ARGUMENT_TYPE_MISS_MATCH(BAD_REQUEST, "9505", "요청 파라미터 타입 불일치. API 문서 확인해주세요."),
+	INVALID_PAGINATION_PARAMETER(BAD_REQUEST, "9506", "올바르지 않은 페이지 네이션 파라미터 요청입니다."),
+	INVALID_EXCEL_PARSE_ERROR(BAD_REQUEST, "9507", "올바르지 않은 Excel 데이터입니다. 관리자에게 문의해 주세요."),
+	UPLOAD_FILE_FAIL(BAD_REQUEST, "9508", "파일 업로드 실패."),
+	DELETE_FILE_FAIL(BAD_REQUEST, "9509", "파일 삭제 실패."),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "9999", "서버 내부 오류 발생했습니다");
 
 	private final HttpStatus status;
