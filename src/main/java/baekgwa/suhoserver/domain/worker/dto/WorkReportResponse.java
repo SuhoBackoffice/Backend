@@ -7,7 +7,6 @@ import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
@@ -76,13 +75,16 @@ public class WorkReportResponse {
 
 		public static GetWorkReportDetail of(
 			WorkReportEntity workReport,
-			UserEntity loginUser,
+			Long loginUserId,
 			List<WorkReportStraight> straightReports,
 			List<WorkReportBranch> branchReports
 		) {
 			return GetWorkReportDetail
 				.builder()
-				.isOwner(loginUser.getId().equals(workReport.getReportUserId()))
+				.isOwner(
+					loginUserId != null &&
+						loginUserId.equals(workReport.getReportUserId())
+				)
 				.reportUserName(workReport.getReportUserName())
 				.workSummary(workReport.getWorkSummary())
 				.workDate(workReport.getWorkDate())

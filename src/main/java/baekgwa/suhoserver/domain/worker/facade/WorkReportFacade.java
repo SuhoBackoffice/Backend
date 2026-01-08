@@ -121,10 +121,11 @@ public class WorkReportFacade {
 
 		return unCompletedStraightList.stream()
 			.map(straight -> WorkReportResponse.GetProjectStraight.of(
-					straight,
-					pendingQuantityMap.getOrDefault(straight.getId(), 0L),
-					ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(), straight.getStraightType().getType())
-				))
+				straight,
+				pendingQuantityMap.getOrDefault(straight.getId(), 0L),
+				ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(),
+					straight.getStraightType().getType())
+			))
 			.filter(Objects::nonNull)
 			.toList();
 	}
@@ -183,8 +184,6 @@ public class WorkReportFacade {
 
 	@Transactional(readOnly = true)
 	public WorkReportResponse.GetWorkReportDetail getWorkReportDetail(Long reportId, Long userId) {
-		UserEntity loginUser = userService.getUserEntityOrThrow(userId);
-
 		WorkReportEntity findWorkReport = workReportReadService.getWorkReportOrThrow(reportId);
 
 		List<WorkReportStraightEntity> straightReports =
@@ -225,7 +224,7 @@ public class WorkReportFacade {
 			.toList();
 
 		return WorkReportResponse.GetWorkReportDetail.of(
-			findWorkReport, loginUser, workReportStraightList, workReportBranchList
+			findWorkReport, userId, workReportStraightList, workReportBranchList
 		);
 	}
 
@@ -247,7 +246,7 @@ public class WorkReportFacade {
 		Long reportId,
 		WorkReportRequest.PostDailyReport request
 	) {
-		if(request.isPending()) {
+		if (request.isPending()) {
 			throw new GlobalException(ErrorCode.REPORT_UPDATE_FAIL_PENDING_IMPOSSIBLE);
 		}
 
@@ -255,7 +254,7 @@ public class WorkReportFacade {
 
 		workReportWriteService.updateWorkReport(findWorkReport, request);
 
-		if(request.isApproved()) {
+		if (request.isApproved()) {
 			List<Long> reportedStraightIdList =
 				projectWriteService.applyStraightProductionQuantityFromReport(findWorkReport);
 			projectWriteService.markStraightSerialProduced(reportedStraightIdList);

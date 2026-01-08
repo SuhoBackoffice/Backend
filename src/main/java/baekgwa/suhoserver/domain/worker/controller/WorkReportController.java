@@ -65,13 +65,13 @@ public class WorkReportController {
 		return BaseResponse.success(SuccessCode.GET_PROJECT_WORK_REPORT_SUCCESS, response);
 	}
 
-	@PostMapping("/project/{projectId}/")
+	@PostMapping("/project/{projectId}")
 	@Operation(summary = "일일 프로젝트 업무 보고")
 	public BaseResponse<WorkReportResponse.PostNewWorkReport> newDailyReport(
 		@Valid @RequestBody WorkReportRequest.PostNewWorkReport request,
 		@PathVariable("projectId") Long projectId,
 		@AuthenticationPrincipal Long userId
-	){
+	) {
 		WorkReportResponse.PostNewWorkReport response =
 			workReportFacade.createDailyReport(request, projectId, userId);
 

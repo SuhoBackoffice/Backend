@@ -94,7 +94,8 @@ public class NotificationService {
 			});
 		});
 
-		log.debug("로그인 된 STAFF {}명에게 알림 전송 완료", sendCount.get());
+		log.debug("로그인 된 STAFF {}명에게 알림 전송 완료.", sendCount.get());
+		log.debug("비로그인 STAFF {}명에게 로그인 시 알림이 제공됩니다.", staffList.size() - sendCount.get());
 	}
 
 	private void sendToClient(SseEmitter emitter, Long userId, String name, Object data) {
