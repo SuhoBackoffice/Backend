@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
 
 /**
@@ -20,7 +21,16 @@ import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSe
  * 25. 12. 29.     Baekgwa               Initial creation
  */
 public interface WorkReportStraightSerialRepository extends JpaRepository<WorkReportStraightSerialEntity, Long> {
-	boolean existsByProjectStraightSerialIdIn(List<Long> projectStraightSerialIds);
+	@Query("SELECT COUNT(ss) > 0 " +
+		"FROM WorkReportStraightSerialEntity ss " +
+		"JOIN ss.workReportStraight s " +
+		"JOIN s.workReport r " +
+		"WHERE ss.projectStraightSerialId IN :serialIds " +
+		"AND r.status IN :statuses")
+	boolean existsBySerialIdsAndStatuses(
+		@Param("serialIds") List<Long> serialIds,
+		@Param("statuses") List<WorkReportStatus> statuses
+	);
 
 	@Query("SELECT wrss "
 		+ "FROM WorkReportStraightSerialEntity wrss "

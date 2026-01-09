@@ -51,7 +51,7 @@ public class WorkReportResponse {
 				.reportUserName(workReport.getReportUserName())
 				.workSummary(workReport.getWorkSummary())
 				.workDate(workReport.getWorkDate())
-				.status(workReport.getStatus().getDescription())
+				.status(workReport.getStatus().name())
 				.build();
 		}
 	}

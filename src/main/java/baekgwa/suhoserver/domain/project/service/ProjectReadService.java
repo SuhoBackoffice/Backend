@@ -30,6 +30,7 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
 import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
 import lombok.RequiredArgsConstructor;
@@ -208,6 +209,11 @@ public class ProjectReadService {
 		);
 	}
 
+	/**
+	 * ProjectStraightEntity ID List 를 통해, Entity List 를 조회
+	 * @param request PostNewWorkReport dto
+	 * @return
+	 */
 	@Transactional(readOnly = true)
 	public Map<Long, ProjectStraightEntity> getProjectStraightMap(
 		WorkReportRequest.PostNewWorkReport request
@@ -329,9 +335,11 @@ public class ProjectReadService {
 			.map(ProjectStraightSerialEntity::getId)
 			.toList();
 
-		boolean alreadyUsed =
-			workReportStraightSerialRepository
-				.existsByProjectStraightSerialIdIn(serialIdList);
+		List<WorkReportStatus> targetStatuses = List.of(WorkReportStatus.PENDING, WorkReportStatus.APPROVED);
+		boolean alreadyUsed = workReportStraightSerialRepository.existsBySerialIdsAndStatuses(
+			serialIdList,
+			targetStatuses
+		);
 
 		if (alreadyUsed) {
 			throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
