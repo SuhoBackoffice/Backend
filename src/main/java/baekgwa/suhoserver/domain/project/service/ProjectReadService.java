@@ -431,12 +431,14 @@ public class ProjectReadService {
 			.map(ProjectBranchSerialEntity::getId)
 			.toList();
 
-		boolean alreadyUsed =
-			workReportBranchSerialRepository
-				.existsByProjectBranchSerialIdIn(serialIdList);
+		List<WorkReportStatus> targetStatuses = List.of(WorkReportStatus.PENDING, WorkReportStatus.APPROVED);
+		boolean alreadyUsed = workReportBranchSerialRepository.existsBySerialIdsAndStatuses(
+			serialIdList,
+			targetStatuses
+		);
 
 		if (alreadyUsed) {
-			throw new GlobalException(ErrorCode.ALREADY_USED_BRANCH_SERIAL);
+			throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
 		}
 
 		Map<Long, String> serialMap =
