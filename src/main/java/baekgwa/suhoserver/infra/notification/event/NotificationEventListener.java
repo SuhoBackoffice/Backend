@@ -1,11 +1,17 @@
 package baekgwa.suhoserver.infra.notification.event;
 
+import java.util.List;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import baekgwa.suhoserver.domain.notification.service.NotificationService;
+import baekgwa.suhoserver.domain.notification.dto.NotificationResponse;
+import baekgwa.suhoserver.domain.notification.service.NotificationPushService;
+import baekgwa.suhoserver.domain.notification.service.NotificationWriteService;
+import baekgwa.suhoserver.model.notification.entity.UserNotificationEntity;
+import baekgwa.suhoserver.model.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,12 +31,21 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationEventListener {
 
-	private final NotificationService notificationService;
+	private final NotificationWriteService notificationWriteService;
+	private final NotificationPushService notificationPushService;
 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-	public void handleNotificationEvent(NotificationEvent event) {
-		log.debug("알림 비동기 처리 시작: {}", event.content());
-		notificationService.sendToAllStaff(event);
+	public void handleWorkReportEvent(NotificationEvent event) {
+		log.debug("업무 보고 알림 처리 시작: {}", event.content());
+
+		List<UserNotificationEntity> savedNotifications =
+			notificationWriteService.createBulkNotification(event, UserRole.STAFF);
+
+		savedNotifications.forEach(mapping -> notificationPushService.send(
+			mapping.getUser().getId(),
+			"notification",
+			NotificationResponse.from(mapping)
+		));
 	}
 }

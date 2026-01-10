@@ -97,7 +97,7 @@ public class WorkReportFacade {
 			branchSerialSnapshot
 		);
 
-		sendNewWorkReportNotification(findUser, findProject, savedWorkReport);
+		publishNotification(findUser, findProject, savedWorkReport);
 
 		return WorkReportResponse.PostNewWorkReport
 			.builder()
@@ -106,18 +106,17 @@ public class WorkReportFacade {
 	}
 
 	/**
-	 * 신규 메시지 발행
-	 * @param findUser
-	 * @param findProject
-	 * @param savedWorkReport
+	 * 업무보고 알림 발송
+	 * @param user
+	 * @param project
+	 * @param report
 	 */
-	private void sendNewWorkReportNotification(UserEntity findUser, ProjectEntity findProject, WorkReportEntity savedWorkReport) {
-		String content = findUser.getUsername() + "님이 업무보고를 진행하였습니다.";
-		String url = "/project/" + findProject.getId() + "/reports/" + savedWorkReport.getId();
+	private void publishNotification(UserEntity user, ProjectEntity project, WorkReportEntity report) {
+		String content = String.format("%s님이 업무보고를 진행하였습니다.", user.getUsername());
+		String url = String.format("/project/%d/reports/%d", project.getId(), report.getId());
+
 		eventPublisher.publishEvent(new NotificationEvent(
-			content,
-			url,
-			NotificationType.WORK_REPORT
+			content, url, NotificationType.WORK_REPORT
 		));
 	}
 

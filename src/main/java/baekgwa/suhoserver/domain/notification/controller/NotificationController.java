@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import baekgwa.suhoserver.domain.notification.service.NotificationService;
+import baekgwa.suhoserver.domain.notification.service.NotificationReadService;
+import baekgwa.suhoserver.domain.notification.service.NotificationWriteService;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import lombok.RequiredArgsConstructor;
@@ -31,13 +32,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NotificationController {
 
-	private final NotificationService notificationService;
+	private final NotificationReadService notificationReadService;
+	private final NotificationWriteService notificationWriteService;
 
 	@GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public ResponseEntity<SseEmitter> subscribe(
 		@AuthenticationPrincipal Long userId
 	) {
-		SseEmitter emitter = notificationService.subscribe(userId);
+		SseEmitter emitter = notificationReadService.subscribe(userId);
 		return ResponseEntity.ok(emitter);
 	}
 
@@ -45,7 +47,7 @@ public class NotificationController {
 	public BaseResponse<Void> readNotification(
 		@PathVariable("userNotificationId") Long userNotificationId
 	) {
-		notificationService.readNotification(userNotificationId);
+		notificationWriteService.markAsRead(userNotificationId);
 		return BaseResponse.success(SuccessCode.DELETE_FILE_SUCCESS);
 	}
 }
