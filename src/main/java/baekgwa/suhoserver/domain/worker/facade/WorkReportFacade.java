@@ -97,16 +97,28 @@ public class WorkReportFacade {
 			branchSerialSnapshot
 		);
 
-		eventPublisher.publishEvent(new NotificationEvent(
-			"새로운 업무 보고가 등록되었습니다.",
-			"http://localhost:3000/report/" + savedWorkReport.getId(),
-			NotificationType.WORK_REPORT
-		));
+		sendNewWorkReportNotification(findUser, findProject, savedWorkReport);
 
 		return WorkReportResponse.PostNewWorkReport
 			.builder()
 			.workReportId(savedWorkReport.getId())
 			.build();
+	}
+
+	/**
+	 * 신규 메시지 발행
+	 * @param findUser
+	 * @param findProject
+	 * @param savedWorkReport
+	 */
+	private void sendNewWorkReportNotification(UserEntity findUser, ProjectEntity findProject, WorkReportEntity savedWorkReport) {
+		String content = findUser.getUsername() + "님이 업무보고를 진행하였습니다.";
+		String url = "/project/" + findProject.getId() + "/reports/" + savedWorkReport.getId();
+		eventPublisher.publishEvent(new NotificationEvent(
+			content,
+			url,
+			NotificationType.WORK_REPORT
+		));
 	}
 
 	@Transactional(readOnly = true)
