@@ -29,11 +29,13 @@ public interface WorkReportRepository extends JpaRepository<WorkReportEntity, Lo
 	@Query("SELECT count(wr) > 0 FROM WorkReportEntity wr "
 		+ "where wr.reportUserId = :userId "
 		+ "and wr.project.id = :projectId "
-		+ "and wr.workDate = :workDate")
+		+ "and wr.workDate = :workDate "
+		+ "AND wr.status in :statusList ")
 	boolean existsDailyReport(
 		@Param("userId") Long userId,
 		@Param("projectId") Long projectId,
-		@Param("workDate") LocalDate workDate
+		@Param("workDate") LocalDate workDate,
+		@Param("statusList") List<WorkReportStatus> statusList
 	);
 
 	@EntityGraph(attributePaths = "project")

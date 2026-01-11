@@ -19,12 +19,25 @@ CREATE TABLE `work_report`
     `work_date`        DATE                  NOT NULL,
     `status`           VARCHAR(50)           NOT NULL,
     `reject_reason`    VARCHAR(50)           NULL,
+    -- PENDING / APPROVED 일 때만 유니크 제약을 적용하기 위한 컬럼
+    `active_flag` TINYINT(1) GENERATED ALWAYS AS (
+        CASE
+            WHEN status IN ('PENDING', 'APPROVED') THEN 1
+            ELSE NULL
+            END
+        ) VIRTUAL,
     `created_at`       DATETIME              NOT NULL,
     `modified_at`      DATETIME              NOT NULL,
+
     PRIMARY KEY (`id`),
-    CONSTRAINT `fk_work_report_project_id` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-    UNIQUE KEY `uk_work_report_daily` (`work_date`, `report_user_id`, `project_id`)
+    CONSTRAINT `fk_work_report_project_id`
+        FOREIGN KEY (`project_id`) REFERENCES `project` (`id`)
+            ON DELETE CASCADE,
+
+    UNIQUE KEY `uk_work_report_active_daily`
+        (`work_date`, `report_user_id`, `project_id`, `active_flag`)
 );
+
 
 CREATE TABLE `work_report_straight`
 (

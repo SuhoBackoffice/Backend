@@ -18,6 +18,7 @@ import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraig
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
+import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
 import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchRepository;
@@ -69,8 +70,13 @@ public class WorkReportWriteService {
 		ProjectEntity project,
 		WorkReportRequest.PostNewWorkReport request
 	) {
-		boolean existReport = workReportRepository.existsDailyReport(user.getId(), project.getId(),
-			request.getWorkDate());
+		List<WorkReportStatus> statusList = List.of(WorkReportStatus.APPROVED, WorkReportStatus.PENDING);
+		boolean existReport = workReportRepository.existsDailyReport(
+			user.getId(),
+			project.getId(),
+			request.getWorkDate(),
+			statusList
+		);
 		if (existReport) {
 			throw new GlobalException(ErrorCode.ALREADY_EXIST_DAILY_REPORT);
 		}
