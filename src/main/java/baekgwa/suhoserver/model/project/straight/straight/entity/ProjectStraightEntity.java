@@ -1,6 +1,8 @@
-package baekgwa.suhoserver.model.project.straight.entity;
+package baekgwa.suhoserver.model.project.straight.straight.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
@@ -17,18 +19,20 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * PackageName : baekgwa.suhoserver.model.project.straight.entity
+ * PackageName : baekgwa.suhoserver.model.project.straight.straight.entity
  * FileName    : ProjectStraightEntity
  * Author      : Baekgwa
  * Date        : 2025-08-08
- * Description : 
+ * Description : 프로젝트에 할당된 직선레일 정보 
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-08-08     Baekgwa               Initial creation
  */
+@Slf4j
 @Entity
 @Getter
 @Table(name = "project_straight")
@@ -78,7 +82,8 @@ public class ProjectStraightEntity extends TemporalEntity {
 	}
 
 	public static ProjectStraightEntity createNewStraight(
-		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length, StraightInfoEntity straightInfo
+		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length,
+		StraightInfoEntity straightInfo
 	) {
 		return ProjectStraightEntity
 			.builder()
@@ -94,9 +99,24 @@ public class ProjectStraightEntity extends TemporalEntity {
 
 	/**
 	 * 프로젝트 직선레일 정보 업데이트용 편의 메서드
-	 * - 현재, 수량만 변경 가능하도록 구성.
+	 * 수량만 변경 가능하도록 구성.
+	 * 변경된 수량만큼 return
+	 * @param changeQuantity 변경할 수량
 	 */
-	public void patchProjectStraight(Long totalQuantity) {
-		this.totalQuantity = totalQuantity;
+	public void patchProjectStraight(Long changeQuantity) {
+		this.totalQuantity = changeQuantity;
+	}
+
+	/**
+	 * 직선레일 생산 수량 업데이트
+	 * @param productionQuantity
+	 */
+	public void updateCompleteQuantity(Long productionQuantity) {
+		long targetQuantity = this.completedQuantity + productionQuantity;
+		if(targetQuantity > this.totalQuantity) {
+			log.debug("총 수량 {}EA / 총 생산량 {}EA", this.totalQuantity, targetQuantity);
+			throw new GlobalException(ErrorCode.REPORT_UPDATE_FAIL_PRODUCTION_QUANTITY_EXCEEDED);
+		}
+		this.completedQuantity = targetQuantity;
 	}
 }

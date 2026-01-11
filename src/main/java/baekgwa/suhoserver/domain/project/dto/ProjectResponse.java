@@ -6,11 +6,12 @@ import java.util.List;
 
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -309,6 +310,30 @@ public class ProjectResponse {
 				.drawingNumber(bom.getDrawingNumber())
 				.itemName(bom.getItemName())
 				.shortage(shortage)
+				.build();
+		}
+	}
+
+	@Getter
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	@Builder(access = AccessLevel.PRIVATE)
+	public static class OnGoingProjectInfo {
+		private final Long projectId;
+		private final String version;
+		private final String region;
+		private final String name;
+		private final LocalDate startDate;
+		private final LocalDate endDate;
+
+		public static OnGoingProjectInfo of(ProjectEntity project) {
+			return OnGoingProjectInfo
+				.builder()
+				.projectId(project.getId())
+				.version(project.getVersionInfoEntity().getName())
+				.region(project.getRegion())
+				.name(project.getName())
+				.startDate(project.getStartDate())
+				.endDate(project.getEndDate())
 				.build();
 		}
 	}

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -16,16 +17,31 @@ import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
-import baekgwa.suhoserver.model.project.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.ProductProductionState;
+import baekgwa.suhoserver.model.project.ProductSerialState;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
-import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.project.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
+import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
+import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchSerialEntity;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchRepository;
+import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
+import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightEntity;
+import baekgwa.suhoserver.model.work.report.straight.entity.WorkReportStraightSerialEntity;
+import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightRepository;
+import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PackageName : baekgwa.suhoserver.domain.project.service
@@ -38,6 +54,7 @@ import lombok.RequiredArgsConstructor;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-09-15     Baekgwa               Initial creation
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProjectWriteService {
@@ -45,6 +62,11 @@ public class ProjectWriteService {
 	private final ProjectRepository projectRepository;
 	private final ProjectBranchRepository projectBranchRepository;
 	private final ProjectStraightRepository projectStraightRepository;
+	private final ProjectStraightSerialRepository projectStraightSerialRepository;
+	private final WorkReportStraightRepository workReportStraightRepository;
+	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
+	private final WorkReportBranchRepository workReportBranchRepository;
+	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
 
 	/**
 	 * 신규 프로젝트 생성 메서드
@@ -77,7 +99,7 @@ public class ProjectWriteService {
 	 * @param findBranchTypeMap 분기레일 정보 Map <PK, Entity>
 	 */
 	@Transactional
-	public void registerProjectBranchOrThrow(
+	public List<ProjectBranchEntity> registerProjectBranchOrThrow(
 		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList,
 		ProjectEntity findProject,
 		Map<Long, BranchTypeEntity> findBranchTypeMap
@@ -104,7 +126,7 @@ public class ProjectWriteService {
 			}).toList();
 
 		// 3. 프로젝트 분기레일 등록
-		projectBranchRepository.saveAll(newProjectBranchList);
+		return projectBranchRepository.saveAll(newProjectBranchList);
 	}
 
 	/**
@@ -115,7 +137,7 @@ public class ProjectWriteService {
 	 * @param straightInfoMap 직선레일 정보 [가공 위치, LitzWire 6개] 를 담은 Map
 	 */
 	@Transactional
-	public void registerProjectStraightOrThrow(
+	public List<ProjectStraightEntity> registerProjectStraightOrThrow(
 		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
 		ProjectEntity findProject,
 		Map<Long, StraightTypeEntity> findStraightTypeMap,
@@ -152,79 +174,49 @@ public class ProjectWriteService {
 				})
 			.toList();
 
-		// 전체 저장
-		projectStraightRepository.saveAll(newProjectStraightList);
+		// 3. 직선레일 전체 저장
+		return projectStraightRepository.saveAll(newProjectStraightList);
 	}
 
 	/**
-
-	 */
-	/**
 	 * 프로젝트에 할당된 특정 직선레일 할당 해제
-	 * @param projectStraightId 프로젝트에 할당된 직선레일 PK
-	 * @return 추가로 삭제할 Straight Info PK
+	 * @param projectStraight 삭제할 프로젝트 직선레일 Entity
 	 */
 	@Transactional
-	public Long deleteProjectStraightOrThrow(Long projectStraightId) {
-		// 1. 삭제할 ProjectStraight Entity 조회
-		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
-			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
-
-		// 2. straightInfoId 사전 추출
-		Long straightInfoId = findProjectStraight.getStraightInfo().getId();
-
-		// 3. 삭제 진행
-		projectStraightRepository.delete(findProjectStraight);
-
-		return straightInfoId;
+	public void deleteProjectStraightOrThrow(ProjectStraightEntity projectStraight) {
+		projectStraightRepository.delete(projectStraight);
 	}
 
 	/**
 	 * 프로젝트에 할당된 직선레일 수정
-	 * @param projectStraightId 프로젝트에 할당된 직선레일 PK
-	 * @param dto 수정할 data
+	 * 추가적으로 Straight 의 Serial 관련 정보도 업데이트(soft delete or create) 처리
+	 * @param projectStraight 프로젝트에 할당된 직선레일 Entity
+	 * @param newQuantity 신규 수량
 	 */
 	@Transactional
 	public void patchProjectStraightOrThrow(
-		Long projectStraightId,
-		ProjectRequest.PatchProjectStraightDto dto
+		ProjectStraightEntity projectStraight, Long newQuantity
 	) {
-		// 1. projectStraight Entity 조회
-		ProjectStraightEntity findProjectStraight = projectStraightRepository.findById(projectStraightId)
-			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
-
-		// 2. 업데이트 처리
-		findProjectStraight.patchProjectStraight(dto.getTotalQuantity());
+		projectStraight.patchProjectStraight(newQuantity);
 	}
 
 	/**
 	 * 프로젝트에 할당된 분기레일 삭제
-	 * @param projectBranchId 프로젝트에 할당된 분기레일 PK
+	 * @param projectBranch 프로젝트에 할당된 분기레일 Entity
 	 */
 	@Transactional
-	public void deleteProjectBranchOrThrow(Long projectBranchId) {
-		// 1. 유효성 확인
-		if (!projectBranchRepository.existsById(projectBranchId)) {
-			throw new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH);
-		}
-
-		// 2. 삭제 진행
-		projectBranchRepository.deleteById(projectBranchId);
+	public void deleteProjectBranch(ProjectBranchEntity projectBranch) {
+		projectBranchRepository.delete(projectBranch);
 	}
 
 	/**
 	 * 프로젝트에 할당된 분기레일 수정
-	 * @param projectBranchId 프로젝트에 할당된 분기레일 PK
-	 * @param dto 수정할 data
+	 * @param projectBranch 프로젝트에 할당된 분기레일 Entity
+	 * @param updateQuantity 업데이트 할 수량
 	 */
 	@Transactional
-	public void patchProjectBranchOrThrow(Long projectBranchId, ProjectRequest.PatchProjectBranchDto dto) {
-		// 1. projectBranch Entity 조회
-		ProjectBranchEntity findProjectBranch = projectBranchRepository.findById(projectBranchId)
-			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
-
-		// 2. 업데이트 처리
-		findProjectBranch.patchProjectBranch(dto.getTotalQuantity());
+	public void patchProjectBranchOrThrow(ProjectBranchEntity projectBranch, Long updateQuantity) {
+		projectBranch.patchProjectBranch(updateQuantity);
 	}
 
 	private void validateDuplicationStraight(
@@ -254,5 +246,135 @@ public class ProjectWriteService {
 				throw new GlobalException(ErrorCode.ALREADY_EXIST_PROJECT_STRAIGHT_DATA);
 			}
 		}
+	}
+
+	/**
+	 * 업무 보고된 수량만큼 프로젝트에 할당된 직선레일의 완료 수량에 업데이트 처리
+	 * @param findWorkReport
+	 * @return List<Long> 보고된 직선레일 PK List
+	 */
+	@Transactional
+	public List<Long> applyStraightProductionQuantityFromReport(
+		WorkReportEntity findWorkReport
+	) {
+		List<WorkReportStraightEntity> workReportStraightList =
+			workReportStraightRepository.findByWorkReport(findWorkReport);
+
+		if (workReportStraightList.isEmpty()) {
+			return List.of();
+		}
+
+		Set<Long> projectStraightIdSet =
+			workReportStraightList.stream()
+				.map(WorkReportStraightEntity::getProjectStraightId)
+				.collect(Collectors.toSet());
+
+		Map<Long, ProjectStraightEntity> projectStraightMap =
+			projectStraightRepository.findAllById(projectStraightIdSet)
+				.stream().collect(Collectors.toMap(
+					ProjectStraightEntity::getId,
+					Function.identity()
+				));
+
+		workReportStraightList.forEach(wrs -> {
+			ProjectStraightEntity ps =
+				projectStraightMap.get(wrs.getProjectStraightId());
+
+			if (ps == null) {
+				throw new GlobalException(ErrorCode.REPORT_PROJECT_STRAIGHT_NOT_FOUND);
+			}
+
+			ps.updateCompleteQuantity(wrs.getProductionQuantity());
+		});
+
+		return workReportStraightList.stream().map(WorkReportStraightEntity::getId).toList();
+	}
+
+	@Transactional
+	public List<Long> applyBranchProductionQuantityFromReport(
+		WorkReportEntity findWorkReport
+	) {
+		List<WorkReportBranchEntity> workReportBranchList =
+			workReportBranchRepository.findByWorkReport(findWorkReport);
+
+		if (workReportBranchList.isEmpty()) {
+			return List.of();
+		}
+
+		Set<Long> projectBranchIdSet =
+			workReportBranchList.stream()
+				.map(WorkReportBranchEntity::getProjectBranchId)
+				.collect(Collectors.toSet());
+
+		Map<Long, ProjectBranchEntity> projectBranchMap =
+			projectBranchRepository.findAllById(projectBranchIdSet)
+				.stream().collect(Collectors.toMap(
+					ProjectBranchEntity::getId,
+					Function.identity()
+				));
+
+		workReportBranchList.forEach(wrb -> {
+			ProjectBranchEntity pb =
+				projectBranchMap.get(wrb.getProjectBranchId());
+
+			if (pb == null) {
+				throw new GlobalException(ErrorCode.REPORT_PROJECT_BRANCH_NOT_FOUND);
+			}
+
+			pb.updateCompleteQuantity(wrb.getProductionQuantity());
+		});
+
+		return workReportBranchList.stream().map(WorkReportBranchEntity::getId).toList();
+	}
+
+	/**
+	 * 보고서에 저장된 직선레일의 Serial List 로, 실제 제품의 생산 상태를 생산 완료로 업데이트 합니다.
+	 * @param reportedStraightIdList 영향 받을 WorkReportStraight PK List
+	 */
+	public void markStraightSerialProduced(List<Long> reportedStraightIdList) {
+		if (reportedStraightIdList.isEmpty()) {
+			return;
+		}
+
+		List<WorkReportStraightSerialEntity> targetStraightSerialList =
+			workReportStraightSerialRepository.findAllByWorkReportStraightIn(reportedStraightIdList);
+
+		List<Long> targetProjectStraightserialIdList = targetStraightSerialList.stream()
+			.map(WorkReportStraightSerialEntity::getProjectStraightSerialId)
+			.toList();
+
+		List<ProjectStraightSerialEntity> serialList = projectStraightSerialRepository.findReportTargetSerialList(
+			targetProjectStraightserialIdList,
+			ProductSerialState.ACTIVE,
+			ProductProductionState.NOT_PRODUCED
+		);
+
+		serialList.forEach(ProjectStraightSerialEntity::markProduced);
+	}
+
+	/**
+	 * 보고서에 저장된 분기 레일의 Serial List 로, 실제 제품의 생산 상태를 생산 완료로 업데이트 합니다.
+	 * @param reportedBranchIdList
+	 */
+	@Transactional
+	public void markBranchSerialProduced(List<Long> reportedBranchIdList) {
+		if (reportedBranchIdList.isEmpty()) {
+			return;
+		}
+
+		List<WorkReportBranchSerialEntity> targetBranchSerialList =
+			workReportBranchSerialRepository.findAllByWorkReportBranchIn(reportedBranchIdList);
+
+		List<Long> targetProjectBranchSerialIdList = targetBranchSerialList.stream()
+			.map(WorkReportBranchSerialEntity::getProjectBranchSerialId)
+			.toList();
+
+		List<ProjectBranchSerialEntity> serialList = projectBranchRepository.findReportTargetSerialList(
+			targetProjectBranchSerialIdList,
+			ProductSerialState.ACTIVE,
+			ProductProductionState.NOT_PRODUCED
+		);
+
+		serialList.forEach(ProjectBranchSerialEntity::markProduced);
 	}
 }

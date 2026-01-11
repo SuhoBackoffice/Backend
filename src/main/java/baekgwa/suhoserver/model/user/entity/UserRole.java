@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum UserRole {
-	USER("직원"),
+	WORKER("직원"),
 	STAFF("관리자"),
 	ADMIN("admin");
 

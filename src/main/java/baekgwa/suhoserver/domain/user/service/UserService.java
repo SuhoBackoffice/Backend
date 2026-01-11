@@ -35,25 +35,36 @@ public class UserService {
 	public void signup(UserRequest.SignupDto signupDto) {
 
 		// 1. 중복 검증
-		if(userRepository.findByLoginId(signupDto.getLoginId()).isPresent()) {
+		if (userRepository.findByLoginId(signupDto.getLoginId()).isPresent()) {
 			throw new GlobalException(ErrorCode.DUPLICATE_LOGIN_ID);
 		}
 
 		// 2. 새로운 회원 데이터 생성
 		UserEntity newUser = UserEntity.createNewUser(signupDto.getLoginId(),
-			passwordEncoder.encode(signupDto.getPassword()), signupDto.getUsername(), UserRole.USER);
+			passwordEncoder.encode(signupDto.getPassword()), signupDto.getUsername(), UserRole.WORKER);
 
 		// 3. 데이터 저장
 		userRepository.save(newUser);
 	}
 
+	@Transactional(readOnly = true)
 	public UserResponse.UserInfoDto getUserInfo(Long userId) {
-
 		// 1. 정보 조회
 		UserEntity findUser = userRepository.findById(userId).orElseThrow(
 			() -> new GlobalException(ErrorCode.INVALID_USER_ID));
 
 		// 2. DTO 변환 및 반환
 		return UserResponse.UserInfoDto.of(findUser.getId(), findUser.getUsername(), findUser.getRole());
+	}
+
+	/**
+	 * userId 를 사용해서, 회원 Entity 를 반환하는 메서드
+	 * @param userId 회원 PK
+	 * @return find UserEntity
+	 */
+	@Transactional(readOnly = true)
+	public UserEntity getUserEntityOrThrow(Long userId) {
+		return userRepository.findById(userId).orElseThrow(
+			() -> new GlobalException(ErrorCode.INVALID_USER_ID));
 	}
 }

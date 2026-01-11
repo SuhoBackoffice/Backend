@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.branch.service.BranchReadService;
+import baekgwa.suhoserver.domain.branch.service.BranchSerialWriteService;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
@@ -16,13 +18,22 @@ import baekgwa.suhoserver.domain.project.service.ProjectBomService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightReadService;
+import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEventDto;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchDeletedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectBranchUpdatedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
+import baekgwa.suhoserver.infra.history.event.ProjectStraightUpdatedEvent;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
@@ -55,6 +66,10 @@ public class ProjectFacade {
 	private final StraightWriteService straightWriteService;
 
 	private final MaterialReadService materialReadService;
+	private final StraightSerialWriteService straightSerialWriteService;
+	private final BranchSerialWriteService branchSerialWriteService;
+
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -80,26 +95,37 @@ public class ProjectFacade {
 
 	@Transactional
 	public ProjectResponse.NewProjectDto registerProjectBranch(
-		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList, Long projectId
+		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList, Long projectId, Long userId
 	) {
-		// 1. 프로젝트 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. Branch 정보 조회
 		Set<Long> branchIdSet = postProjectBranchInfoList.stream()
 			.map(ProjectRequest.PostProjectBranchInfo::getBranchTypeId)
 			.collect(Collectors.toSet());
 		Map<Long, BranchTypeEntity> findBranchTypeMap = branchReadService.getBranchTypeListOrThrow(branchIdSet);
 
-		// 3. 신규 ProjectBranch 생성
-		projectWriteService.registerProjectBranchOrThrow(postProjectBranchInfoList, findProject, findBranchTypeMap);
+		List<ProjectBranchEntity> saveProjectBranchList = projectWriteService.registerProjectBranchOrThrow(
+			postProjectBranchInfoList, findProject, findBranchTypeMap);
+
+		branchSerialWriteService.registerProjectBranchSerial(saveProjectBranchList);
+
+		List<ProjectBranchCreatedEventDto> eventDtoList = saveProjectBranchList.stream().map(
+				pb -> new ProjectBranchCreatedEventDto(
+					pb.getId(),
+					pb.getBranchType().getId(),
+					pb.getTotalQuantity(),
+					pb.getBranchType().getCode()))
+			.toList();
+		ProjectBranchCreatedEvent event =
+			new ProjectBranchCreatedEvent(findProject.getId(), userId, eventDtoList);
+		applicationEventPublisher.publishEvent(event);
 
 		return new ProjectResponse.NewProjectDto(projectId);
 	}
 
 	@Transactional
 	public void registerProjectStraight(
-		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId
+		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId, Long userId
 	) {
 		// 1. 프로젝트 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
@@ -119,8 +145,33 @@ public class ProjectFacade {
 			);
 
 		// 3. 신규 직선레일 생성 및 등록
-		projectWriteService.registerProjectStraightOrThrow(postProjectStraightInfoList, findProject,
-			findStraightTypeMap, straightInfoMap);
+		List<ProjectStraightEntity> saveProjectStraightList = projectWriteService.registerProjectStraightOrThrow(
+			postProjectStraightInfoList,
+			findProject,
+			findStraightTypeMap,
+			straightInfoMap
+		);
+
+		// 4. 신규 등록된 직선레일 Serial 등록
+		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
+
+		// 5. history 등록
+		List<ProjectStraightCreatedEventDto> eventDtoList = saveProjectStraightList.stream()
+			.map(ps -> new ProjectStraightCreatedEventDto(
+				ps.getId(),
+				ps.getLength(),
+				ps.getIsLoopRail(),
+				ps.getStraightType().getType(),
+				ps.getTotalQuantity()
+			))
+			.toList();
+		ProjectStraightCreatedEvent createdEvent =
+			new ProjectStraightCreatedEvent(
+				findProject.getId(),
+				userId,
+				eventDtoList
+			);
+		applicationEventPublisher.publishEvent(createdEvent);
 	}
 
 	@Transactional(readOnly = true)
@@ -163,30 +214,90 @@ public class ProjectFacade {
 	}
 
 	@Transactional
-	public void deleteProjectStraight(Long projectStraightId) {
-		// 1. 프로젝트에 직선레일 특정 삭제
-		Long straightInfoId = projectWriteService.deleteProjectStraightOrThrow(projectStraightId);
+	public void deleteProjectStraight(Long projectStraightId, Long userId) {
+		ProjectStraightEntity findProjectStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 
-		// 2. 직선레일 정보 삭제
-		straightWriteService.deleteStraightInfoOrThrow(straightInfoId);
+		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
+		straightWriteService.deleteStraightInfoOrThrow(findProjectStraight.getStraightInfo().getId());
+
+		ProjectStraightDeletedEvent event = new ProjectStraightDeletedEvent(
+			findProjectStraight.getProject().getId(),
+			userId,
+			findProjectStraight.getId(),
+			findProjectStraight.getLength(),
+			findProjectStraight.getIsLoopRail(),
+			findProjectStraight.getStraightType().getType(),
+			findProjectStraight.getTotalQuantity()
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional
 	public void patchProjectStraight(
 		Long projectStraightId,
-		ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
+		ProjectRequest.PatchProjectStraightDto patchProjectStraightDto,
+		Long userId
 	) {
-		projectWriteService.patchProjectStraightOrThrow(projectStraightId, patchProjectStraightDto);
+		ProjectStraightEntity findStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
+		Long oldQuantity = findStraight.getTotalQuantity();
+		Long newQuantity = patchProjectStraightDto.getTotalQuantity();
+
+		projectWriteService.patchProjectStraightOrThrow(findStraight, newQuantity);
+
+		straightSerialWriteService.patchProjectStraightSerial(findStraight, oldQuantity, newQuantity);
+
+		ProjectStraightUpdatedEvent event = new ProjectStraightUpdatedEvent(
+			findStraight.getProject().getId(),
+			userId,
+			findStraight.getId(),
+			findStraight.getLength(),
+			findStraight.getIsLoopRail(),
+			findStraight.getStraightType().getType(),
+			oldQuantity,
+			newQuantity
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional
-	public void deleteProjectBranch(Long projectBranchId) {
-		projectWriteService.deleteProjectBranchOrThrow(projectBranchId);
+	public void deleteProjectBranch(Long projectBranchId, Long userId) {
+		ProjectBranchEntity findProjectBranch = projectReadService.getProjectBranchOrThrow(projectBranchId);
+
+		projectWriteService.deleteProjectBranch(findProjectBranch);
+
+		ProjectBranchDeletedEvent event = new ProjectBranchDeletedEvent(
+			findProjectBranch.getProject().getId(),
+			userId,
+			findProjectBranch.getId(),
+			findProjectBranch.getBranchType().getId(),
+			findProjectBranch.getTotalQuantity(),
+			findProjectBranch.getBranchType().getCode()
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional
-	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto patchProjectBranchDto) {
-		projectWriteService.patchProjectBranchOrThrow(projectBranchId, patchProjectBranchDto);
+	public void patchProjectBranch(Long projectBranchId, ProjectRequest.PatchProjectBranchDto request, Long userId) {
+		ProjectBranchEntity findProjectBranch =
+			projectReadService.getProjectBranchOrThrow(projectBranchId);
+
+		Long oldQuantity = findProjectBranch.getTotalQuantity();
+		Long newQuantity = request.getTotalQuantity();
+
+		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, request.getTotalQuantity());
+
+		branchSerialWriteService.patchProjectBranchSerial(findProjectBranch, oldQuantity, newQuantity);
+
+		ProjectBranchUpdatedEvent event = new ProjectBranchUpdatedEvent(
+			findProjectBranch.getProject().getId(),
+			userId,
+			findProjectBranch.getId(),
+			findProjectBranch.getBranchType().getId(),
+			oldQuantity,
+			newQuantity,
+			findProjectBranch.getBranchType().getCode()
+		);
+		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional(readOnly = true)
@@ -208,5 +319,10 @@ public class ProjectFacade {
 
 		// 3. 분기레일별로 생산 가능량 조회
 		return branchReadService.getBranchCapacity(inboundedMaterialMap, projectBranchList);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.OnGoingProjectInfo> getOnGoingProjectInfo() {
+		return projectReadService.getOnGoingProjectInfoList();
 	}
 }

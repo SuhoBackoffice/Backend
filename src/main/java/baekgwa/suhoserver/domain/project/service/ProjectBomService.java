@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.infra.download.ImageDownloader;
 import baekgwa.suhoserver.infra.excel.util.ExcelMerges;
@@ -34,11 +35,11 @@ import baekgwa.suhoserver.infra.excel.util.ExcelStyler;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.bom.repository.BranchBomRepository;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
-import baekgwa.suhoserver.model.project.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.project.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.project.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -423,8 +424,11 @@ public class ProjectBomService {
 				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
 				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
 				r.createCell(STRAIGHT_COL_PROC).setCellValue(String.valueOf(e.getStraightInfo().getHolePosition()));
-				r.createCell(STRAIGHT_COL_NUM)
-					.setCellValue("LR-" + e.getLength() + "-" + e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_NUM).setCellValue(ProductSerialFactory.generateStraightSerial(
+					e.getLength(),
+					e.getIsLoopRail(),
+					e.getStraightType().getType()
+				));
 				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
 				r.createCell(6).setCellValue(toDouble(e.getStraightInfo().getLitzwire1()));
 				r.createCell(7).setCellValue(toDouble(e.getStraightInfo().getLitzwire2()));
@@ -484,8 +488,11 @@ public class ProjectBomService {
 				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
 				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
 				r.createCell(STRAIGHT_COL_PROC).setCellValue("");
-				r.createCell(STRAIGHT_COL_NUM)
-					.setCellValue("SR-" + e.getLength() + "-" + e.getStraightType().getType());
+				r.createCell(STRAIGHT_COL_NUM).setCellValue(ProductSerialFactory.generateStraightSerial(
+					e.getLength(),
+					e.getIsLoopRail(),
+					e.getStraightType().getType()
+				));
 				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
 				r.createCell(6).setCellValue(toDouble(e.getStraightInfo().getLitzwire1()));
 				r.createCell(7).setCellValue(toDouble(e.getStraightInfo().getLitzwire2()));

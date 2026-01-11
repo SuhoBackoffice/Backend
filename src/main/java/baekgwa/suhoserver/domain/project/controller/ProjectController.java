@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -60,10 +61,11 @@ public class ProjectController {
 	@Operation(summary = "프로젝트 분기 정보 등록")
 	public BaseResponse<ProjectResponse.NewProjectDto> registerProjectBranch(
 		@RequestBody @Valid List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList,
-		@PathVariable("projectId") Long projectId
+		@PathVariable("projectId") Long projectId,
+		@AuthenticationPrincipal Long userId
 	) {
 		ProjectResponse.NewProjectDto newProjectDto =
-			projectFacade.registerProjectBranch(postProjectBranchInfoList, projectId);
+			projectFacade.registerProjectBranch(postProjectBranchInfoList, projectId, userId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_BRANCH_SUCCESS, newProjectDto);
 	}
@@ -81,9 +83,10 @@ public class ProjectController {
 	@Operation(summary = "프로젝트 직선 레일 정보 등록")
 	public BaseResponse<Void> registerProjectStraight(
 		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
-		@PathVariable("projectId") Long projectId
+		@PathVariable("projectId") Long projectId,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId);
+		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId, userId);
 
 		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
 	}
@@ -140,9 +143,10 @@ public class ProjectController {
 	@DeleteMapping("/straight/{projectStraightId}")
 	@Operation(summary = "프로젝트의 직선레일 삭제")
 	public BaseResponse<Void> deleteProjectStraight(
-		@PathVariable("projectStraightId") Long projectStraightId
+		@PathVariable("projectStraightId") Long projectStraightId,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.deleteProjectStraight(projectStraightId);
+		projectFacade.deleteProjectStraight(projectStraightId, userId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
 
@@ -150,18 +154,20 @@ public class ProjectController {
 	@Operation(summary = "프로젝트의 직선레일 정보 수정")
 	public BaseResponse<Void> patchProjectStraight(
 		@PathVariable("projectStraightId") Long projectStraightId,
-		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto
+		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto);
+		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto, userId);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
 	}
 
 	@DeleteMapping("/branch/{projectBranchId}")
 	@Operation(summary = "프로젝트 분기레일 삭제")
 	public BaseResponse<Void> deleteProjectBranch(
-		@PathVariable("projectBranchId") Long projectBranchId
+		@PathVariable("projectBranchId") Long projectBranchId,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.deleteProjectBranch(projectBranchId);
+		projectFacade.deleteProjectBranch(projectBranchId, userId);
 		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
 	}
 
@@ -169,9 +175,10 @@ public class ProjectController {
 	@Operation(summary = "프로젝트의 특정 분기레일 정보 수정")
 	public BaseResponse<Void> patchProjectBranch(
 		@PathVariable("projectBranchId") Long projectBranchId,
-		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto
+		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto,
+		@AuthenticationPrincipal Long userId
 	) {
-		projectFacade.patchProjectBranch(projectBranchId, patchProjectBranchDto);
+		projectFacade.patchProjectBranch(projectBranchId, patchProjectBranchDto, userId);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
 	}
 
@@ -202,5 +209,14 @@ public class ProjectController {
 		List<ProjectResponse.ProjectBranchCapacity> projectBranchCapacityList =
 			projectFacade.getProjectBranchCapacity(projectId);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_BRANCH_CAPACITY, projectBranchCapacityList);
+	}
+
+	@GetMapping("/ongoing")
+	@Operation(summary = "현재 진행중인 프로젝트 목록")
+	public BaseResponse<List<ProjectResponse.OnGoingProjectInfo>> getOnGoingProjectList() {
+
+		List<ProjectResponse.OnGoingProjectInfo> response = projectFacade.getOnGoingProjectInfo();
+
+		return BaseResponse.success(SuccessCode.GET_ON_GOING_PROJECT_INFO, response);
 	}
 }

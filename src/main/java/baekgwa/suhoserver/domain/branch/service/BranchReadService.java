@@ -22,8 +22,8 @@ import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.bom.repository.BranchBomRepository;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.branch.type.repository.BranchTypeRepository;
-import baekgwa.suhoserver.model.project.branch.entity.ProjectBranchEntity;
-import baekgwa.suhoserver.model.project.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import lombok.RequiredArgsConstructor;
 

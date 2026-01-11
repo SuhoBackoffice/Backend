@@ -1,6 +1,8 @@
-package baekgwa.suhoserver.model.project.branch.entity;
+package baekgwa.suhoserver.model.project.branch.branch.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import jakarta.persistence.Column;
@@ -16,9 +18,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * PackageName : baekgwa.suhoserver.model.project.branch.entity
+ * PackageName : baekgwa.suhoserver.model.project.branch.branch.entity
  * FileName    : ProjectBranchEntity
  * Author      : Baekgwa
  * Date        : 2025-08-07
@@ -28,6 +31,7 @@ import lombok.NoArgsConstructor;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-08-07     Baekgwa               Initial creation
  */
+@Slf4j
 @Entity
 @Getter
 @Table(name = "project_branch")
@@ -74,5 +78,18 @@ public class ProjectBranchEntity extends TemporalEntity {
 
 	public void patchProjectBranch(Long totalQuantity) {
 		this.totalQuantity = totalQuantity;
+	}
+
+	/**
+	 * 분기 레일 생산 수량 업데이트
+	 * @param productionQuantity
+	 */
+	public void updateCompleteQuantity(Long productionQuantity) {
+		long targetQuantity = this.completedQuantity + productionQuantity;
+		if(targetQuantity > this.totalQuantity) {
+			log.debug("총 수량 {}EA / 총 생산량 {}EA", this.totalQuantity, targetQuantity);
+			throw new GlobalException(ErrorCode.REPORT_UPDATE_FAIL_PRODUCTION_QUANTITY_EXCEEDED);
+		}
+		this.completedQuantity = targetQuantity;
 	}
 }

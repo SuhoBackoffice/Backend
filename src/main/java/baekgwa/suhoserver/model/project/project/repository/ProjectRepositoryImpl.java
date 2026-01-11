@@ -18,6 +18,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.entity.QProjectEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -70,6 +71,19 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
 			.fetchOne();
 
 		return new PageImpl<>(findProjectList, pageable, totalCount != null ? totalCount : 0);
+	}
+
+	@Override
+	public List<ProjectEntity> findOnGoingProjectList() {
+
+		LocalDate today = LocalDate.now();
+
+		return queryFactory
+			.selectFrom(project)
+			.where(
+				project.endDate.goe(today)
+			)
+			.fetch();
 	}
 
 	private BooleanBuilder createWhereCondition(ProjectRequest.GetProjectInfo dto) {

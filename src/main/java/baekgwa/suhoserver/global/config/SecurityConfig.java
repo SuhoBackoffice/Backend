@@ -64,7 +64,7 @@ public class SecurityConfig {
 	static RoleHierarchy roleHierarchy() {
 		return RoleHierarchyImpl.withDefaultRolePrefix()
 			.role(ADMIN.name()).implies(STAFF.name())
-			.role(STAFF.name()).implies(USER.name())
+			.role(STAFF.name()).implies(WORKER.name())
 			.build();
 	}
 
@@ -117,6 +117,7 @@ public class SecurityConfig {
 				.requestMatchers(GET, "/project/sort-type").permitAll()
 				.requestMatchers(PATCH, "/project/straight/{projectStraightId}").hasRole(STAFF.name())
 				.requestMatchers(DELETE, "/project/straight/{projectStraightId}").hasRole(STAFF.name())
+				.requestMatchers(GET, "/project/ongoing").hasRole(WORKER.name())
 
 				// Straight
 				.requestMatchers(POST, "/straight/type").hasRole(STAFF.name())
@@ -126,11 +127,21 @@ public class SecurityConfig {
 				.requestMatchers(DELETE, "/file").hasRole(STAFF.name())
 
 				// Material
-				.requestMatchers(GET, "/material/{projectId}").hasRole(USER.name())
-				.requestMatchers(GET, "/material/inbound/{projectId}").hasRole(USER.name())
-				.requestMatchers(POST, "/material/inbound/{projectId}").hasRole(USER.name())
-				.requestMatchers(GET, "/material/history/{projectId}").hasRole(USER.name())
-				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(USER.name())
+				.requestMatchers(GET, "/material/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/material/inbound/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(POST, "/material/inbound/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/material/history/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(WORKER.name())
+
+				// Worker
+				.requestMatchers(POST, "/work/report/project/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/{reportId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{reportId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{projectId}/straight").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{projectId}/straight/{straightId}/serial").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{projectId}/branch").hasRole(WORKER.name())
+				.requestMatchers(GET, "/work/report/project/{projectId}/branch/{branchId}/serial").hasRole(WORKER.name())
+				.requestMatchers(POST, "/work/report/{reportId}/status").hasRole(STAFF.name())
 
 				.anyRequest().authenticated());
 

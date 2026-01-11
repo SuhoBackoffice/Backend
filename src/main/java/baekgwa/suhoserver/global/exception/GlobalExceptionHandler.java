@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -90,6 +91,15 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<BaseResponse<Void>> methodArgumentTypeMismatchException(
 		MethodArgumentTypeMismatchException e) {
 		final ErrorCode errorCode = ErrorCode.METHOD_ARGUMENT_TYPE_MISS_MATCH;
+		return ResponseEntity.status(errorCode.getStatus())
+			.body(BaseResponse.fail(errorCode));
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<BaseResponse<Void>> handleHttpMessageNotReadableException(
+		HttpMessageNotReadableException e
+	) {
+		final ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;
 		return ResponseEntity.status(errorCode.getStatus())
 			.body(BaseResponse.fail(errorCode));
 	}
