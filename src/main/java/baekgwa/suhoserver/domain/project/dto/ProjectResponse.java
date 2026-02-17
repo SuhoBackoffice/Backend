@@ -9,7 +9,6 @@ import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -142,8 +141,8 @@ public class ProjectResponse {
 				.isLoopRail(projectStraight.getIsLoopRail())
 				.straightType(projectStraight.getStraightType().getType())
 				.totalQuantity(projectStraight.getTotalQuantity())
-				.litzInfo(LitzInfo.from(projectStraight.getStraightInfo()))
-				.holePosition(projectStraight.getStraightInfo().getHolePosition())
+				.litzInfo(LitzInfo.from(projectStraight))
+				.holePosition(projectStraight.getHolePosition())
 				.build();
 		}
 	}
@@ -168,15 +167,15 @@ public class ProjectResponse {
 			this.litz6 = litz6;
 		}
 
-		public static LitzInfo from(StraightInfoEntity straightInfo) {
+		public static LitzInfo from(ProjectStraightEntity projectStraight) {
 			return LitzInfo
 				.builder()
-				.litz1(getOrZero(straightInfo.getLitzwire1()))
-				.litz2(getOrZero(straightInfo.getLitzwire2()))
-				.litz3(getOrZero(straightInfo.getLitzwire3()))
-				.litz4(getOrZero(straightInfo.getLitzwire4()))
-				.litz5(getOrZero(straightInfo.getLitzwire5()))
-				.litz6(getOrZero(straightInfo.getLitzwire6()))
+				.litz1(getOrZero(projectStraight.getLitzwire1()))
+				.litz2(getOrZero(projectStraight.getLitzwire2()))
+				.litz3(getOrZero(projectStraight.getLitzwire3()))
+				.litz4(getOrZero(projectStraight.getLitzwire4()))
+				.litz5(getOrZero(projectStraight.getLitzwire5()))
+				.litz6(getOrZero(projectStraight.getLitzwire6()))
 				.build();
 		}
 

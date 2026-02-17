@@ -2,6 +2,7 @@ package baekgwa.suhoserver.domain.project.service;
 
 import static java.lang.Boolean.*;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,6 @@ import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSe
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
-import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
@@ -141,7 +141,7 @@ public class ProjectWriteService {
 		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
 		ProjectEntity findProject,
 		Map<Long, StraightTypeEntity> findStraightTypeMap,
-		Map<ProjectRequest.PostProjectStraightInfo, StraightInfoEntity> straightInfoMap
+		Map<ProjectRequest.PostProjectStraightInfo, Map<String, Object>> straightInfoMap
 	) {
 		// 1. 입력 데이터 중복 검증
 		// db에 이미 있거나, 중복된 요청이 오는 경우 [3600A, 3600A 2번 요청] 필터링
@@ -162,7 +162,9 @@ public class ProjectWriteService {
 						}
 					}
 
-					StraightInfoEntity findStraightInfo = straightInfoMap.get(dto);
+					Map<String, Object> info = straightInfoMap.get(dto);
+					BigDecimal holePosition = (BigDecimal) info.get("holePosition");
+					BigDecimal[] wires = (BigDecimal[]) info.get("wires");
 
 					return ProjectStraightEntity.createNewStraight(
 						findProject,
@@ -170,7 +172,8 @@ public class ProjectWriteService {
 						dto.getTotalQuantity(),
 						dto.getIsLoopRail(),
 						dto.getLength(),
-						findStraightInfo);
+						holePosition,
+						wires);
 				})
 			.toList();
 

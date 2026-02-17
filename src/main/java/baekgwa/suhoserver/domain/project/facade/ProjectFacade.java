@@ -34,7 +34,6 @@ import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import lombok.RequiredArgsConstructor;
@@ -136,9 +135,9 @@ public class ProjectFacade {
 			.collect(Collectors.toSet());
 		Map<Long, StraightTypeEntity> findStraightTypeMap = straightReadService.getStraightTypeList(straightTypeIdList);
 
-		// 2. 직선레일 홀 위치 및 LitzWire 정보 생성 및 저장
-		Map<ProjectRequest.PostProjectStraightInfo, StraightInfoEntity> straightInfoMap =
-			straightWriteService.registerNewStraightInfo(
+		// 2. 직선레일 홀 위치 및 LitzWire 정보 생성
+		Map<ProjectRequest.PostProjectStraightInfo, Map<String, Object>> straightInfoMap =
+			straightWriteService.calculateStraightInfo(
 				postProjectStraightInfoList,
 				findProject.getVersionInfoEntity(),
 				findStraightTypeMap
@@ -218,7 +217,6 @@ public class ProjectFacade {
 		ProjectStraightEntity findProjectStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 
 		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
-		straightWriteService.deleteStraightInfoOrThrow(findProjectStraight.getStraightInfo().getId());
 
 		ProjectStraightDeletedEvent event = new ProjectStraightDeletedEvent(
 			findProjectStraight.getProject().getId(),
