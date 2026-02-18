@@ -22,6 +22,8 @@ import baekgwa.suhoserver.domain.straight.service.StraightReadService;
 import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEventDto;
@@ -112,7 +114,11 @@ public class ProjectFacade {
 		branchSerialWriteService.registerProjectBranchSerial(saveProjectBranchList);
 
 		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(branchTypeIdSet);
-		materialWriteService.updateBranchMaterialStock(postProjectBranchInfoList, branchBomMap, findProject);
+
+		Map<Long, Long> branchQuantityMap = postProjectBranchInfoList.stream()
+			.collect(Collectors.toMap(ProjectRequest.PostProjectBranchInfo::getBranchTypeId,
+				ProjectRequest.PostProjectBranchInfo::getQuantity));
+		materialWriteService.updateBranchMaterialStock(branchQuantityMap, branchBomMap, findProject);
 
 		List<ProjectBranchCreatedEventDto> eventDtoList = saveProjectBranchList.stream().map(
 				pb -> new ProjectBranchCreatedEventDto(
@@ -287,10 +293,17 @@ public class ProjectFacade {
 
 		Long oldQuantity = findProjectBranch.getTotalQuantity();
 		Long newQuantity = request.getTotalQuantity();
+		long diffQuantity = newQuantity - oldQuantity;
+		if(diffQuantity == 0) throw new GlobalException(ErrorCode.PATCH_BRANCH_COUNT_FAIL_DIFF_ZERO);
 
 		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, request.getTotalQuantity());
 
 		branchSerialWriteService.patchProjectBranchSerial(findProjectBranch, oldQuantity, newQuantity);
+		Long branchTypeId = findProjectBranch.getBranchType().getId();
+		Map<Long, Long> quantityMap = Map.of(branchTypeId, diffQuantity);
+
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
+		materialWriteService.updateBranchMaterialStock(quantityMap, branchBomMap, findProjectBranch.getProject());
 
 		ProjectBranchUpdatedEvent event = new ProjectBranchUpdatedEvent(
 			findProjectBranch.getProject().getId(),

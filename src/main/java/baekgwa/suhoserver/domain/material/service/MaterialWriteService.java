@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
-import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.material.history.repository.MaterialHistoryRepository;
 import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
@@ -60,29 +59,32 @@ public class MaterialWriteService {
 	/**
 	 * 분기레일 자재 (stock) 목록 생성 및 업데이트 진행
 	 * 만약 이번에 등록한게 이번 프로젝트에 처음 적용된 거면 신규 row 생성
-	 * 이전에 등록된 거라면 수량(totalPlanQuantity) 증가
-	 * @param postProjectBranchInfoList
-	 * @param branchBomMap
-	 * @param findProject
+	 * 이전에 등록된 거라면 수량(totalPlanQuantity) 증가 (음수일 경우 감소)
+	 * @param branchTypeIdAndQuantityMap Key: BranchTypeId, Value: 변경될 수량 (양수/음수)
+	 * @param branchBomMap key: BranchTypeId, Value: BranchBomList(Items)
+	 * @param findProject fk Project
 	 */
 	@Transactional
 	public void updateBranchMaterialStock(
-		List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList,
+		Map<Long, Long> branchTypeIdAndQuantityMap,
 		Map<Long, List<BranchBomEntity>> branchBomMap,
 		ProjectEntity findProject
 	) {
 		Map<String, Long> additionalQuantityMap = new HashMap<>();
 		Map<String, String> itemNameMap = new HashMap<>();
 
-		for (ProjectRequest.PostProjectBranchInfo info : postProjectBranchInfoList) {
-			List<BranchBomEntity> bomList = branchBomMap.get(info.getBranchTypeId());
+		for (Map.Entry<Long, Long> entry : branchTypeIdAndQuantityMap.entrySet()) {
+			Long branchTypeId = entry.getKey();
+			Long quantity = entry.getValue();
+
+			List<BranchBomEntity> bomList = branchBomMap.get(branchTypeId);
 			if (bomList == null || bomList.isEmpty()) {
-				log.warn("BOM 이 등록되지 않은 분기레일이 존재? branchTypeId: {}", info.getBranchTypeId());
+				log.warn("BOM 이 등록되지 않은 분기레일이 존재? branchTypeId: {}", branchTypeId);
 				continue;
 			}
 
 			for (BranchBomEntity bom : bomList) {
-				long requiredAmount = bom.getUnitQuantity() * info.getQuantity();
+				long requiredAmount = bom.getUnitQuantity() * quantity;
 				additionalQuantityMap.merge(bom.getDrawingNumber(), requiredAmount, Long::sum);
 				itemNameMap.putIfAbsent(bom.getDrawingNumber(), bom.getItemName());
 			}
