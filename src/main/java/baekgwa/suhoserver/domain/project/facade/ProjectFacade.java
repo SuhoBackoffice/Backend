@@ -273,6 +273,11 @@ public class ProjectFacade {
 	public void deleteProjectBranch(Long projectBranchId, Long userId) {
 		ProjectBranchEntity findProjectBranch = projectReadService.getProjectBranchOrThrow(projectBranchId);
 
+		Long branchTypeId = findProjectBranch.getBranchType().getId();
+		Map<Long, Long> quantityMap = Map.of(branchTypeId, -findProjectBranch.getTotalQuantity());
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
+		materialWriteService.updateBranchMaterialStock(quantityMap, branchBomMap, findProjectBranch.getProject());
+
 		projectWriteService.deleteProjectBranch(findProjectBranch);
 
 		ProjectBranchDeletedEvent event = new ProjectBranchDeletedEvent(
