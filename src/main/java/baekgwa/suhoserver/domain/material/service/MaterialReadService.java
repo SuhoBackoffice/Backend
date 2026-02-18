@@ -3,15 +3,12 @@ package baekgwa.suhoserver.domain.material.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
-import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
-import baekgwa.suhoserver.model.material.inbound.repository.MaterialInboundRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -30,28 +27,31 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MaterialReadService {
 
-	private final MaterialInboundRepository materialInboundRepository;
+	//todo : 신규 material Entity 로 이전 처리 필요.
+	// private final MaterialInboundRepository materialInboundRepository;
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialHistory> getMaterialHistroyList(
 		Long projectId, String keyword, MaterialSort sort
 	) {
 		// 1. keyword 에 매칭되는 모든 material Info 조회
-		return materialInboundRepository.findByProjectAndKeyword(projectId, keyword, sort);
+		// return materialInboundRepository.findByProjectAndKeyword(projectId, keyword, sort);
+		return List.of();
 	}
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialHistoryDetail> getMaterialHistoryDetail(
 		Long projectId, String keyword, LocalDate date
 	) {
-		// 1. materialInbound Entity List 조회
-		List<MaterialInboundEntity> findMaterialInboundList =
-			materialInboundRepository.findMaterialDetailByKeywordAndDate(projectId, keyword, date);
-
-		// 2. dto 변환 및 return
-		return findMaterialInboundList.stream()
-			.map(MaterialResponse.MaterialHistoryDetail::of)
-			.toList();
+		// // 1. materialInbound Entity List 조회
+		// List<MaterialInboundEntity> findMaterialInboundList =
+		// 	materialInboundRepository.findMaterialDetailByKeywordAndDate(projectId, keyword, date);
+		//
+		// // 2. dto 변환 및 return
+		// return findMaterialInboundList.stream()
+		// 	.map(MaterialResponse.MaterialHistoryDetail::of)
+		// 	.toList();
+		return List.of();
 	}
 
 	@Transactional(readOnly = true)
@@ -59,10 +59,11 @@ public class MaterialReadService {
 		MaterialResponse.ProjectMaterialState projectMaterialState,
 		ProjectEntity findProject
 	) {
-		List<MaterialInboundEntity> findMaterialInboundList = materialInboundRepository.findByProject(findProject);
-		long inboundCount = findMaterialInboundList.stream().mapToLong(MaterialInboundEntity::getQuantity).sum();
-
-		return MaterialResponse.ProjectMaterialState.from(projectMaterialState, inboundCount);
+		// List<MaterialInboundEntity> findMaterialInboundList = materialInboundRepository.findByProject(findProject);
+		// long inboundCount = findMaterialInboundList.stream().mapToLong(MaterialInboundEntity::getQuantity).sum();
+		//
+		// return MaterialResponse.ProjectMaterialState.from(projectMaterialState, inboundCount);
+		return MaterialResponse.ProjectMaterialState.from(0L, 0L, 0L);
 	}
 
 	/**
@@ -71,11 +72,12 @@ public class MaterialReadService {
 	 * @return Map<도번, 수량>
 	 */
 	public Map<String, Long> getAllProjectMaterial(Long projectId) {
-		List<MaterialInboundEntity> findMaterialList = materialInboundRepository.findByProjectId(projectId);
-		return findMaterialList.stream()
-			.collect(Collectors.groupingBy(
-				MaterialInboundEntity::getDrawingNumber,
-				Collectors.summingLong(MaterialInboundEntity::getQuantity)
-			));
+		// List<MaterialInboundEntity> findMaterialList = materialInboundRepository.findByProjectId(projectId);
+		// return findMaterialList.stream()
+		// 	.collect(Collectors.groupingBy(
+		// 		MaterialInboundEntity::getDrawingNumber,
+		// 		Collectors.summingLong(MaterialInboundEntity::getQuantity)
+		// 	));
+		return Map.of();
 	}
 }

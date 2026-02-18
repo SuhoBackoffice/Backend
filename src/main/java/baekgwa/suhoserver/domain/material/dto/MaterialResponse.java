@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
-import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -76,7 +75,8 @@ public class MaterialResponse {
 		private final Long quantity;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialHistoryDetail(Long id, String drawingNumber, String itemName, LocalDateTime receivedAt, Long quantity) {
+		private MaterialHistoryDetail(Long id, String drawingNumber, String itemName, LocalDateTime receivedAt,
+			Long quantity) {
 			this.id = id;
 			this.drawingNumber = drawingNumber;
 			this.itemName = itemName;
@@ -84,16 +84,17 @@ public class MaterialResponse {
 			this.quantity = quantity;
 		}
 
-		public static MaterialHistoryDetail of(MaterialInboundEntity materialInbound) {
-			return MaterialHistoryDetail
-				.builder()
-				.id(materialInbound.getId())
-				.drawingNumber(materialInbound.getDrawingNumber())
-				.itemName(materialInbound.getItemName())
-				.receivedAt(materialInbound.getCreatedAt())
-				.quantity(materialInbound.getQuantity())
-				.build();
-		}
+		//todo : 신규 material Entity 로 이전 처리 필요.
+		// public static MaterialHistoryDetail of(MaterialInboundEntity materialInbound) {
+		// 	return MaterialHistoryDetail
+		// 		.builder()
+		// 		.id(materialInbound.getId())
+		// 		.drawingNumber(materialInbound.getDrawingNumber())
+		// 		.itemName(materialInbound.getItemName())
+		// 		.receivedAt(materialInbound.getCreatedAt())
+		// 		.quantity(materialInbound.getQuantity())
+		// 		.build();
+		// }
 	}
 
 	@Getter

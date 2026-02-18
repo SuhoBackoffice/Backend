@@ -286,4 +286,19 @@ public class BranchReadService {
 			.filter(e -> e.getValue() > 0) // 1개 이상만 처리
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
+
+	/**
+	 * branchTypeId Set 을 바탕으로 전체 BOM Map 반환
+	 * @param branchTypeIdSet branchTypeIdSet
+	 * @return key: branchTypeId, value = List of branchBom
+	 */
+	@Transactional(readOnly = true)
+	public Map<Long, List<BranchBomEntity>> getBranchBomMap(Set<Long> branchTypeIdSet) {
+		List<BranchBomEntity> findBranchBomList = branchBomRepository.findAllByBranchTypeIds(branchTypeIdSet);
+
+		return findBranchBomList.stream()
+			.collect(
+				Collectors.groupingBy(branchBom -> branchBom.getBranchTypeEntity().getId())
+			);
+	}
 }

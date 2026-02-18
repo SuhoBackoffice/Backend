@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import baekgwa.suhoserver.domain.branch.service.BranchReadService;
 import baekgwa.suhoserver.domain.branch.service.BranchSerialWriteService;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
+import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectBomService;
@@ -30,6 +31,7 @@ import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightUpdatedEvent;
+import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -69,6 +71,7 @@ public class ProjectFacade {
 	private final BranchSerialWriteService branchSerialWriteService;
 
 	private final ApplicationEventPublisher applicationEventPublisher;
+	private final MaterialWriteService materialWriteService;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
@@ -98,15 +101,18 @@ public class ProjectFacade {
 	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		Set<Long> branchIdSet = postProjectBranchInfoList.stream()
+		Set<Long> branchTypeIdSet = postProjectBranchInfoList.stream()
 			.map(ProjectRequest.PostProjectBranchInfo::getBranchTypeId)
 			.collect(Collectors.toSet());
-		Map<Long, BranchTypeEntity> findBranchTypeMap = branchReadService.getBranchTypeListOrThrow(branchIdSet);
+		Map<Long, BranchTypeEntity> findBranchTypeMap = branchReadService.getBranchTypeListOrThrow(branchTypeIdSet);
 
 		List<ProjectBranchEntity> saveProjectBranchList = projectWriteService.registerProjectBranchOrThrow(
 			postProjectBranchInfoList, findProject, findBranchTypeMap);
 
 		branchSerialWriteService.registerProjectBranchSerial(saveProjectBranchList);
+
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(branchTypeIdSet);
+		materialWriteService.updateBranchMaterialStock(postProjectBranchInfoList, branchBomMap, findProject);
 
 		List<ProjectBranchCreatedEventDto> eventDtoList = saveProjectBranchList.stream().map(
 				pb -> new ProjectBranchCreatedEventDto(
