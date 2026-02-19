@@ -108,4 +108,16 @@ public class BranchSerialWriteService {
 			projectBranchSerialRepository.saveAll(newSerials);
 		}
 	}
+
+	/**
+	 * 특정 분기레일 전체 물량 취소로 인한 시리얼 전체 비활성화
+	 * 기 생산 완료된 분기레일은 그대로 생산 상태로 둘 것
+	 * @param findProjectBranch
+	 */
+	public void deleteProjectBranchSerial(ProjectBranchEntity findProjectBranch) {
+		List<ProjectBranchSerialEntity> findBranchSerialList
+			= projectBranchSerialRepository.findAllByProjectBranch(findProjectBranch);
+
+		findBranchSerialList.forEach(bs -> bs.deactivate(ProductInactiveReason.DESIGN_CHANGE));
+	}
 }

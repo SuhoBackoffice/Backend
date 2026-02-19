@@ -18,6 +18,7 @@ CREATE TABLE `users`
     `role`        VARCHAR(50)  NOT NULL,
     `created_at`  DATETIME     NOT NULL,
     `modified_at` DATETIME     NOT NULL,
+    `is_deleted`  TINYINT(1)   NOT NULL,
     PRIMARY KEY `pk_user_id` (`id`)
 );
 
@@ -43,6 +44,7 @@ CREATE TABLE `branch_type`
     `created_at`  DATETIME              NOT NULL,
     `modified_at` DATETIME              NOT NULL,
     `image_url`   VARCHAR(255)          NULL,
+    `is_deleted`  TINYINT(1)            NOT NULL,
     PRIMARY KEY (`id`),
     INDEX `idx_branch_type_version_id` (`version_id`),
     CONSTRAINT `fk_branch_type_version_info` FOREIGN KEY (`version_id`) REFERENCES `version_info` (`id`),
@@ -77,6 +79,7 @@ CREATE TABLE `project`
     `end_date`    DATE,
     `created_at`  DATETIME              NOT NULL,
     `modified_at` DATETIME              NOT NULL,
+    `is_deleted`  TINYINT(1)            NOT NULL,
     PRIMARY KEY (`id`),
     INDEX `idx_project_version_id` (`version_id`),
     CONSTRAINT `fk_project_version_info` FOREIGN KEY (`version_id`) REFERENCES `version_info` (`id`)
@@ -91,6 +94,7 @@ CREATE TABLE `project_branch`
     `completed_quantity` BIGINT                NOT NULL,
     `created_at`         DATETIME              NOT NULL,
     `modified_at`        DATETIME              NOT NULL,
+    `is_deleted`         TINYINT(1)            NOT NULL,
     PRIMARY KEY (`id`),
     INDEX `idx_project_branch_project_id` (`project_id`),
     INDEX `idx_project_branch_branch_type_id` (`branch_type_id`),
@@ -111,31 +115,22 @@ CREATE TABLE `straight_type`
     UNIQUE KEY `uk_straight_type_type` (`type`)
 );
 
-CREATE TABLE `straight_info`
-(
-    `id`            BIGINT AUTO_INCREMENT NOT NULL,
-    `hole_position` DECIMAL(5, 1)         NULL,
-    `litzwire1`     DECIMAL(5, 1)         NULL,
-    `litzwire2`     DECIMAL(5, 1)         NULL,
-    `litzwire3`     DECIMAL(5, 1)         NULL,
-    `litzwire4`     DECIMAL(5, 1)         NULL,
-    `litzwire5`     DECIMAL(5, 1)         NULL,
-    `litzwire6`     DECIMAL(5, 1)         NULL,
-    `created_at`    DATETIME              NOT NULL,
-    `modified_at`   DATETIME              NOT NULL,
-    PRIMARY KEY (`id`)
-);
-
 CREATE TABLE `project_straight`
 (
     `id`                 BIGINT AUTO_INCREMENT NOT NULL,
     `project_id`         BIGINT                NOT NULL,
     `straight_type_id`   BIGINT                NOT NULL,
-    `straight_info_id`   BIGINT                NOT NULL,
     `total_quantity`     BIGINT                NOT NULL,
     `completed_quantity` BIGINT                NOT NULL,
     `is_loop_rail`       TINYINT(1)            NOT NULL,
     `length`             BIGINT                NOT NULL,
+    `hole_position`      DECIMAL(5, 1)         NULL,
+    `litzwire1`          DECIMAL(5, 1)         NULL,
+    `litzwire2`          DECIMAL(5, 1)         NULL,
+    `litzwire3`          DECIMAL(5, 1)         NULL,
+    `litzwire4`          DECIMAL(5, 1)         NULL,
+    `litzwire5`          DECIMAL(5, 1)         NULL,
+    `litzwire6`          DECIMAL(5, 1)         NULL,
     `created_at`         DATETIME              NOT NULL,
     `modified_at`        DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
@@ -143,7 +138,6 @@ CREATE TABLE `project_straight`
     INDEX `idx_project_straight_straight_type_id` (`straight_type_id`),
     CONSTRAINT `fk_project_straight_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
     CONSTRAINT `fk_project_straight_straight_type` FOREIGN KEY (`straight_type_id`) REFERENCES `straight_type` (`id`),
-    CONSTRAINT `fk_project_straight_straight_info` FOREIGN KEY (`straight_info_id`) REFERENCES `straight_info` (`id`),
     CONSTRAINT `ck_project_straight_total_quantity_nonnegative` CHECK (`total_quantity` >= 0),
     CONSTRAINT `ck_project_straight_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0),
     CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300),

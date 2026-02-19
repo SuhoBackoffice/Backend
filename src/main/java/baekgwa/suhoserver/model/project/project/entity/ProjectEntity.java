@@ -2,7 +2,10 @@ package baekgwa.suhoserver.model.project.project.entity;
 
 import java.time.LocalDate;
 
-import baekgwa.suhoserver.global.entity.TemporalEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import baekgwa.suhoserver.global.entity.SoftDeleteEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,7 +36,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "project")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProjectEntity extends TemporalEntity {
+@SQLDelete(sql = "UPDATE project SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = 0")
+public class ProjectEntity extends SoftDeleteEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

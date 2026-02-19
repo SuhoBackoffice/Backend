@@ -2,7 +2,10 @@ package baekgwa.suhoserver.model.branch.type.entity;
 
 import java.time.LocalDate;
 
-import baekgwa.suhoserver.global.entity.TemporalEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import baekgwa.suhoserver.global.entity.SoftDeleteEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,7 +36,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "branch_type")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class BranchTypeEntity extends TemporalEntity {
+@SQLDelete(sql = "UPDATE branch_type SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = 0")
+public class BranchTypeEntity extends SoftDeleteEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,7 +71,8 @@ public class BranchTypeEntity extends TemporalEntity {
 	}
 
 	@Builder(access = AccessLevel.PRIVATE)
-	public BranchTypeEntity(VersionInfoEntity versionInfoEntity, String code, String name, LocalDate version, String imageUrl) {
+	public BranchTypeEntity(VersionInfoEntity versionInfoEntity, String code, String name, LocalDate version,
+		String imageUrl) {
 		this.versionInfoEntity = versionInfoEntity;
 		this.code = code;
 		this.name = name;
@@ -74,7 +80,8 @@ public class BranchTypeEntity extends TemporalEntity {
 		this.imageUrl = imageUrl;
 	}
 
-	public static BranchTypeEntity createNewBranchType(VersionInfoEntity versionInfoEntity, String code, String branchName, String imageUrl) {
+	public static BranchTypeEntity createNewBranchType(VersionInfoEntity versionInfoEntity, String code,
+		String branchName, String imageUrl) {
 		return BranchTypeEntity
 			.builder()
 			.versionInfoEntity(versionInfoEntity)

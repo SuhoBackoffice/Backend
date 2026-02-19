@@ -34,4 +34,6 @@ public interface ProjectBranchSerialRepository extends JpaRepository<ProjectBran
 		@Param("state") ProductSerialState productSerialState,
 		@Param("productionState") ProductProductionState productionState
 	);
+
+	List<ProjectBranchSerialEntity> findAllByProjectBranch(ProjectBranchEntity projectBranch);
 }

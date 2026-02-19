@@ -86,7 +86,6 @@ public class ProjectWriteService {
 			throw new GlobalException(ErrorCode.PROJECT_END_AFTER_START_ERROR);
 		}
 
-		// 2. 프로젝트 Entity 생성 및 저장
 		ProjectEntity newProject = ProjectEntity.createNewProject(findVersion, postNewProjectDto.getName(),
 			postNewProjectDto.getRegion(), postNewProjectDto.getStartDate(), postNewProjectDto.getEndDate());
 		return projectRepository.save(newProject);
@@ -104,12 +103,10 @@ public class ProjectWriteService {
 		ProjectEntity findProject,
 		Map<Long, BranchTypeEntity> findBranchTypeMap
 	) {
-		// 1. 현재 프로젝트에 등록된 분기레일 코드 조회 (중복 확인용)
 		List<String> existBranchCode = projectBranchRepository.findAllByBranchTypeIdIn(
 				findBranchTypeMap.keySet().stream().toList())
 			.stream().map(data -> data.getBranchType().getCode()).toList();
 
-		// 2. 프로젝트 분기레일 Entity List 생성
 		List<ProjectBranchEntity> newProjectBranchList = postProjectBranchInfoList.stream()
 			.map(dto -> {
 				BranchTypeEntity branchType = findBranchTypeMap.get(dto.getBranchTypeId());
@@ -125,7 +122,6 @@ public class ProjectWriteService {
 				return ProjectBranchEntity.createNewProjectBranch(findProject, branchType, dto.getQuantity());
 			}).toList();
 
-		// 3. 프로젝트 분기레일 등록
 		return projectBranchRepository.saveAll(newProjectBranchList);
 	}
 
@@ -209,7 +205,7 @@ public class ProjectWriteService {
 	 */
 	@Transactional
 	public void deleteProjectBranch(ProjectBranchEntity projectBranch) {
-		projectBranchRepository.delete(projectBranch);
+		projectBranch.softDelete();
 	}
 
 	/**

@@ -31,8 +31,7 @@ CREATE TABLE `work_report`
 
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_project_id`
-        FOREIGN KEY (`project_id`) REFERENCES `project` (`id`)
-            ON DELETE CASCADE,
+        FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
 
     UNIQUE KEY `uk_work_report_active_daily`
         (`work_date`, `report_user_id`, `project_id`, `active_flag`)
@@ -61,7 +60,7 @@ CREATE TABLE `work_report_straight_serial`
     `modified_at`                DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_straight_serial_work_report_straight_id`
-        FOREIGN KEY (`work_report_straight_id`) REFERENCES `work_report_straight` (`id`) ON DELETE CASCADE
+        FOREIGN KEY (`work_report_straight_id`) REFERENCES `work_report_straight` (`id`)
 );
 
 CREATE TABLE `work_report_branch`
@@ -86,5 +85,5 @@ CREATE TABLE `work_report_branch_serial`
     `modified_at`              DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_branch_serial_work_report_straight_id`
-        FOREIGN KEY (`work_report_branch_id`) REFERENCES `work_report_branch` (`id`) ON DELETE CASCADE
+        FOREIGN KEY (`work_report_branch_id`) REFERENCES `work_report_branch` (`id`)
 );

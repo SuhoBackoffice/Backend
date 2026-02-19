@@ -13,7 +13,6 @@ package baekgwa.suhoserver.infra.history.event;
  */
 public record ProjectBranchCreatedEventDto(
 	Long projectBranchId,
-	Long branchTypeId,
 	Long afterQuantity,
 	String code
 ) {

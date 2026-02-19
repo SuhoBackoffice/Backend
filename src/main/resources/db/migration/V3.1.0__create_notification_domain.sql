@@ -32,10 +32,8 @@ CREATE TABLE `user_notification`
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_user_notification_user_id`
         FOREIGN KEY (`user_id`)
-            REFERENCES `users` (`id`)
-            ON DELETE CASCADE,
+            REFERENCES `users` (`id`),
     CONSTRAINT `fk_user_notification_notification_id`
         FOREIGN KEY (`notification_id`)
             REFERENCES `notification` (`id`)
-            ON DELETE CASCADE
 );

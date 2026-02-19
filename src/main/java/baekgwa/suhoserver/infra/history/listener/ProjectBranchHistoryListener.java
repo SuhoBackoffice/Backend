@@ -1,7 +1,6 @@
 package baekgwa.suhoserver.infra.history.listener;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -12,8 +11,12 @@ import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchDeletedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchUpdatedEvent;
+import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.branch.history.entity.ProjectBranchHistoryEntity;
 import baekgwa.suhoserver.model.project.branch.history.repository.ProjectBranchHistoryRepository;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,29 +42,28 @@ public class ProjectBranchHistoryListener {
 
 	private final ProjectBranchHistoryRepository projectBranchHistoryRepository;
 	private final UserRepository userRepository;
+	private final ProjectRepository projectRepository;
+	private final ProjectBranchRepository projectBranchRepository;
 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void registerProjectBranchHistory(ProjectBranchCreatedEvent event) {
 		log.debug("{} Registering Project Branch History", LOG_PREFIX);
 
-		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
-		if (optionalFindUser.isEmpty()) {
-			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
-			return;
-		}
-		UserEntity findUser = optionalFindUser.get();
+		UserEntity findUser = userRepository.getReferenceById(event.userId());
+		ProjectEntity project = projectRepository.getReferenceById(event.projectId());
 
 		List<ProjectBranchHistoryEntity> historyList = event.projectBranchDtoList().stream()
-			.map(pb -> ProjectBranchHistoryEntity.create(
-				findUser.getId(),
-				findUser.getUsername(),
-				event.projectId(),
-				pb.projectBranchId(),
-				pb.branchTypeId(),
-				ProductSerialFactory.generateBranchSerial(pb.code()),
-				pb.afterQuantity()
-			))
+			.map(pb -> {
+				ProjectBranchEntity projectBranch = projectBranchRepository.getReferenceById(pb.projectBranchId());
+				return ProjectBranchHistoryEntity.create(
+					findUser,
+					project,
+					projectBranch,
+					ProductSerialFactory.generateBranchSerial(pb.code()),
+					pb.afterQuantity()
+				);
+			})
 			.toList();
 
 		projectBranchHistoryRepository.saveAll(historyList);
@@ -72,19 +74,14 @@ public class ProjectBranchHistoryListener {
 	public void deleteProjectBranchHistory(ProjectBranchDeletedEvent event) {
 		log.debug("{} Deleting Project Branch History", LOG_PREFIX);
 
-		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
-		if (optionalFindUser.isEmpty()) {
-			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
-			return;
-		}
-		UserEntity findUser = optionalFindUser.get();
+		UserEntity findUser = userRepository.getReferenceById(event.userId());
+		ProjectEntity project = projectRepository.getReferenceById(event.projectId());
+		ProjectBranchEntity projectBranch = projectBranchRepository.getReferenceById(event.projectBranchId());
 
 		ProjectBranchHistoryEntity history = ProjectBranchHistoryEntity.delete(
-			findUser.getId(),
-			findUser.getUsername(),
-			event.projectId(),
-			event.projectBranchId(),
-			event.branchTypeId(),
+			findUser,
+			project,
+			projectBranch,
 			ProductSerialFactory.generateBranchSerial(event.code()),
 			event.beforeQuantity()
 		);
@@ -97,19 +94,14 @@ public class ProjectBranchHistoryListener {
 	public void updateProjectBranchHistory(ProjectBranchUpdatedEvent event) {
 		log.debug("{} Updating Project Branch History", LOG_PREFIX);
 
-		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
-		if (optionalFindUser.isEmpty()) {
-			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
-			return;
-		}
-		UserEntity findUser = optionalFindUser.get();
+		UserEntity findUser = userRepository.getReferenceById(event.userId());
+		ProjectEntity project = projectRepository.getReferenceById(event.projectId());
+		ProjectBranchEntity projectBranch = projectBranchRepository.getReferenceById(event.projectBranchId());
 
 		ProjectBranchHistoryEntity history = ProjectBranchHistoryEntity.update(
-			findUser.getId(),
-			findUser.getUsername(),
-			event.projectId(),
-			event.projectBranchId(),
-			event.branchTypeId(),
+			findUser,
+			project,
+			projectBranch,
 			ProductSerialFactory.generateBranchSerial(event.code()),
 			event.beforeQuantity(),
 			event.afterQuantity()

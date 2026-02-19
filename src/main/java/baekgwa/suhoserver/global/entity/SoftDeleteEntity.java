@@ -1,10 +1,7 @@
 package baekgwa.suhoserver.global.entity;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PreRemove;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,25 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 public class SoftDeleteEntity extends TemporalEntity {
 
-	@Column(name = "deleted_at")
-	private LocalDateTime deletedAt;
-
 	@Column(name = "is_deleted", nullable = false)
 	private boolean isDeleted = false;
 
-	public void delete() {
+	public void softDelete() {
 		this.isDeleted = true;
-		this.deletedAt = LocalDateTime.now();
-	}
-
-	@PreRemove
-	private void preRemove() {
-		log.debug("Pre-Remove Entity");
-		this.delete();
-	}
-
-	public void restore() {
-		this.isDeleted = false;
-		this.deletedAt = null;
 	}
 }
