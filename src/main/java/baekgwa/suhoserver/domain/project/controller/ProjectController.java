@@ -6,10 +6,7 @@ import java.util.List;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,19 +54,6 @@ public class ProjectController {
 		return BaseResponse.success(SuccessCode.CREATE_NEW_PROJECT_SUCCESS, newProjectDto);
 	}
 
-	@PostMapping("/{projectId}/branch")
-	@Operation(summary = "프로젝트 분기 정보 등록")
-	public BaseResponse<ProjectResponse.NewProjectDto> registerProjectBranch(
-		@RequestBody @Valid List<ProjectRequest.PostProjectBranchInfo> postProjectBranchInfoList,
-		@PathVariable("projectId") Long projectId,
-		@AuthenticationPrincipal Long userId
-	) {
-		ProjectResponse.NewProjectDto newProjectDto =
-			projectFacade.registerProjectBranch(postProjectBranchInfoList, projectId, userId);
-
-		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_BRANCH_SUCCESS, newProjectDto);
-	}
-
 	@GetMapping("/{projectId}")
 	@Operation(summary = "프로젝트 정보 조회")
 	public BaseResponse<ProjectResponse.ProjectDetailInfo> getProjectInfo(
@@ -77,37 +61,6 @@ public class ProjectController {
 	) {
 		ProjectResponse.ProjectDetailInfo projectDetailInfo = projectFacade.getProjectInfo(projectId);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_INFORMATION_SUCCESS, projectDetailInfo);
-	}
-
-	@PostMapping("/{projectId}/straight")
-	@Operation(summary = "프로젝트 직선 레일 정보 등록")
-	public BaseResponse<Void> registerProjectStraight(
-		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
-		@PathVariable("projectId") Long projectId,
-		@AuthenticationPrincipal Long userId
-	) {
-		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId, userId);
-
-		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
-	}
-
-	@GetMapping("/{projectId}/branch")
-	@Operation(summary = "프로젝트 분기레일 정보 조회")
-	public BaseResponse<List<ProjectResponse.ProjectBranchInfo>> getProjectBranchInfo(
-		@PathVariable("projectId") Long projectId
-	) {
-		List<ProjectResponse.ProjectBranchInfo> projectBranchInfoList = projectFacade.getProjectBranchInfo(projectId);
-		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS, projectBranchInfoList);
-	}
-
-	@GetMapping("/{projectId}/straight")
-	@Operation(summary = "프로젝트 직선레일 정보 조회")
-	public BaseResponse<List<ProjectResponse.ProjectStraightInfo>> getProjectStraightInfo(
-		@PathVariable("projectId") Long projectId
-	) {
-		List<ProjectResponse.ProjectStraightInfo> projectStraightInfoList =
-			projectFacade.getProjectStraightInfo(projectId);
-		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, projectStraightInfoList);
 	}
 
 	@GetMapping
@@ -121,7 +74,6 @@ public class ProjectController {
 		@RequestParam(value = "endDate", required = false) LocalDate endDate,
 		@RequestParam(value = "sort", required = false, defaultValue = "START_DATE") ProjectSort sort
 	) {
-		// dto 객체 생성
 		ProjectRequest.GetProjectInfo dto =
 			new ProjectRequest.GetProjectInfo(keyword, page, size, versionId, startDate, endDate, sort);
 
@@ -138,48 +90,6 @@ public class ProjectController {
 			.toList();
 
 		return BaseResponse.success(SuccessCode.GET_PROJECT_SEARCH_SORT_SUCCESS, result);
-	}
-
-	@DeleteMapping("/straight/{projectStraightId}")
-	@Operation(summary = "프로젝트의 직선레일 삭제")
-	public BaseResponse<Void> deleteProjectStraight(
-		@PathVariable("projectStraightId") Long projectStraightId,
-		@AuthenticationPrincipal Long userId
-	) {
-		projectFacade.deleteProjectStraight(projectStraightId, userId);
-		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
-	}
-
-	@PatchMapping("/straight/{projectStraightId}")
-	@Operation(summary = "프로젝트의 직선레일 정보 수정")
-	public BaseResponse<Void> patchProjectStraight(
-		@PathVariable("projectStraightId") Long projectStraightId,
-		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto,
-		@AuthenticationPrincipal Long userId
-	) {
-		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto, userId);
-		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
-	}
-
-	@DeleteMapping("/branch/{projectBranchId}")
-	@Operation(summary = "프로젝트 분기레일 삭제")
-	public BaseResponse<Void> deleteProjectBranch(
-		@PathVariable("projectBranchId") Long projectBranchId,
-		@AuthenticationPrincipal Long userId
-	) {
-		projectFacade.deleteProjectBranch(projectBranchId, userId);
-		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
-	}
-
-	@PatchMapping("/branch/{projectBranchId}")
-	@Operation(summary = "프로젝트의 특정 분기레일 정보 수정")
-	public BaseResponse<Void> patchProjectBranch(
-		@PathVariable("projectBranchId") Long projectBranchId,
-		@RequestBody @Valid ProjectRequest.PatchProjectBranchDto patchProjectBranchDto,
-		@AuthenticationPrincipal Long userId
-	) {
-		projectFacade.patchProjectBranch(projectBranchId, patchProjectBranchDto, userId);
-		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
 	}
 
 	@GetMapping("/{projectId}/quantity-list")
@@ -199,16 +109,6 @@ public class ProjectController {
 		return ResponseEntity.ok()
 			.headers(headers)
 			.body(response.getExcelBytes());
-	}
-
-	@GetMapping("/{projectId}/branch/capacity")
-	@Operation(summary = "프로젝트의 분기레일의 생산 가능한 수량 확인")
-	public BaseResponse<List<ProjectResponse.ProjectBranchCapacity>> getProjectBranchCapacity(
-		@PathVariable("projectId") Long projectId
-	) {
-		List<ProjectResponse.ProjectBranchCapacity> projectBranchCapacityList =
-			projectFacade.getProjectBranchCapacity(projectId);
-		return BaseResponse.success(SuccessCode.GET_PROJECT_BRANCH_CAPACITY, projectBranchCapacityList);
 	}
 
 	@GetMapping("/ongoing")

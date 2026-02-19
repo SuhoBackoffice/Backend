@@ -1,0 +1,86 @@
+package baekgwa.suhoserver.domain.project.controller;
+
+import java.util.List;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
+import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
+import baekgwa.suhoserver.domain.project.facade.ProjectFacade;
+import baekgwa.suhoserver.global.response.BaseResponse;
+import baekgwa.suhoserver.global.response.SuccessCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * PackageName : baekgwa.suhoserver.domain.project.controller
+ * FileName    : ProjectStraightController
+ * Author      : Baekgwa
+ * Date        : 26. 2. 19.
+ * Description : 
+ * =====================================================================================================================
+ * DATE          AUTHOR               NOTE
+ * ---------------------------------------------------------------------------------------------------------------------
+ * 26. 2. 19.     Baekgwa               Initial creation
+ */
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/project")
+@Tag(name = "Project Straight Controller", description = "프로젝트(직선 레일) 컨트롤러")
+public class ProjectStraightController {
+
+	private final ProjectFacade projectFacade;
+
+	@PostMapping("/{projectId}/straight")
+	@Operation(summary = "프로젝트 직선 레일 정보 등록")
+	public BaseResponse<Void> registerProjectStraight(
+		@RequestBody @Valid List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
+		@PathVariable("projectId") Long projectId,
+		@AuthenticationPrincipal Long userId
+	) {
+		projectFacade.registerProjectStraight(postProjectStraightInfoList, projectId, userId);
+
+		return BaseResponse.success(SuccessCode.REGISTER_PROJECT_NORMAL_STRAIGHT_SUCCESS);
+	}
+
+	@GetMapping("/{projectId}/straight")
+	@Operation(summary = "프로젝트 직선레일 정보 조회")
+	public BaseResponse<List<ProjectResponse.ProjectStraightInfo>> getProjectStraightInfo(
+		@PathVariable("projectId") Long projectId
+	) {
+		List<ProjectResponse.ProjectStraightInfo> projectStraightInfoList =
+			projectFacade.getProjectStraightInfo(projectId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, projectStraightInfoList);
+	}
+
+	@DeleteMapping("/straight/{projectStraightId}")
+	@Operation(summary = "프로젝트의 직선레일 삭제")
+	public BaseResponse<Void> deleteProjectStraight(
+		@PathVariable("projectStraightId") Long projectStraightId,
+		@AuthenticationPrincipal Long userId
+	) {
+		projectFacade.deleteProjectStraight(projectStraightId, userId);
+		return BaseResponse.success(SuccessCode.DELETE_PROJECT_STRAIGHT_SUCCESS);
+	}
+
+	@PatchMapping("/straight/{projectStraightId}")
+	@Operation(summary = "프로젝트의 직선레일 정보 수정")
+	public BaseResponse<Void> patchProjectStraight(
+		@PathVariable("projectStraightId") Long projectStraightId,
+		@RequestBody @Valid ProjectRequest.PatchProjectStraightDto patchProjectStraightDto,
+		@AuthenticationPrincipal Long userId
+	) {
+		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto, userId);
+		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
+	}
+}
