@@ -118,7 +118,7 @@ public class ProjectFacade {
 		Map<Long, Long> branchQuantityMap = postProjectBranchInfoList.stream()
 			.collect(Collectors.toMap(ProjectRequest.PostProjectBranchInfo::getBranchTypeId,
 				ProjectRequest.PostProjectBranchInfo::getQuantity));
-		materialWriteService.updateBranchMaterialStock(branchQuantityMap, branchBomMap, findProject);
+		materialWriteService.updateBranchMaterialPlanStock(branchQuantityMap, branchBomMap, findProject);
 
 		List<ProjectBranchCreatedEventDto> eventDtoList = saveProjectBranchList.stream().map(
 				pb -> new ProjectBranchCreatedEventDto(
@@ -276,7 +276,7 @@ public class ProjectFacade {
 		Long branchTypeId = findProjectBranch.getBranchType().getId();
 		Map<Long, Long> quantityMap = Map.of(branchTypeId, -findProjectBranch.getTotalQuantity());
 		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
-		materialWriteService.updateBranchMaterialStock(quantityMap, branchBomMap, findProjectBranch.getProject());
+		materialWriteService.updateBranchMaterialPlanStock(quantityMap, branchBomMap, findProjectBranch.getProject());
 
 		projectWriteService.deleteProjectBranch(findProjectBranch);
 
@@ -308,7 +308,7 @@ public class ProjectFacade {
 		Map<Long, Long> quantityMap = Map.of(branchTypeId, diffQuantity);
 
 		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
-		materialWriteService.updateBranchMaterialStock(quantityMap, branchBomMap, findProjectBranch.getProject());
+		materialWriteService.updateBranchMaterialPlanStock(quantityMap, branchBomMap, findProjectBranch.getProject());
 
 		ProjectBranchUpdatedEvent event = new ProjectBranchUpdatedEvent(
 			findProjectBranch.getProject().getId(),

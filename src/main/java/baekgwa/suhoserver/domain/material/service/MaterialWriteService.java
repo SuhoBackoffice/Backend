@@ -65,7 +65,7 @@ public class MaterialWriteService {
 	 * @param findProject fk Project
 	 */
 	@Transactional
-	public void updateBranchMaterialStock(
+	public void updateBranchMaterialPlanStock(
 		Map<Long, Long> branchTypeIdAndQuantityMap,
 		Map<Long, List<BranchBomEntity>> branchBomMap,
 		ProjectEntity findProject
@@ -104,12 +104,55 @@ public class MaterialWriteService {
 				stock.addTotalPlanQuantity(addQuantity);
 			} else {
 				newStockList.add(
-					ProjectMaterialStockEntity.createNewBranchStock(findProject, drawingNumber, itemNameMap.get(drawingNumber), addQuantity));
+					ProjectMaterialStockEntity.createNewBranchStock(findProject, drawingNumber,
+						itemNameMap.get(drawingNumber), addQuantity));
 			}
 		});
 
 		if (!newStockList.isEmpty()) {
 			projectMaterialStockRepository.saveAll(newStockList);
 		}
+	}
+
+	/**
+	 * 분기레일 자재 (stock) 사용 처리
+	 * @param branchTypeIdAndQuantityMap Key: BranchTypeId, Value: 작업 완료한 수량 (양수)
+	 * @param branchBomMap key: BranchTypeId, Value: BranchBomList(Items)
+	 * @param findProject fk Project
+	 */
+	@Transactional
+	public void updateBranchMaterialCompleteStock(
+		Map<Long, Long> branchTypeIdAndQuantityMap,
+		Map<Long, List<BranchBomEntity>> branchBomMap,
+		ProjectEntity findProject
+	) {
+		Map<String, Long> usedQuantityMap = new HashMap<>();
+
+		for (Map.Entry<Long, Long> entry : branchTypeIdAndQuantityMap.entrySet()) {
+			Long branchTypeId = entry.getKey();
+			Long quantity = entry.getValue();
+
+			List<BranchBomEntity> bomList = branchBomMap.get(branchTypeId);
+			if (bomList == null || bomList.isEmpty()) {
+				log.warn("BOM 이 등록되지 않은 분기레일 생산 보고? branchTypeId: {}", branchTypeId);
+				continue;
+			}
+
+			for (BranchBomEntity bom : bomList) {
+				long usedAmount = bom.getUnitQuantity() * quantity;
+				usedQuantityMap.merge(bom.getDrawingNumber(), usedAmount, Long::sum);
+			}
+		}
+
+		List<ProjectMaterialStockEntity> needUpdateStockList =
+			projectMaterialStockRepository.findExistMaterialStockList(findProject, usedQuantityMap.keySet());
+
+		Map<String, ProjectMaterialStockEntity> existingStockMap = needUpdateStockList.stream()
+			.collect(Collectors.toMap(ProjectMaterialStockEntity::getMaterialCode, Function.identity()));
+
+		usedQuantityMap.forEach((drawingNumber, usedQuantity) -> {
+			ProjectMaterialStockEntity stock = existingStockMap.get(drawingNumber);
+			stock.addTotalUsedQuantity(usedQuantity);
+		});
 	}
 }

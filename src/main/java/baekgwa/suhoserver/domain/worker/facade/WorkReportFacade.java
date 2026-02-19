@@ -3,11 +3,15 @@ package baekgwa.suhoserver.domain.worker.facade;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import baekgwa.suhoserver.domain.branch.service.BranchReadService;
+import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
 import baekgwa.suhoserver.domain.user.service.UserService;
@@ -19,6 +23,7 @@ import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.infra.notification.event.NotificationEvent;
+import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.notification.NotificationType;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
@@ -55,6 +60,8 @@ public class WorkReportFacade {
 	private final WorkReportWriteService workReportWriteService;
 	private final ProjectWriteService projectWriteService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final BranchReadService branchReadService;
+	private final MaterialWriteService materialWriteService;
 
 	@Transactional
 	public WorkReportResponse.PostNewWorkReport createDailyReport(
@@ -273,6 +280,35 @@ public class WorkReportFacade {
 			List<Long> reportedBranchIdList =
 				projectWriteService.applyBranchProductionQuantityFromReport(findWorkReport);
 			projectWriteService.markBranchSerialProduced(reportedBranchIdList);
+
+			updateBranchMaterialCompleteStock(findWorkReport);
+		}
+	}
+
+	private void updateBranchMaterialCompleteStock(WorkReportEntity findWorkReport) {
+		List<WorkReportBranchEntity> branchReports = workReportReadService.getWorkReportBranch(findWorkReport);
+		if (!branchReports.isEmpty()) {
+			List<Long> projectBranchIds = branchReports.stream()
+				.map(WorkReportBranchEntity::getProjectBranchId)
+				.toList();
+
+			List<ProjectBranchEntity> projectBranches = projectReadService.getProjectBranchListByIds(projectBranchIds);
+			Map<Long, ProjectBranchEntity> projectBranchMap = projectBranches.stream()
+				.collect(Collectors.toMap(ProjectBranchEntity::getId, Function.identity()));
+
+			Map<Long, Long> branchQuantityMap = branchReports.stream()
+				.filter(report -> projectBranchMap.containsKey(report.getProjectBranchId()))
+				.collect(Collectors.toMap(
+					report -> projectBranchMap.get(report.getProjectBranchId()).getBranchType().getId(),
+					WorkReportBranchEntity::getProductionQuantity,
+					Long::sum
+				));
+
+			Map<Long, List<BranchBomEntity>> branchBomMap =
+				branchReadService.getBranchBomMap(branchQuantityMap.keySet());
+
+			materialWriteService.updateBranchMaterialCompleteStock(
+				branchQuantityMap, branchBomMap, findWorkReport.getProject());
 		}
 	}
 }

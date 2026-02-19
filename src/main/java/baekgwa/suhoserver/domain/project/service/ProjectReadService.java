@@ -463,4 +463,9 @@ public class ProjectReadService {
 
 		return result;
 	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectBranchEntity> getProjectBranchListByIds(List<Long> projectBranchIds) {
+		return projectBranchRepository.findAllById(projectBranchIds);
+	}
 }

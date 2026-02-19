@@ -86,4 +86,8 @@ public class ProjectMaterialStockEntity extends TemporalEntity {
 	public void addTotalPlanQuantity(Long addQuantity) {
 		this.totalPlanQuantity += addQuantity;
 	}
+
+	public void addTotalUsedQuantity(Long usedQuantity) {
+		this.totalUsedQuantity += usedQuantity;
+	}
 }
