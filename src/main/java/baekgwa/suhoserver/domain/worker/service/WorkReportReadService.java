@@ -68,7 +68,7 @@ public class WorkReportReadService {
 
 		return findWorkStraightList.stream()
 			.collect(Collectors.groupingBy(
-				WorkReportStraightEntity::getProjectStraightId,
+				wrs-> wrs.getProjectStraight().getId(),
 				Collectors.summingLong(WorkReportStraightEntity::getProductionQuantity)
 			));
 	}

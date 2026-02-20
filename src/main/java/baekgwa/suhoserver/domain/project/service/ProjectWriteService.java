@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -18,15 +17,12 @@ import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
-import baekgwa.suhoserver.model.project.ProductProductionState;
-import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
-import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
@@ -62,9 +58,10 @@ public class ProjectWriteService {
 	private final ProjectRepository projectRepository;
 	private final ProjectBranchRepository projectBranchRepository;
 	private final ProjectStraightRepository projectStraightRepository;
-	private final ProjectStraightSerialRepository projectStraightSerialRepository;
+
 	private final WorkReportStraightRepository workReportStraightRepository;
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
+
 	private final WorkReportBranchRepository workReportBranchRepository;
 	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
 
@@ -263,26 +260,8 @@ public class ProjectWriteService {
 			return List.of();
 		}
 
-		Set<Long> projectStraightIdSet =
-			workReportStraightList.stream()
-				.map(WorkReportStraightEntity::getProjectStraightId)
-				.collect(Collectors.toSet());
-
-		Map<Long, ProjectStraightEntity> projectStraightMap =
-			projectStraightRepository.findAllById(projectStraightIdSet)
-				.stream().collect(Collectors.toMap(
-					ProjectStraightEntity::getId,
-					Function.identity()
-				));
-
 		workReportStraightList.forEach(wrs -> {
-			ProjectStraightEntity ps =
-				projectStraightMap.get(wrs.getProjectStraightId());
-
-			if (ps == null) {
-				throw new GlobalException(ErrorCode.REPORT_PROJECT_STRAIGHT_NOT_FOUND);
-			}
-
+			ProjectStraightEntity ps = wrs.getProjectStraight();
 			ps.updateCompleteQuantity(wrs.getProductionQuantity());
 		});
 
@@ -320,17 +299,10 @@ public class ProjectWriteService {
 		List<WorkReportStraightSerialEntity> targetStraightSerialList =
 			workReportStraightSerialRepository.findAllByWorkReportStraightIn(reportedStraightIdList);
 
-		List<Long> targetProjectStraightserialIdList = targetStraightSerialList.stream()
-			.map(WorkReportStraightSerialEntity::getProjectStraightSerialId)
-			.toList();
-
-		List<ProjectStraightSerialEntity> serialList = projectStraightSerialRepository.findReportTargetSerialList(
-			targetProjectStraightserialIdList,
-			ProductSerialState.ACTIVE,
-			ProductProductionState.NOT_PRODUCED
-		);
-
-		serialList.forEach(ProjectStraightSerialEntity::markProduced);
+		targetStraightSerialList.forEach(wrs -> {
+			ProjectStraightSerialEntity straightSerial = wrs.getProjectStraightSerial();
+			straightSerial.markProduced();
+		});
 	}
 
 	/**

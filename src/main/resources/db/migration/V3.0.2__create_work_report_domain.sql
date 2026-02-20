@@ -45,9 +45,12 @@ CREATE TABLE `work_report_straight`
     `work_report_id`      BIGINT                NOT NULL,
     `project_straight_id` BIGINT                NOT NULL,
     `production_quantity` BIGINT                NOT NULL,
-    `snapshot_serial`     VARCHAR(50)           NOT NULL,
     `created_at`          DATETIME              NOT NULL,
     `modified_at`         DATETIME              NOT NULL,
+    CONSTRAINT `fk_work_report_straight_work_report`
+        FOREIGN KEY (`work_report_id`) REFERENCES `work_report` (`id`),
+    CONSTRAINT `fk_work_report_straight_project_straight_id`
+        FOREIGN KEY (`project_straight_id`) REFERENCES suho_server.`project_straight` (`id`),
     PRIMARY KEY (`id`)
 );
 
@@ -56,12 +59,13 @@ CREATE TABLE `work_report_straight_serial`
     `id`                         BIGINT AUTO_INCREMENT NOT NULL,
     `work_report_straight_id`    BIGINT                NOT NULL,
     `project_straight_serial_id` BIGINT                NOT NULL,
-    `project_straight_serial`    VARCHAR(50)           NOT NULL,
     `created_at`                 DATETIME              NOT NULL,
     `modified_at`                DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_straight_serial_work_report_straight_id`
-        FOREIGN KEY (`work_report_straight_id`) REFERENCES `work_report_straight` (`id`)
+        FOREIGN KEY (`work_report_straight_id`) REFERENCES `work_report_straight` (`id`),
+    CONSTRAINT `fk_work_report_straight_serial_project_straight`
+        FOREIGN KEY (`project_straight_serial_id`) REFERENCES `project_straight_serial` (`id`)
 );
 
 CREATE TABLE `work_report_branch`

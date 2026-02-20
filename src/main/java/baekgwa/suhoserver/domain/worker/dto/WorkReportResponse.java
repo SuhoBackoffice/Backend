@@ -3,6 +3,7 @@ package baekgwa.suhoserver.domain.worker.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
@@ -135,10 +136,14 @@ public class WorkReportResponse {
 			WorkReportStraightEntity reportedStraight,
 			List<WorkReportStraightSerial> serialList
 		) {
+			ProjectStraightEntity straight = reportedStraight.getProjectStraight();
+			String serial = ProductSerialFactory.generateStraightSerial(straight.getLength(),
+				straight.getIsLoopRail(), straight.getStraightType().getType());
+
 			return WorkReportStraight
 				.builder()
-				.straightSerial(reportedStraight.getSerial())
-				.projectStraightId(reportedStraight.getProjectStraightId())
+				.straightSerial(serial)
+				.projectStraightId(reportedStraight.getProjectStraight().getId())
 				.productionQuantity(reportedStraight.getProductionQuantity())
 				.productionSerials(serialList)
 				.build();
@@ -155,8 +160,8 @@ public class WorkReportResponse {
 		public static WorkReportStraightSerial from(WorkReportStraightSerialEntity serial) {
 			return WorkReportStraightSerial
 				.builder()
-				.projectStraightSerialId(serial.getProjectStraightSerialId())
-				.serial(serial.getSerial())
+				.projectStraightSerialId(serial.getProjectStraightSerial().getId())
+				.serial(serial.getProjectStraightSerial().getSerial())
 				.build();
 		}
 	}
