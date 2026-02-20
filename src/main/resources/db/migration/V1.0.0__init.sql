@@ -133,6 +133,7 @@ CREATE TABLE `project_straight`
     `litzwire6`          DECIMAL(5, 1)         NULL,
     `created_at`         DATETIME              NOT NULL,
     `modified_at`        DATETIME              NOT NULL,
+    `is_deleted`         TINYINT(1)            NOT NULL,
     PRIMARY KEY (`id`),
     INDEX `idx_project_straight_project_id` (`project_id`),
     INDEX `idx_project_straight_straight_type_id` (`straight_type_id`),
@@ -140,6 +141,5 @@ CREATE TABLE `project_straight`
     CONSTRAINT `fk_project_straight_straight_type` FOREIGN KEY (`straight_type_id`) REFERENCES `straight_type` (`id`),
     CONSTRAINT `ck_project_straight_total_quantity_nonnegative` CHECK (`total_quantity` >= 0),
     CONSTRAINT `ck_project_straight_completed_quantity_nonnegative` CHECK (`completed_quantity` >= 0),
-    CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300),
-    UNIQUE KEY `uk_project_straight_project_id_straight_type_id_length` (`project_id`, `straight_type_id`, `length`)
+    CONSTRAINT `ck_project_straight_length_over_300` CHECK (`length` >= 300)
 );

@@ -2,7 +2,10 @@ package baekgwa.suhoserver.model.project.straight.straight.entity;
 
 import java.math.BigDecimal;
 
-import baekgwa.suhoserver.global.entity.TemporalEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import baekgwa.suhoserver.global.entity.SoftDeleteEntity;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -38,7 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Table(name = "project_straight")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProjectStraightEntity extends TemporalEntity {
+@SQLDelete(sql = "UPDATE project_straight SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = 0")
+public class ProjectStraightEntity extends SoftDeleteEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

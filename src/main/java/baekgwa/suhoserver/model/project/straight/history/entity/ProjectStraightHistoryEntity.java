@@ -2,13 +2,19 @@ package baekgwa.suhoserver.model.project.straight.history.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
 import baekgwa.suhoserver.model.project.ProjectProductAction;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.user.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,17 +43,17 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 	@Column(name = "id", nullable = false)
 	private Long id;
 
-	@Column(name = "change_user_id", nullable = false)
-	private Long changeUserId;
+	@JoinColumn(name = "change_user_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	private UserEntity changeUser;
 
-	@Column(name = "change_user_name", nullable = false)
-	private String changeUserName;
+	@JoinColumn(name = "project_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	private ProjectEntity project;
 
-	@Column(name = "project_id", nullable = false)
-	private Long projectId;
-
-	@Column(name = "project_straight_id", nullable = false)
-	private Long projectStraightId;
+	@JoinColumn(name = "project_straight_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	private ProjectStraightEntity projectStraight;
 
 	@Column(name = "straight_serial", nullable = false)
 	private String straightSerial;
@@ -62,14 +68,14 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 	@Column(name = "after_quantity", nullable = false)
 	private Long afterQuantity;
 
-	@Builder
-	private ProjectStraightHistoryEntity(Long changeUserId, String changeUserName, Long projectId,
-		Long projectStraightId,
-		String straightSerial, ProjectProductAction action, Long beforeQuantity, Long afterQuantity) {
-		this.changeUserId = changeUserId;
-		this.changeUserName = changeUserName;
-		this.projectId = projectId;
-		this.projectStraightId = projectStraightId;
+	@Builder(access = AccessLevel.PRIVATE)
+	private ProjectStraightHistoryEntity(UserEntity changeUser, ProjectEntity project,
+		ProjectStraightEntity projectStraight,
+		String straightSerial, ProjectProductAction action, Long beforeQuantity, Long afterQuantity
+	) {
+		this.changeUser = changeUser;
+		this.project = project;
+		this.projectStraight = projectStraight;
 		this.straightSerial = straightSerial;
 		this.action = action;
 		this.beforeQuantity = beforeQuantity;
@@ -78,28 +84,19 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 
 	/**
 	 * 프로젝트 직선(루프)레일 생성 히스토리 생성 정적 팩터리 메서드
-	 * @param userId 회원 pk
-	 * @param userName 회원 이름
-	 * @param projectId 프로젝트 pk
-	 * @param projectStraightId 프로젝트 직선레일 pk
-	 * @param straightSerial 직선레일 식별자
-	 * @param afterQuantity 이후 수량
-	 * @return new ProjectStraightHistoryEntity
 	 */
 	public static ProjectStraightHistoryEntity create(
-		Long userId,
-		String userName,
-		Long projectId,
-		Long projectStraightId,
+		UserEntity user,
+		ProjectEntity project,
+		ProjectStraightEntity projectStraight,
 		String straightSerial,
 		Long afterQuantity
 	) {
 		return ProjectStraightHistoryEntity
 			.builder()
-			.changeUserId(userId)
-			.changeUserName(userName)
-			.projectId(projectId)
-			.projectStraightId(projectStraightId)
+			.changeUser(user)
+			.project(project)
+			.projectStraight(projectStraight)
 			.straightSerial(straightSerial)
 			.beforeQuantity(0L)
 			.afterQuantity(afterQuantity)
@@ -109,28 +106,19 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 
 	/**
 	 * 프로젝트 직선(루프)레일 생성 히스토리 생성 정적 팩터리 메서드
-	 * @param userId 회원 pk
-	 * @param userName 회원 이름
-	 * @param projectId 프로젝트 pk
-	 * @param projectStraightId 프로젝트 직선레일 pk
-	 * @param straightSerial 직선레일 식별자
-	 * @param beforeQuantity 삭제 전 마지막 수량
-	 * @return new ProjectStraightHistoryEntity
 	 */
 	public static ProjectStraightHistoryEntity delete(
-		Long userId,
-		String userName,
-		Long projectId,
-		Long projectStraightId,
+		UserEntity user,
+		ProjectEntity project,
+		ProjectStraightEntity projectStraight,
 		String straightSerial,
 		Long beforeQuantity
 	) {
 		return ProjectStraightHistoryEntity
 			.builder()
-			.changeUserId(userId)
-			.changeUserName(userName)
-			.projectId(projectId)
-			.projectStraightId(projectStraightId)
+			.changeUser(user)
+			.project(project)
+			.projectStraight(projectStraight)
 			.straightSerial(straightSerial)
 			.beforeQuantity(beforeQuantity)
 			.afterQuantity(0L)
@@ -140,30 +128,20 @@ public class ProjectStraightHistoryEntity extends TemporalEntity {
 
 	/**
 	 * 프로젝트 직선(루프)레일 생성 히스토리 생성 정적 팩터리 메서드
-	 * @param userId 회원 pk
-	 * @param userName 회원 이름
-	 * @param projectId 프로젝트 pk
-	 * @param projectStraightId 프로젝트 직선레일 pk
-	 * @param straightSerial 직선레일 식별자
-	 * @param beforeQuantity 이전 수량
-	 * @param afterQuantity 업데이트 수량
-	 * @return new ProjectStraightHistoryEntity
 	 */
 	public static ProjectStraightHistoryEntity update(
-		Long userId,
-		String userName,
-		Long projectId,
-		Long projectStraightId,
+		UserEntity user,
+		ProjectEntity project,
+		ProjectStraightEntity projectStraight,
 		String straightSerial,
 		Long beforeQuantity,
 		Long afterQuantity
 	) {
 		return ProjectStraightHistoryEntity
 			.builder()
-			.changeUserId(userId)
-			.changeUserName(userName)
-			.projectId(projectId)
-			.projectStraightId(projectStraightId)
+			.changeUser(user)
+			.project(project)
+			.projectStraight(projectStraight)
 			.straightSerial(straightSerial)
 			.beforeQuantity(beforeQuantity)
 			.afterQuantity(afterQuantity)

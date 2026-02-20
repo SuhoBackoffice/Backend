@@ -13,7 +13,6 @@ CREATE TABLE `project_straight_history`
 (
     `id`                  BIGINT AUTO_INCREMENT NOT NULL,
     `change_user_id`      BIGINT                NOT NULL,
-    `change_user_name`    VARCHAR(50)           NOT NULL,
     `project_id`          BIGINT                NOT NULL,
     `project_straight_id` BIGINT                NOT NULL,
     `straight_serial`     VARCHAR(50)           NOT NULL,
@@ -22,7 +21,13 @@ CREATE TABLE `project_straight_history`
     `after_quantity`      BIGINT                NOT NULL,
     `created_at`          DATETIME              NOT NULL,
     `modified_at`         DATETIME              NOT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_project_straight_history_user`
+        FOREIGN KEY (`change_user_id`) REFERENCES `users` (`id`),
+    CONSTRAINT `fk_project_straight_history_project`
+        FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
+    CONSTRAINT `fk_project_straight_history_project_straight`
+        FOREIGN KEY (`project_straight_id`) REFERENCES `project_straight` (`id`)
 );
 
 CREATE TABLE `project_branch_history`

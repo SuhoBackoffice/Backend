@@ -228,8 +228,6 @@ public class ProjectFacade {
 	public void deleteProjectStraight(Long projectStraightId, Long userId) {
 		ProjectStraightEntity findProjectStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 
-		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
-
 		ProjectStraightDeletedEvent event = new ProjectStraightDeletedEvent(
 			findProjectStraight.getProject().getId(),
 			userId,
@@ -239,6 +237,11 @@ public class ProjectFacade {
 			findProjectStraight.getStraightType().getType(),
 			findProjectStraight.getTotalQuantity()
 		);
+
+		straightSerialWriteService.deleteProjectStraightSerial(findProjectStraight);
+
+		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
+
 		applicationEventPublisher.publishEvent(event);
 	}
 

@@ -180,7 +180,7 @@ public class ProjectWriteService {
 	 */
 	@Transactional
 	public void deleteProjectStraightOrThrow(ProjectStraightEntity projectStraight) {
-		projectStraightRepository.delete(projectStraight);
+		projectStraight.softDelete();
 	}
 
 	/**
