@@ -12,6 +12,7 @@ import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.branch.serial.repository.ProjectBranchSerialRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
@@ -139,32 +140,29 @@ public class WorkReportWriteService {
 		WorkReportEntity savedWorkReport,
 		WorkReportRequest.PostNewWorkReport request,
 		Map<Long, ProjectBranchEntity> projectBranchMap,
-		Map<Long, Map<Long, String>> branchSerialSnapshot
+		Map<Long, List<ProjectBranchSerialEntity>> branchSerialMap
 	) {
 		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
 			ProjectBranchEntity pb = projectBranchMap.get(branch.getProjectBranchId());
-			String serial = ProductSerialFactory.generateBranchSerial(pb.getBranchType().getCode());
 
 			WorkReportBranchEntity workReportBranch =
 				workReportBranchRepository.save(
 					WorkReportBranchEntity.of(
 						savedWorkReport,
-						branch.getProjectBranchId(),
-						branch.getProductionQuantity(),
-						serial
+						pb,
+						branch.getProductionQuantity()
 					)
 				);
 
-			Map<Long, String> serialSnapshot =
-				branchSerialSnapshot.get(branch.getProjectBranchId());
+			List<ProjectBranchSerialEntity> serialList =
+				branchSerialMap.get(branch.getProjectBranchId());
 
 			List<WorkReportBranchSerialEntity> branchSerialList =
-				branch.getProjectBranchSerialIdList().stream()
-					.map(serialId ->
+				serialList.stream()
+					.map(serial ->
 						WorkReportBranchSerialEntity.of(
 							workReportBranch,
-							serialId,
-							serialSnapshot.get(serialId)
+							serial
 						)
 					)
 					.toList();
@@ -186,7 +184,6 @@ public class WorkReportWriteService {
 			throw new GlobalException(ErrorCode.REPORT_REJECTED_BUT_REJECT_REASON_NOT_EXIST);
 		}
 
-		// 이미 반려된 작업 보고서는 수정이 불가능 합니다.
 		if(!findWorkReport.isEditable()) {
 			throw new GlobalException(ErrorCode.ALREADY_UPDATED_REPORT);
 		}

@@ -48,7 +48,7 @@ public class WorkReportResponse {
 			return GetProjectWorkReport
 				.builder()
 				.workReportId(workReport.getId())
-				.reportUserName(workReport.getReportUserName())
+				.reportUserName(workReport.getReportUser().getUsername())
 				.workSummary(workReport.getWorkSummary())
 				.workDate(workReport.getWorkDate())
 				.status(workReport.getStatus().name())
@@ -83,9 +83,9 @@ public class WorkReportResponse {
 				.builder()
 				.isOwner(
 					loginUserId != null &&
-						loginUserId.equals(workReport.getReportUserId())
+						loginUserId.equals(workReport.getReportUser().getId())
 				)
-				.reportUserName(workReport.getReportUserName())
+				.reportUserName(workReport.getReportUser().getUsername())
 				.workSummary(workReport.getWorkSummary())
 				.workDate(workReport.getWorkDate())
 				.status(workReport.getStatus().name())
@@ -114,8 +114,8 @@ public class WorkReportResponse {
 		) {
 			return WorkReportBranch
 				.builder()
-				.branchSerial(reportedBranch.getSerial())
-				.projectBranchId(reportedBranch.getProjectBranchId())
+				.branchSerial(reportedBranch.getProjectBranch().getBranchType().getName())
+				.projectBranchId(reportedBranch.getProjectBranch().getId())
 				.productionQuantity(reportedBranch.getProductionQuantity())
 				.productionSerials(serialList)
 				.build();
@@ -171,8 +171,8 @@ public class WorkReportResponse {
 		public static WorkReportBranchSerial from(WorkReportBranchSerialEntity serial) {
 			return WorkReportBranchSerial
 				.builder()
-				.projectBranchSerialId(serial.getProjectBranchSerialId())
-				.serial(serial.getSerial())
+				.projectBranchSerialId(serial.getProjectBranchSerial().getId())
+				.serial(serial.getProjectBranchSerial().getSerial())
 				.build();
 		}
 	}

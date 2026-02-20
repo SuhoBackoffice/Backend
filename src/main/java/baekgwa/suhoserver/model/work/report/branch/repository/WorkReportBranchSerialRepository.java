@@ -38,7 +38,7 @@ public interface WorkReportBranchSerialRepository extends JpaRepository<WorkRepo
 		+ "FROM WorkReportBranchSerialEntity bs "
 		+ "JOIN bs.workReportBranch b "
 		+ "JOIN b.workReport r "
-		+ "WHERE bs.projectBranchSerialId IN :serialIds "
+		+ "WHERE bs.projectBranchSerial.id IN :serialIds "
 		+ "AND r.status IN :statuses")
 	boolean existsBySerialIdsAndStatuses(
 		@Param("serialIds") List<Long> serialIds,

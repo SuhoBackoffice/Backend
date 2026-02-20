@@ -300,26 +300,8 @@ public class ProjectWriteService {
 			return List.of();
 		}
 
-		Set<Long> projectBranchIdSet =
-			workReportBranchList.stream()
-				.map(WorkReportBranchEntity::getProjectBranchId)
-				.collect(Collectors.toSet());
-
-		Map<Long, ProjectBranchEntity> projectBranchMap =
-			projectBranchRepository.findAllById(projectBranchIdSet)
-				.stream().collect(Collectors.toMap(
-					ProjectBranchEntity::getId,
-					Function.identity()
-				));
-
 		workReportBranchList.forEach(wrb -> {
-			ProjectBranchEntity pb =
-				projectBranchMap.get(wrb.getProjectBranchId());
-
-			if (pb == null) {
-				throw new GlobalException(ErrorCode.REPORT_PROJECT_BRANCH_NOT_FOUND);
-			}
-
+			ProjectBranchEntity pb = wrb.getProjectBranch();
 			pb.updateCompleteQuantity(wrb.getProductionQuantity());
 		});
 
@@ -364,16 +346,9 @@ public class ProjectWriteService {
 		List<WorkReportBranchSerialEntity> targetBranchSerialList =
 			workReportBranchSerialRepository.findAllByWorkReportBranchIn(reportedBranchIdList);
 
-		List<Long> targetProjectBranchSerialIdList = targetBranchSerialList.stream()
-			.map(WorkReportBranchSerialEntity::getProjectBranchSerialId)
-			.toList();
-
-		List<ProjectBranchSerialEntity> serialList = projectBranchRepository.findReportTargetSerialList(
-			targetProjectBranchSerialIdList,
-			ProductSerialState.ACTIVE,
-			ProductProductionState.NOT_PRODUCED
-		);
-
-		serialList.forEach(ProjectBranchSerialEntity::markProduced);
+		targetBranchSerialList.forEach(wrb -> {
+			ProjectBranchSerialEntity serial = wrb.getProjectBranchSerial();
+			serial.markProduced();
+		});
 	}
 }

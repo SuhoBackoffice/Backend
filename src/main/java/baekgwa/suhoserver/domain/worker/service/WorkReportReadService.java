@@ -95,7 +95,7 @@ public class WorkReportReadService {
 
 		return findWorkBranchList.stream()
 			.collect(Collectors.groupingBy(
-				WorkReportBranchEntity::getProjectBranchId,
+				wrb -> wrb.getProjectBranch().getId(),
 				Collectors.summingLong(WorkReportBranchEntity::getProductionQuantity)
 			));
 	}

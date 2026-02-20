@@ -65,7 +65,7 @@ public class ProjectBranchSerialEntity extends TemporalEntity {
 	private LocalDate producedAt;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "reason", nullable = false)
+	@Column(name = "reason")
 	private ProductInactiveReason reason;
 
 	@Column(name = "sequence", nullable = false)

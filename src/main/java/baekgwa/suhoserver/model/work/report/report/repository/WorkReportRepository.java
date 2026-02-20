@@ -27,7 +27,7 @@ import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 public interface WorkReportRepository extends JpaRepository<WorkReportEntity, Long> {
 
 	@Query("SELECT count(wr) > 0 FROM WorkReportEntity wr "
-		+ "where wr.reportUserId = :userId "
+		+ "where wr.reportUser.id = :userId "
 		+ "and wr.project.id = :projectId "
 		+ "and wr.workDate = :workDate "
 		+ "AND wr.status in :statusList ")

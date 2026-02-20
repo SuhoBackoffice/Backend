@@ -369,12 +369,12 @@ public class ProjectReadService {
 	}
 
 	/**
-	 * 분기레일 시리얼 ID 를 기반으로 serial 이름 찾아오는 메서드
+	 * 분기레일 시리얼 ID 를 기반으로 serial Entity 찾아오는 메서드
 	 * @param request
-	 * @return Map<프로젝트에 할당된 분기레일 PK, Map<분기레일 시리얼 PK, 분기레일 시리얼 이름>>
+	 * @return Map<프로젝트에 할당된 분기레일 PK, List<분기레일 시리얼 Entity>>
 	 */
 	@Transactional(readOnly = true)
-	public Map<Long, Map<Long, String>> getBranchSerialSnapshot(
+	public Map<Long, List<ProjectBranchSerialEntity>> getBranchSerialEntityMap(
 		WorkReportRequest.PostNewWorkReport request
 	) {
 		if (request.getBranchReportList().isEmpty()) {
@@ -441,27 +441,10 @@ public class ProjectReadService {
 			throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
 		}
 
-		Map<Long, String> serialMap =
-			serialEntities.stream()
-				.collect(Collectors.toMap(
-					ProjectBranchSerialEntity::getId,
-					ProjectBranchSerialEntity::getSerial
-				));
-
-		Map<Long, Map<Long, String>> result = new HashMap<>();
-
-		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
-
-			Map<Long, String> map = new HashMap<>();
-
-			for (Long serialId : branch.getProjectBranchSerialIdList()) {
-				map.put(serialId, serialMap.get(serialId));
-			}
-
-			result.put(branch.getProjectBranchId(), map);
-		}
-
-		return result;
+		return serialEntities.stream()
+			.collect(Collectors.groupingBy(
+				s -> s.getProjectBranch().getId()
+			));
 	}
 
 	@Transactional(readOnly = true)

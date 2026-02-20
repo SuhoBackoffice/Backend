@@ -3,7 +3,6 @@ package baekgwa.suhoserver.domain.worker.facade;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -94,14 +93,14 @@ public class WorkReportFacade {
 		Map<Long, ProjectBranchEntity> projectBranchMap =
 			projectReadService.getProjectBranchMap(request);
 
-		Map<Long, Map<Long, String>> branchSerialSnapshot =
-			projectReadService.getBranchSerialSnapshot(request);
+		Map<Long, List<ProjectBranchSerialEntity>> branchSerialMap =
+			projectReadService.getBranchSerialEntityMap(request);
 
 		workReportWriteService.createNewBranchWorkReport(
 			savedWorkReport,
 			request,
 			projectBranchMap,
-			branchSerialSnapshot
+			branchSerialMap
 		);
 
 		publishNotification(findUser, findProject, savedWorkReport);
@@ -287,28 +286,21 @@ public class WorkReportFacade {
 
 	private void updateBranchMaterialCompleteStock(WorkReportEntity findWorkReport) {
 		List<WorkReportBranchEntity> branchReports = workReportReadService.getWorkReportBranch(findWorkReport);
-		if (!branchReports.isEmpty()) {
-			List<Long> projectBranchIds = branchReports.stream()
-				.map(WorkReportBranchEntity::getProjectBranchId)
-				.toList();
 
-			List<ProjectBranchEntity> projectBranches = projectReadService.getProjectBranchListByIds(projectBranchIds);
-			Map<Long, ProjectBranchEntity> projectBranchMap = projectBranches.stream()
-				.collect(Collectors.toMap(ProjectBranchEntity::getId, Function.identity()));
+		if (branchReports.isEmpty())
+			return;
 
-			Map<Long, Long> branchQuantityMap = branchReports.stream()
-				.filter(report -> projectBranchMap.containsKey(report.getProjectBranchId()))
-				.collect(Collectors.toMap(
-					report -> projectBranchMap.get(report.getProjectBranchId()).getBranchType().getId(),
-					WorkReportBranchEntity::getProductionQuantity,
-					Long::sum
-				));
+		Map<Long, Long> branchQuantityMap = branchReports.stream()
+			.collect(Collectors.toMap(
+				report -> report.getProjectBranch().getBranchType().getId(),
+				WorkReportBranchEntity::getProductionQuantity,
+				Long::sum
+			));
 
-			Map<Long, List<BranchBomEntity>> branchBomMap =
-				branchReadService.getBranchBomMap(branchQuantityMap.keySet());
+		Map<Long, List<BranchBomEntity>> branchBomMap =
+			branchReadService.getBranchBomMap(branchQuantityMap.keySet());
 
-			materialWriteService.updateBranchMaterialCompleteStock(
-				branchQuantityMap, branchBomMap, findWorkReport.getProject());
-		}
+		materialWriteService.updateBranchMaterialCompleteStock(
+			branchQuantityMap, branchBomMap, findWorkReport.getProject());
 	}
 }

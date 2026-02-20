@@ -13,7 +13,6 @@ CREATE TABLE `work_report`
 (
     `id`               BIGINT AUTO_INCREMENT NOT NULL,
     `report_user_id`   BIGINT                NOT NULL,
-    `report_user_name` VARCHAR(50)           NOT NULL,
     `project_id`       BIGINT                NOT NULL,
     `work_summary`     TEXT                  NULL,
     `work_date`        DATE                  NOT NULL,
@@ -32,6 +31,8 @@ CREATE TABLE `work_report`
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_project_id`
         FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
+    CONSTRAINT `fk_work_report_report_user_id`
+        FOREIGN KEY (`report_user_id`) REFERENCES `users` (`id`),
 
     UNIQUE KEY `uk_work_report_active_daily`
         (`work_date`, `report_user_id`, `project_id`, `active_flag`)
@@ -69,10 +70,13 @@ CREATE TABLE `work_report_branch`
     `work_report_id`      BIGINT                NOT NULL,
     `project_branch_id`   BIGINT                NOT NULL,
     `production_quantity` BIGINT                NOT NULL,
-    `snapshot_serial`     VARCHAR(50)           NOT NULL,
     `created_at`          DATETIME              NOT NULL,
     `modified_at`         DATETIME              NOT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_work_report_branch_work_report`
+        FOREIGN KEY (`work_report_id`) REFERENCES `work_report` (`id`),
+    CONSTRAINT `fk_work_report_branch_project_branch`
+        FOREIGN KEY (`project_branch_id`) REFERENCES `project_branch` (`id`)
 );
 
 CREATE TABLE `work_report_branch_serial`
@@ -80,10 +84,11 @@ CREATE TABLE `work_report_branch_serial`
     `id`                       BIGINT AUTO_INCREMENT NOT NULL,
     `work_report_branch_id`    BIGINT                NOT NULL,
     `project_branch_serial_id` BIGINT                NOT NULL,
-    `project_branch_serial`    VARCHAR(50)           NOT NULL,
     `created_at`               DATETIME              NOT NULL,
     `modified_at`              DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_work_report_branch_serial_work_report_straight_id`
-        FOREIGN KEY (`work_report_branch_id`) REFERENCES `work_report_branch` (`id`)
+        FOREIGN KEY (`work_report_branch_id`) REFERENCES `work_report_branch` (`id`),
+    CONSTRAINT `fk_work_report_branch_serial_project_branch_serial`
+        FOREIGN KEY (`project_branch_serial_id`) REFERENCES suho_server.`project_branch_serial` (`id`)
 );
