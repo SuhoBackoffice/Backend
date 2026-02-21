@@ -173,7 +173,7 @@ public class MaterialWriteService {
 	 * @return
 	 */
 	@Transactional
-	public void createProjectStraightBom(
+	public List<ProjectStraightBomEntity> createProjectStraightBom(
 		List<ProjectStraightEntity> saveProjectStraightList,
 		ProjectEntity project
 	) {
@@ -233,7 +233,45 @@ public class MaterialWriteService {
 			bomList.addAll(mergeBomList(straight, tempBomList));
 		}
 
-		projectStraightBomRepository.saveAll(bomList);
+		return projectStraightBomRepository.saveAll(bomList);
+	}
+
+	@Transactional
+	public void updateStraightMaterialPlanStock(
+		List<ProjectStraightBomEntity> savedStraightBom,
+		ProjectEntity findProject
+	) {
+		Map<String, Long> additionalQuantityMap = new HashMap<>();
+		Map<String, String> itemNameMap = new HashMap<>();
+
+		for (ProjectStraightBomEntity bom : savedStraightBom) {
+			long requiredAmount = bom.getUnitQuantity() * bom.getProjectStraight().getTotalQuantity();
+			additionalQuantityMap.merge(bom.getMaterialCode(), requiredAmount, Long::sum);
+			itemNameMap.putIfAbsent(bom.getMaterialCode(), bom.getItemName());
+		}
+
+		List<ProjectMaterialStockEntity> needUpdateStockList =
+			projectMaterialStockRepository.findExistMaterialStockList(findProject, additionalQuantityMap.keySet());
+
+		Map<String, ProjectMaterialStockEntity> existingStockMap = needUpdateStockList.stream()
+			.collect(Collectors.toMap(ProjectMaterialStockEntity::getMaterialCode, Function.identity()));
+
+		List<ProjectMaterialStockEntity> newStockList = new ArrayList<>();
+
+		additionalQuantityMap.forEach((drawingNumber, addQuantity) -> {
+			if (existingStockMap.containsKey(drawingNumber)) {
+				ProjectMaterialStockEntity stock = existingStockMap.get(drawingNumber);
+				stock.addTotalPlanQuantity(addQuantity);
+			} else {
+				newStockList.add(
+					ProjectMaterialStockEntity.createNewBranchStock(findProject, drawingNumber,
+						itemNameMap.get(drawingNumber), addQuantity));
+			}
+		});
+
+		if (!newStockList.isEmpty()) {
+			projectMaterialStockRepository.saveAll(newStockList);
+		}
 	}
 
 	private List<ProjectStraightBomEntity> generateLoopLitzwireBom(

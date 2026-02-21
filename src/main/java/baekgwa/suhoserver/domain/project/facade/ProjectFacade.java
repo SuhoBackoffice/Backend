@@ -37,6 +37,7 @@ import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
@@ -159,9 +160,10 @@ public class ProjectFacade {
 
 		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
 
-		materialWriteService.createProjectStraightBom(saveProjectStraightList, findProject);
+		List<ProjectStraightBomEntity> savedStraightBom
+			= materialWriteService.createProjectStraightBom(saveProjectStraightList, findProject);
 
-		//todo: projectMaterialStockEntity 업데이트 처리
+		materialWriteService.updateStraightMaterialPlanStock(savedStraightBom, findProject);
 
 		List<ProjectStraightCreatedEventDto> eventDtoList = saveProjectStraightList.stream()
 			.map(ps -> new ProjectStraightCreatedEventDto(
