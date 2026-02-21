@@ -22,9 +22,13 @@ import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRe
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomRuleEntity;
+import baekgwa.suhoserver.model.project.straight.bom.repository.ProjectStraightBomRuleRepository;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
+import baekgwa.suhoserver.model.straight.bom.entity.StraightBomStandardEntity;
+import baekgwa.suhoserver.model.straight.bom.repository.StraightBomStandardRepository;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
@@ -64,6 +68,9 @@ public class ProjectWriteService {
 
 	private final WorkReportBranchRepository workReportBranchRepository;
 	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
+
+	private final StraightBomStandardRepository straightBomStandardRepository;
+	private final ProjectStraightBomRuleRepository projectStraightBomRuleRepository;
 
 	/**
 	 * 신규 프로젝트 생성 메서드
@@ -322,5 +329,24 @@ public class ProjectWriteService {
 			ProjectBranchSerialEntity serial = wrb.getProjectBranchSerial();
 			serial.markProduced();
 		});
+	}
+
+	/**
+	 * 프로젝트에 직선레일의 기본 조립 기준을 할당합니다.
+	 * 해당 기준에는, BOM 과 관련있는 자재에 대한 정보
+	 * 길이별 소요 자재 등이 포함됩니다.
+	 * @param findVersion
+	 * @param savedProject
+	 */
+	@Transactional
+	public void setProjectStraightRule(VersionInfoEntity findVersion, ProjectEntity savedProject) {
+		List<StraightBomStandardEntity> baseBomRuleList
+			= straightBomStandardRepository.findAllByVersionInfo(findVersion);
+
+		List<ProjectStraightBomRuleEntity> projectBomRuleList = baseBomRuleList.stream()
+			.map(sbs -> ProjectStraightBomRuleEntity.of(savedProject, sbs))
+			.toList();
+
+		projectStraightBomRuleRepository.saveAll(projectBomRuleList);
 	}
 }

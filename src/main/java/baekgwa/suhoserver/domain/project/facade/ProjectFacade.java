@@ -78,14 +78,12 @@ public class ProjectFacade {
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
-
-		// 1. 버전 정보 조회
 		VersionInfoEntity findVersion = versionReadService.getVersionInfoOrThrow(postNewProjectDto.getVersionId());
 
-		// 2. 신규 프로젝트 생성 및 저장
 		ProjectEntity savedProject = projectWriteService.createNewProjectOrThrow(postNewProjectDto, findVersion);
 
-		// 3. 응답 객체 생성 및 반환
+		projectWriteService.setProjectStraightRule(findVersion, savedProject);
+
 		return new ProjectResponse.NewProjectDto(savedProject.getId());
 	}
 
@@ -138,16 +136,13 @@ public class ProjectFacade {
 	public void registerProjectStraight(
 		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId, Long userId
 	) {
-		// 1. 프로젝트 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 필요한 직선레일 타입정보 조회
 		Set<Long> straightTypeIdList = postProjectStraightInfoList.stream()
 			.map(ProjectRequest.PostProjectStraightInfo::getStraightTypeId)
 			.collect(Collectors.toSet());
 		Map<Long, StraightTypeEntity> findStraightTypeMap = straightReadService.getStraightTypeList(straightTypeIdList);
 
-		// 2. 직선레일 홀 위치 및 LitzWire 정보 생성
 		Map<ProjectRequest.PostProjectStraightInfo, Map<String, Object>> straightInfoMap =
 			straightWriteService.calculateStraightInfo(
 				postProjectStraightInfoList,
@@ -155,7 +150,6 @@ public class ProjectFacade {
 				findStraightTypeMap
 			);
 
-		// 3. 신규 직선레일 생성 및 등록
 		List<ProjectStraightEntity> saveProjectStraightList = projectWriteService.registerProjectStraightOrThrow(
 			postProjectStraightInfoList,
 			findProject,
@@ -163,10 +157,8 @@ public class ProjectFacade {
 			straightInfoMap
 		);
 
-		// 4. 신규 등록된 직선레일 Serial 등록
 		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
 
-		// 5. history 등록
 		List<ProjectStraightCreatedEventDto> eventDtoList = saveProjectStraightList.stream()
 			.map(ps -> new ProjectStraightCreatedEventDto(
 				ps.getId(),
