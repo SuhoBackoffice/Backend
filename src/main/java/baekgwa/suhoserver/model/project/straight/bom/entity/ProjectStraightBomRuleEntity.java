@@ -51,10 +51,10 @@ public class ProjectStraightBomRuleEntity extends TemporalEntity {
 	@Column(name = "condition_type", nullable = false)
 	private StraightBomConditionType conditionType;
 
-	@Column(name = "min_condition_value")
+	@Column(name = "min_condition_value", nullable = false)
 	private BigDecimal minConditionValue;
 
-	@Column(name = "max_condition_value")
+	@Column(name = "max_condition_value", nullable = false)
 	private BigDecimal maxConditionValue;
 
 	@Column(name = "material_code", nullable = false)

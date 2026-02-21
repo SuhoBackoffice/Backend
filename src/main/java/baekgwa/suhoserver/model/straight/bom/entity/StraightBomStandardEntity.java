@@ -51,11 +51,11 @@ public class StraightBomStandardEntity extends TemporalEntity {
 	private StraightBomConditionType conditionType;
 
 	// 이상
-	@Column(name = "min_condition_value")
+	@Column(name = "min_condition_value", nullable = false)
 	private BigDecimal minConditionValue;
 
 	// 미만
-	@Column(name = "max_condition_value")
+	@Column(name = "max_condition_value", nullable = false)
 	private BigDecimal maxConditionValue;
 
 	@Column(name = "material_code", nullable = false)

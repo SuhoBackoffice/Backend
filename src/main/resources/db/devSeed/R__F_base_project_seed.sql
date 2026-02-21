@@ -1,0 +1,2 @@
+INSERT INTO `users` (id, login_id, password, username, role, created_at, modified_at, is_deleted)
+    VALUE (1, 'test', '$2a$10$pnREo8f7Nnse9r1BwveAsOsBYqi/ml13eFY/fRoPPJthb.HqOiHGG', 'tester', 'ADMIN', '2026-02-21 20:43:49', '2026-02-21 20:43:49', 0);

@@ -83,6 +83,19 @@ public class ProjectMaterialStockEntity extends TemporalEntity {
 			.build();
 	}
 
+	public static ProjectMaterialStockEntity createNewStraightStock(ProjectEntity project, String materialCode,
+		String itemName, Long totalPlanQuantity) {
+		return ProjectMaterialStockEntity
+			.builder()
+			.project(project)
+			.materialCode(materialCode)
+			.itemName(itemName)
+			.totalPlanQuantity(totalPlanQuantity)
+			.totalInboundQuantity(0L)
+			.totalUsedQuantity(0L)
+			.build();
+	}
+
 	public void addTotalPlanQuantity(Long addQuantity) {
 		this.totalPlanQuantity += addQuantity;
 	}

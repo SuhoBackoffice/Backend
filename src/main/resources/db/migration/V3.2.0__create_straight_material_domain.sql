@@ -9,15 +9,29 @@
  * 2026-02-21     Baekgwa               Initial creation
 **/
 
+CREATE TABLE `project_straight_bom`
+(
+    `id`                  BIGINT AUTO_INCREMENT NOT NULL,
+    `project_straight_id` BIGINT                NOT NULL,
+    `material_code`       VARCHAR(255)          NOT NULL,
+    `item_name`           VARCHAR(255)          NOT NULL,
+    `unit_quantity`       BIGINT                NOT NULL,
+    `created_at`          DATETIME              NOT NULL,
+    `modified_at`         DATETIME              NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_project_straight_bom_project_straight_id`
+        FOREIGN KEY (`project_straight_id`) REFERENCES `project_straight` (`id`)
+);
+
 CREATE TABLE `straight_bom_standard`
 (
     `id`                  BIGINT AUTO_INCREMENT NOT NULL,
     `version_id`          BIGINT                NOT NULL,
-    `condition_type`      VARCHAR(50)           NULL,
-    `min_condition_value` DECIMAL(5, 1)         NULL,
-    `max_condition_value` DECIMAL(5, 1)         NULL,
-    `material_code`       VARCHAR(255)          NULL,
-    `item_name`           VARCHAR(255)          NULL,
+    `condition_type`      VARCHAR(50)           NOT NULL,
+    `min_condition_value` DECIMAL(5, 1)         NOT NULL,
+    `max_condition_value` DECIMAL(5, 1)         NOT NULL,
+    `material_code`       VARCHAR(255)          NOT NULL,
+    `item_name`           VARCHAR(255)          NOT NULL,
     `quantity`            BIGINT                NOT NULL,
     `created_at`          DATETIME              NOT NULL,
     `modified_at`         DATETIME              NOT NULL,
@@ -30,11 +44,11 @@ CREATE TABLE `project_straight_bom_rule`
 (
     `id`                  BIGINT AUTO_INCREMENT NOT NULL,
     `project_id`          BIGINT                NOT NULL,
-    `condition_type`      VARCHAR(50)           NULL,
-    `min_condition_value` DECIMAL(5, 1)         NULL,
-    `max_condition_value` DECIMAL(5, 1)         NULL,
-    `material_code`       VARCHAR(255)          NULL,
-    `item_name`           VARCHAR(255)          NULL,
+    `condition_type`      VARCHAR(50)           NOT NULL,
+    `min_condition_value` DECIMAL(5, 1)         NOT NULL,
+    `max_condition_value` DECIMAL(5, 1)         NOT NULL,
+    `material_code`       VARCHAR(255)          NOT NULL,
+    `item_name`           VARCHAR(255)          NOT NULL,
     `quantity`            BIGINT                NOT NULL,
     `created_at`          DATETIME              NOT NULL,
     `modified_at`         DATETIME              NOT NULL,

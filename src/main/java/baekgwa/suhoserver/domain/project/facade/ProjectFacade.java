@@ -159,6 +159,10 @@ public class ProjectFacade {
 
 		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
 
+		materialWriteService.createProjectStraightBom(saveProjectStraightList, findProject);
+
+		//todo: projectMaterialStockEntity 업데이트 처리
+
 		List<ProjectStraightCreatedEventDto> eventDtoList = saveProjectStraightList.stream()
 			.map(ps -> new ProjectStraightCreatedEventDto(
 				ps.getId(),
