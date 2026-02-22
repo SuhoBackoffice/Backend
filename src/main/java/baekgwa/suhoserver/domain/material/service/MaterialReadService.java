@@ -1,5 +1,7 @@
 package baekgwa.suhoserver.domain.material.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
+import baekgwa.suhoserver.model.material.project.repository.ProjectMaterialStockRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +31,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MaterialReadService {
 
-	//todo : 신규 material Entity 로 이전 처리 필요.
-	// private final MaterialInboundRepository materialInboundRepository;
+	private final ProjectMaterialStockRepository projectMaterialStockRepository;
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialHistory> getMaterialHistroyList(
@@ -55,15 +58,23 @@ public class MaterialReadService {
 	}
 
 	@Transactional(readOnly = true)
-	public MaterialResponse.ProjectMaterialState getMaterialState(
-		MaterialResponse.ProjectMaterialState projectMaterialState,
-		ProjectEntity findProject
-	) {
-		// List<MaterialInboundEntity> findMaterialInboundList = materialInboundRepository.findByProject(findProject);
-		// long inboundCount = findMaterialInboundList.stream().mapToLong(MaterialInboundEntity::getQuantity).sum();
-		//
-		// return MaterialResponse.ProjectMaterialState.from(projectMaterialState, inboundCount);
-		return MaterialResponse.ProjectMaterialState.from(0L, 0L, 0L);
+	public MaterialResponse.ProjectMaterialState getMaterialState(ProjectEntity findProject) {
+		List<ProjectMaterialStockEntity> stockList = projectMaterialStockRepository.findAllByProject(findProject);
+
+		long unitKindCount = stockList.size();
+		long totalCount = stockList.stream().mapToLong(ProjectMaterialStockEntity::getTotalPlanQuantity).sum();
+		long usedCount = stockList.stream().mapToLong(ProjectMaterialStockEntity::getTotalUsedQuantity).sum();
+		long inboundCount = stockList.stream().mapToLong(ProjectMaterialStockEntity::getTotalInboundQuantity).sum();
+
+		BigDecimal inboundPercent = BigDecimal.ZERO;
+		if (totalCount > 0) {
+			inboundPercent = BigDecimal.valueOf(inboundCount)
+				.multiply(BigDecimal.valueOf(100))
+				.divide(BigDecimal.valueOf(totalCount), 1, RoundingMode.HALF_UP);
+		}
+
+		return MaterialResponse.ProjectMaterialState
+			.from(inboundPercent, unitKindCount, totalCount, inboundCount, usedCount);
 	}
 
 	/**

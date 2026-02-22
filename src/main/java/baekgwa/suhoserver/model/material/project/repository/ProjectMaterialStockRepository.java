@@ -28,4 +28,6 @@ public interface ProjectMaterialStockRepository extends JpaRepository<ProjectMat
 		@Param("findProject") ProjectEntity findProject,
 		@Param("drawingNumberSet") Collection<String> drawingNumberSet
 	);
+
+	List<ProjectMaterialStockEntity> findAllByProject(ProjectEntity project);
 }

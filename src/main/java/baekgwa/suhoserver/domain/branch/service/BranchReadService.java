@@ -2,7 +2,6 @@ package baekgwa.suhoserver.domain.branch.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -142,42 +141,6 @@ public class BranchReadService {
 
 		// 3. Map → List 변환 후 반환
 		return new ArrayList<>(materialMap.values());
-	}
-
-	/**
-	 * 프로젝트 분기레일 목록을 통해, 모든 분기레일 자재를 정리하는 메서드
-	 */
-	@Transactional(readOnly = true)
-	public MaterialResponse.ProjectMaterialState getBranchBomList(List<ProjectBranchEntity> findProjectBranchList) {
-		// 1. 분기 목록에 해당하는 id 별, branch_type 정보 추출
-		// key = projectTypeId, value = ProjectBranch Entity
-		// 추후, value 값으로, target_quantity, completed_quantity 계산해야함.
-		Map<Long, ProjectBranchEntity> findProjectTypeIdMap = findProjectBranchList.stream()
-			.collect(Collectors.toMap(data -> data.getBranchType().getId(), Function.identity()));
-
-		// 2) 모든 분기 타입의 BOM을 한 번에 조회 (N+1 방지)
-		List<Long> typeIds = new ArrayList<>(findProjectTypeIdMap.keySet());
-		List<BranchBomEntity> branchBomList = branchBomRepository.findAllByBranchTypeIds(typeIds);
-
-		// 3) 집계
-		long totalCount = 0L; // 필요한 총 수량
-		long usedCount = 0L; // 사용(완료) 총 수량
-		Set<String> uniqueKinds = new HashSet<>(); // drawingNumber 기준 종류 수
-
-		for (BranchBomEntity bom : branchBomList) {
-			ProjectBranchEntity findProjectBranch = findProjectTypeIdMap.get(bom.getBranchTypeEntity().getId());
-			// 총 필요 수량 = unitQuantity × 계획 수량
-			totalCount += bom.getUnitQuantity() * findProjectBranch.getTotalQuantity();
-			// 사용 수량 = unitQuantity × 완료 수량
-			usedCount += bom.getUnitQuantity() * findProjectBranch.getCompletedQuantity();
-			// 종류 수(도번 기준)
-			uniqueKinds.add(bom.getDrawingNumber());
-		}
-
-		long unitKindCount = uniqueKinds.size();
-
-		// 4) 이 메서드 역할은 3가지만 채우고 나머지는 파사드에서 with로 덧씌움
-		return MaterialResponse.ProjectMaterialState.from(unitKindCount, totalCount, usedCount);
 	}
 
 	/**
