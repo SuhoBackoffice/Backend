@@ -56,6 +56,7 @@ public enum ErrorCode {
 		"이미 동일한 분기레일이 존재합니다. 변경이 필요하다면 수정/삭제 기능을 사용해 주세요."),
 	CREATE_QUANTITY_LIST_BRANCH_BOM_VALID_FAIL(BAD_REQUEST, "5008", "프로젝트 BOM List 생성 실패. 관리자에게 문의해 주세요."),
 	PATCH_BRANCH_COUNT_FAIL_DIFF_ZERO(BAD_REQUEST, "5009", "수량 업데이트 취소. 이전 수량과 동일합니다."),
+	PATCH_STRAIGHT_COUNT_FAIL_DIFF_ZERO(BAD_REQUEST, "5010", "수량 업데이트 취소. 이전 수량과 동일합니다."),
 
 	// Straight : 6000 ~ 6999
 	DUPLICATE_STRAIGHT_TYPE(BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),

@@ -250,6 +250,32 @@ public class MaterialWriteService {
 			itemNameMap.putIfAbsent(bom.getMaterialCode(), bom.getItemName());
 		}
 
+		updateProjectMaterialStock(findProject, additionalQuantityMap, itemNameMap);
+	}
+
+	@Transactional
+	public void updateStraightMaterialPlanStock(
+		ProjectStraightEntity straight,
+		long diffQuantity
+	) {
+		List<ProjectStraightBomEntity> bomList = projectStraightBomRepository.findAllByProjectStraight(straight);
+		Map<String, Long> additionalQuantityMap = new HashMap<>();
+		Map<String, String> itemNameMap = new HashMap<>();
+
+		for (ProjectStraightBomEntity bom : bomList) {
+			long requiredAmount = bom.getUnitQuantity() * diffQuantity;
+			additionalQuantityMap.merge(bom.getMaterialCode(), requiredAmount, Long::sum);
+			itemNameMap.putIfAbsent(bom.getMaterialCode(), bom.getItemName());
+		}
+
+		updateProjectMaterialStock(straight.getProject(), additionalQuantityMap, itemNameMap);
+	}
+
+	private void updateProjectMaterialStock(
+		ProjectEntity findProject,
+		Map<String, Long> additionalQuantityMap,
+		Map<String, String> itemNameMap
+	) {
 		List<ProjectMaterialStockEntity> needUpdateStockList =
 			projectMaterialStockRepository.findExistMaterialStockList(findProject, additionalQuantityMap.keySet());
 

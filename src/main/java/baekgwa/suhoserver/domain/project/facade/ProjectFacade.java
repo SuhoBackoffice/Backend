@@ -238,6 +238,8 @@ public class ProjectFacade {
 
 		straightSerialWriteService.deleteProjectStraightSerial(findProjectStraight);
 
+		materialWriteService.updateStraightMaterialPlanStock(findProjectStraight, -findProjectStraight.getTotalQuantity());
+
 		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
 
 		applicationEventPublisher.publishEvent(event);
@@ -252,10 +254,17 @@ public class ProjectFacade {
 		ProjectStraightEntity findStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 		Long oldQuantity = findStraight.getTotalQuantity();
 		Long newQuantity = patchProjectStraightDto.getTotalQuantity();
+		long diffQuantity = newQuantity - oldQuantity;
+
+		if (diffQuantity == 0) {
+			throw new GlobalException(ErrorCode.PATCH_STRAIGHT_COUNT_FAIL_DIFF_ZERO);
+		}
 
 		projectWriteService.patchProjectStraightOrThrow(findStraight, newQuantity);
 
 		straightSerialWriteService.patchProjectStraightSerial(findStraight, oldQuantity, newQuantity);
+
+		materialWriteService.updateStraightMaterialPlanStock(findStraight, diffQuantity);
 
 		ProjectStraightUpdatedEvent event = new ProjectStraightUpdatedEvent(
 			findStraight.getProject().getId(),
