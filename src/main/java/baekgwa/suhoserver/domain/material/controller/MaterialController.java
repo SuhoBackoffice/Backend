@@ -3,6 +3,7 @@ package baekgwa.suhoserver.domain.material.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,9 +76,10 @@ public class MaterialController {
 	@Operation(summary = "프로젝트에 자재 입고")
 	public BaseResponse<Void> postMaterialInbound(
 		@PathVariable("projectId") Long projectId,
-		@Valid @RequestBody List<MaterialRequest.PostMaterialInbound> postMaterialInboundList
+		@Valid @RequestBody List<MaterialRequest.PostMaterialInbound> postMaterialInboundList,
+		@AuthenticationPrincipal Long userId
 	) {
-		materialFacade.postMaterialInbound(projectId, postMaterialInboundList);
+		materialFacade.postMaterialInbound(projectId, postMaterialInboundList, userId);
 
 		return BaseResponse.success(SuccessCode.POST_MATERIAL_INBOUND_UPDATE_SUCCESS);
 	}

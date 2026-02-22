@@ -14,6 +14,7 @@ import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
+import baekgwa.suhoserver.domain.user.service.UserService;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEventDto;
 import baekgwa.suhoserver.model.material.MaterialHistoryType;
@@ -42,6 +43,7 @@ public class MaterialFacade {
 	private final MaterialReadService materialReadService;
 
 	private final ApplicationEventPublisher eventPublisher;
+	private final UserService userService;
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialInfo> getMaterialList(Long projectId, String keyword) {
@@ -59,6 +61,7 @@ public class MaterialFacade {
 		Long userId
 	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+		userService.getUserEntityOrThrow(userId);
 		materialWriteService.postMaterialInbound(findProject, postMaterialInboundList);
 
 		List<MaterialHistoryEventDto> historyList = postMaterialInboundList.stream()

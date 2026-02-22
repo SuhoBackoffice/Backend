@@ -141,7 +141,7 @@ public class MaterialWriteService {
 	 * @param findProject fk Project
 	 */
 	@Transactional
-	public void updateBranchMaterialCompleteStock(
+	public List<ProjectMaterialStockEntity> updateBranchMaterialCompleteStock(
 		Map<Long, Long> branchTypeIdAndQuantityMap,
 		Map<Long, List<BranchBomEntity>> branchBomMap,
 		ProjectEntity findProject
@@ -174,6 +174,8 @@ public class MaterialWriteService {
 			ProjectMaterialStockEntity stock = existingStockMap.get(drawingNumber);
 			stock.addTotalUsedQuantity(usedQuantity);
 		});
+
+		return needUpdateStockList;
 	}
 
 	/**
@@ -183,7 +185,7 @@ public class MaterialWriteService {
 	 * @param findProject fk Project
 	 */
 	@Transactional
-	public void updateStraightMaterialCompleteStock(
+	public List<ProjectMaterialStockEntity> updateStraightMaterialCompleteStock(
 		Map<Long, Long> straightIdAndQuantityMap,
 		Map<Long, List<ProjectStraightBomEntity>> straightBomMap,
 		ProjectEntity findProject
@@ -216,6 +218,8 @@ public class MaterialWriteService {
 			ProjectMaterialStockEntity stock = existingStockMap.get(drawingNumber);
 			stock.addTotalUsedQuantity(usedQuantity);
 		});
+
+		return needUpdateStockList;
 	}
 
 	/**
