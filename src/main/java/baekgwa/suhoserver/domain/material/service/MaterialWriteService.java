@@ -167,6 +167,48 @@ public class MaterialWriteService {
 	}
 
 	/**
+	 * 직선레일 자재 (stock) 사용 처리
+	 * @param straightIdAndQuantityMap Key: ProjectStraightId, Value: 작업 완료한 수량 (양수)
+	 * @param straightBomMap key: ProjectStraightId, Value: ProjectStraightBomList(Items)
+	 * @param findProject fk Project
+	 */
+	@Transactional
+	public void updateStraightMaterialCompleteStock(
+		Map<Long, Long> straightIdAndQuantityMap,
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap,
+		ProjectEntity findProject
+	) {
+		Map<String, Long> usedQuantityMap = new HashMap<>();
+
+		for (Map.Entry<Long, Long> entry : straightIdAndQuantityMap.entrySet()) {
+			Long straightId = entry.getKey();
+			Long quantity = entry.getValue();
+
+			List<ProjectStraightBomEntity> bomList = straightBomMap.get(straightId);
+			if (bomList == null || bomList.isEmpty()) {
+				log.warn("BOM 이 등록되지 않은 직선레일 생산 보고? straightId: {}", straightId);
+				continue;
+			}
+
+			for (ProjectStraightBomEntity bom : bomList) {
+				long usedAmount = bom.getUnitQuantity() * quantity;
+				usedQuantityMap.merge(bom.getMaterialCode(), usedAmount, Long::sum);
+			}
+		}
+
+		List<ProjectMaterialStockEntity> needUpdateStockList =
+			projectMaterialStockRepository.findExistMaterialStockList(findProject, usedQuantityMap.keySet());
+
+		Map<String, ProjectMaterialStockEntity> existingStockMap = needUpdateStockList.stream()
+			.collect(Collectors.toMap(ProjectMaterialStockEntity::getMaterialCode, Function.identity()));
+
+		usedQuantityMap.forEach((drawingNumber, usedQuantity) -> {
+			ProjectMaterialStockEntity stock = existingStockMap.get(drawingNumber);
+			stock.addTotalUsedQuantity(usedQuantity);
+		});
+	}
+
+	/**
 	 * 직선레일 BOM 생성 및 저장
 	 * @param saveProjectStraightList
 	 * @param project

@@ -13,6 +13,7 @@ import baekgwa.suhoserver.domain.branch.service.BranchReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
+import baekgwa.suhoserver.domain.straight.service.StraightReadService;
 import baekgwa.suhoserver.domain.user.service.UserService;
 import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.domain.worker.dto.WorkReportResponse;
@@ -27,6 +28,8 @@ import baekgwa.suhoserver.model.notification.NotificationType;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
+import baekgwa.suhoserver.model.project.straight.bom.repository.ProjectStraightBomRepository;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
@@ -54,13 +57,23 @@ import lombok.RequiredArgsConstructor;
 public class WorkReportFacade {
 
 	private final UserService userService;
+
 	private final ProjectReadService projectReadService;
+
 	private final WorkReportReadService workReportReadService;
 	private final WorkReportWriteService workReportWriteService;
+
 	private final ProjectWriteService projectWriteService;
-	private final ApplicationEventPublisher eventPublisher;
+
 	private final BranchReadService branchReadService;
+
 	private final MaterialWriteService materialWriteService;
+
+	private final StraightReadService straightReadService;
+
+	private final ProjectStraightBomRepository projectStraightBomRepository;
+
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public WorkReportResponse.PostNewWorkReport createDailyReport(
@@ -281,6 +294,7 @@ public class WorkReportFacade {
 			projectWriteService.markBranchSerialProduced(reportedBranchIdList);
 
 			updateBranchMaterialCompleteStock(findWorkReport);
+			updateStraightMaterialCompleteStock(findWorkReport);
 		}
 	}
 
@@ -302,5 +316,32 @@ public class WorkReportFacade {
 
 		materialWriteService.updateBranchMaterialCompleteStock(
 			branchQuantityMap, branchBomMap, findWorkReport.getProject());
+	}
+
+	private void updateStraightMaterialCompleteStock(WorkReportEntity workReport) {
+		List<WorkReportStraightEntity> straightReportList = workReportReadService.getWorkReportStraight(workReport);
+
+		if (straightReportList.isEmpty()) {
+			return;
+		}
+
+		// key: straightId, value: 작업 완료 수량
+		Map<Long, Long> straightQuantityMap = straightReportList.stream()
+			.collect(Collectors.toMap(
+				report -> report.getProjectStraight().getId(),
+				WorkReportStraightEntity::getProductionQuantity,
+				Long::sum
+			));
+
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap = straightReportList.stream()
+			.map(WorkReportStraightEntity::getProjectStraight)
+			.distinct()
+			.collect(Collectors.toMap(
+				ProjectStraightEntity::getId,
+				projectStraightBomRepository::findAllByProjectStraight
+			));
+
+		materialWriteService.updateStraightMaterialCompleteStock(
+			straightQuantityMap, straightBomMap, workReport.getProject());
 	}
 }
