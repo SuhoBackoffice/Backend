@@ -34,6 +34,16 @@ public class MaterialReadService {
 	private final ProjectMaterialStockRepository projectMaterialStockRepository;
 
 	@Transactional(readOnly = true)
+	public List<MaterialResponse.SearchMaterialInfo> searchMaterialListByKeyword(Long projectId, String keyword) {
+		List<ProjectMaterialStockEntity> stockList =
+			projectMaterialStockRepository.searchByProjectAndKeyword(projectId, keyword);
+
+		return stockList.stream()
+			.map(MaterialResponse.SearchMaterialInfo::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialHistory> getMaterialHistroyList(
 		Long projectId, String keyword, MaterialSort sort
 	) {

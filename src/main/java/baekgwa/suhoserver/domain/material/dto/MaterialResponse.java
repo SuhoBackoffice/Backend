@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,24 +25,30 @@ import lombok.NoArgsConstructor;
 public class MaterialResponse {
 
 	@Getter
-	public static class MaterialInfo {
+	public static class SearchMaterialInfo {
 		private final Long id;
 		private final String drawingNumber;
 		private final String itemName;
+		private final Long needInboundQuantity;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialInfo(String drawingNumber, String itemName, Long id) {
+		public SearchMaterialInfo(Long id, String drawingNumber, String itemName, Long needInboundQuantity) {
 			this.id = id;
 			this.drawingNumber = drawingNumber;
 			this.itemName = itemName;
+			this.needInboundQuantity = needInboundQuantity;
 		}
 
-		public static MaterialInfo of(BranchBomEntity branchBomEntity) {
-			return MaterialInfo
+		public static SearchMaterialInfo from(ProjectMaterialStockEntity stock) {
+
+			Long needInboundQuantity = stock.getTotalPlanQuantity() - stock.getTotalInboundQuantity();
+
+			return SearchMaterialInfo
 				.builder()
-				.id(branchBomEntity.getId())
-				.drawingNumber(branchBomEntity.getDrawingNumber())
-				.itemName(branchBomEntity.getItemName())
+				.id(stock.getId())
+				.drawingNumber(stock.getMaterialCode())
+				.itemName(stock.getItemName())
+				.needInboundQuantity(needInboundQuantity)
 				.build();
 		}
 	}

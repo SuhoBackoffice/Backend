@@ -1,6 +1,5 @@
 package baekgwa.suhoserver.domain.branch.service;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
@@ -112,35 +110,6 @@ public class BranchReadService {
 
 		return findBranchTypeList.stream()
 			.collect(Collectors.toMap(BranchTypeEntity::getId, Function.identity()));
-	}
-
-	/**
-	 * 분기 타입 ID List 로, 전체 BomList 중, Keyword 에 일치하는 자재 목록을 반환
-	 * keyword 는, [도번, 자재 명]에서 검색
-	 * 도번 기준으로, 중복된 데이터는 삭제 처리
-	 * @param findBranchTypeIdList 분기 타입 ID List
-	 * @param keyword 검색 키워드
-	 * @return 찾은 BOM List
-	 */
-	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialInfo> getAllBranchBomList(
-		List<Long> findBranchTypeIdList, String keyword
-	) {
-		// 1. 원본 엔티티 조회
-		List<BranchBomEntity> findBranchBomList =
-			branchBomRepository.searchBranchBomList(findBranchTypeIdList, keyword);
-
-		// 2. 도번(drawingNumber) 기준으로 중복 제거된 Map 생성
-		Map<String, MaterialResponse.MaterialInfo> materialMap =
-			findBranchBomList.stream()
-				.collect(Collectors.toMap(
-					BranchBomEntity::getDrawingNumber,
-					MaterialResponse.MaterialInfo::of,
-					(existing, duplicate) -> existing
-				));
-
-		// 3. Map → List 변환 후 반환
-		return new ArrayList<>(materialMap.values());
 	}
 
 	/**

@@ -7,14 +7,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import baekgwa.suhoserver.domain.branch.service.BranchReadService;
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
-import baekgwa.suhoserver.domain.user.service.UserService;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEventDto;
 import baekgwa.suhoserver.model.material.MaterialHistoryType;
@@ -37,21 +35,13 @@ import lombok.RequiredArgsConstructor;
 public class MaterialFacade {
 
 	private final ProjectReadService projectReadService;
-	private final BranchReadService branchReadService;
-
 	private final MaterialWriteService materialWriteService;
 	private final MaterialReadService materialReadService;
-
 	private final ApplicationEventPublisher eventPublisher;
-	private final UserService userService;
 
 	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialInfo> getMaterialList(Long projectId, String keyword) {
-		// 1. 프로젝트에 할당된, 분기 리스트 조회
-		List<Long> findBranchTypeIdList = projectReadService.getBranchTypeIdList(projectId);
-
-		// 2. 분기레일 자재 목록 조회
-		return branchReadService.getAllBranchBomList(findBranchTypeIdList, keyword);
+	public List<MaterialResponse.SearchMaterialInfo> searchMaterialListByKeyword(Long projectId, String keyword) {
+		return materialReadService.searchMaterialListByKeyword(projectId, keyword);
 	}
 
 	@Transactional
@@ -61,7 +51,6 @@ public class MaterialFacade {
 		Long userId
 	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
-		userService.getUserEntityOrThrow(userId);
 		materialWriteService.postMaterialInbound(findProject, postMaterialInboundList);
 
 		List<MaterialHistoryEventDto> historyList = postMaterialInboundList.stream()

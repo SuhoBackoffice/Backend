@@ -36,4 +36,12 @@ public interface ProjectMaterialStockRepository extends JpaRepository<ProjectMat
 		@Param("project") ProjectEntity project,
 		@Param("ids") Collection<Long> ids
 	);
+
+	@Query("SELECT pms FROM ProjectMaterialStockEntity pms " +
+		"WHERE pms.project.id = :projectId " +
+		"AND (pms.materialCode LIKE %:keyword% OR pms.itemName LIKE %:keyword%)")
+	List<ProjectMaterialStockEntity> searchByProjectAndKeyword(
+		@Param("projectId") Long projectId,
+		@Param("keyword") String keyword
+	);
 }

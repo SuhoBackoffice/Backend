@@ -42,7 +42,6 @@ public class ProjectMaterialStockEntity extends TemporalEntity {
 	@JoinColumn(name = "project_id", nullable = false)
 	private ProjectEntity project;
 
-	// 직선레일의 경우, materialCode 를 생성할 수 있도록 준비할 것.
 	@Column(name = "material_code", nullable = false, columnDefinition = "도번 혹은 식별자")
 	private String materialCode;
 
