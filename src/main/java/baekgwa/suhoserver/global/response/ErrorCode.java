@@ -94,10 +94,10 @@ public enum ErrorCode {
 	REPORT_UPDATE_FAIL_PENDING_IMPOSSIBLE(BAD_REQUEST, "8019", "보고서는 승인 혹은 반려만 가능합니다."),
 	REPORT_PROJECT_BRANCH_NOT_FOUND(BAD_REQUEST, "8020", "보고서에 작성된 분기 레일은 더 이상 존재하지 않습니다."),
 
-	//Notification: 9000 ~ 9499
+	// Notification: 9000 ~ 9499
 	NOT_FOUNT_NOTIFICATION(NOT_FOUND, "9000", "존재하지 않는 알림 입니다."),
 
-	//Common: 9500 ~ 9999
+	// Common: 9500 ~ 9999
 	NOT_FOUND_URL(NOT_FOUND, "9500", "요청하신 URL 을 찾을 수 없습니다."),
 	NOT_SUPPORTED_METHOD(METHOD_NOT_ALLOWED, "9501", "요청 메서드를 찾을 수 없습니다."),
 	VALIDATION_FAIL_ERROR(BAD_REQUEST, "9502", ""),
