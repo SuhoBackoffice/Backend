@@ -20,7 +20,7 @@ public enum MaterialHistoryType {
 
 	INBOUND("입고"),
 	OUTBOUND("반출"),
-	PRODUCTION_USE("제품에 사용");
+	PRODUCTION_USE("사용");
 
 	private final String description;
 }

@@ -30,4 +30,10 @@ public interface ProjectMaterialStockRepository extends JpaRepository<ProjectMat
 	);
 
 	List<ProjectMaterialStockEntity> findAllByProject(ProjectEntity project);
+
+	@Query("SELECT pms FROM ProjectMaterialStockEntity pms WHERE pms.project = :project AND pms.id IN :ids")
+	List<ProjectMaterialStockEntity> findAllByProjectAndIdIn(
+		@Param("project") ProjectEntity project,
+		@Param("ids") Collection<Long> ids
+	);
 }

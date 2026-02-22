@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
+import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.factory.StraightBomInfoFactory;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.material.history.repository.MaterialHistoryRepository;
 import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
@@ -43,8 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MaterialWriteService {
 
-	//todo : 신규 material Entity 로 이전 처리 필요.
-	// private final MaterialInboundRepository materialInboundRepository;
 	private final MaterialHistoryRepository materialHistoryRepository;
 	private final ProjectMaterialStockRepository projectMaterialStockRepository;
 	private final ProjectStraightBomRuleRepository projectStraightBomRuleRepository;
@@ -55,15 +56,24 @@ public class MaterialWriteService {
 		ProjectEntity findProject,
 		List<MaterialRequest.PostMaterialInbound> postMaterialInboundList
 	) {
-		// // 1. MaterialInbound Entity 생성
-		// // 이미 오늘 2번 들어온 자재도, 다른 Row 로 기록.
-		// List<MaterialInboundEntity> newMaterialInboundList = postMaterialInboundList.stream()
-		// 	.map(data ->
-		// 		MaterialInboundEntity.of(data.getDrawingNumber(), data.getItemName(), data.getQuantity(), findProject))
-		// 	.toList();
-		//
-		// // 2. 저장
-		// materialInboundRepository.saveAll(newMaterialInboundList);
+		Set<Long> requestStockIds = postMaterialInboundList.stream()
+			.map(MaterialRequest.PostMaterialInbound::getProjectMaterialStockId)
+			.collect(Collectors.toSet());
+
+		List<ProjectMaterialStockEntity> findStockList =
+			projectMaterialStockRepository.findAllByProjectAndIdIn(findProject, requestStockIds);
+
+		if (findStockList.size() != requestStockIds.size()) {
+			throw new GlobalException(ErrorCode.NOT_EXIST_MATERIAL);
+		}
+
+		Map<Long, ProjectMaterialStockEntity> stockMap = findStockList.stream()
+			.collect(Collectors.toMap(ProjectMaterialStockEntity::getId, Function.identity()));
+
+		for (MaterialRequest.PostMaterialInbound request : postMaterialInboundList) {
+			ProjectMaterialStockEntity stock = stockMap.get(request.getProjectMaterialStockId());
+			stock.addTotalInboundQuantity(request.getQuantity());
+		}
 	}
 
 	/**

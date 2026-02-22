@@ -103,4 +103,8 @@ public class ProjectMaterialStockEntity extends TemporalEntity {
 	public void addTotalUsedQuantity(Long usedQuantity) {
 		this.totalUsedQuantity += usedQuantity;
 	}
+
+	public void addTotalInboundQuantity(Long inboundQuantity) {
+		this.totalInboundQuantity += inboundQuantity;
+	}
 }

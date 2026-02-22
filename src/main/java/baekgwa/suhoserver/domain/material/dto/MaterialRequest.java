@@ -1,7 +1,7 @@
 package baekgwa.suhoserver.domain.material.dto;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,10 +23,8 @@ public class MaterialRequest {
 	@Getter
 	@NoArgsConstructor(access = AccessLevel.PROTECTED)
 	public static class PostMaterialInbound {
-		@NotBlank(message = "부품 코드는 필수 입니다.")
-		private String drawingNumber;
-		@NotBlank(message = "부품 명은 필수 입니다.")
-		private String itemName;
+		@NotNull(message = "제품 정보는 필수 입니다.")
+		private Long projectMaterialStockId;
 		@Min(value = 1L, message = "입고 수량은 최소 1개 입니다.")
 		private Long quantity;
 	}

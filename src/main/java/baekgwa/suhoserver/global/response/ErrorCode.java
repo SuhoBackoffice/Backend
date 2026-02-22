@@ -69,6 +69,7 @@ public enum ErrorCode {
 
 	// Material : 7000 ~ 7999
 	INVALID_MATERIAL_KEYWORD_OVER_2(BAD_REQUEST, "7000", "키워드는 2글자 이상이어야 합니다."),
+	NOT_EXIST_MATERIAL(BAD_REQUEST, "7001", "등록되지 않은 제품입니다."),
 
 	// Work : 8000 ~ 8999
 	ALREADY_EXIST_DAILY_REPORT(BAD_REQUEST, "8000", "이미 해당일에 업무 보고를 진행하였습니다."),

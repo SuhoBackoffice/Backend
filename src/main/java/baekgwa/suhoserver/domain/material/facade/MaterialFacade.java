@@ -3,6 +3,7 @@ package baekgwa.suhoserver.domain.material.facade;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,9 @@ import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
+import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
+import baekgwa.suhoserver.infra.history.event.MaterialHistoryEventDto;
+import baekgwa.suhoserver.model.material.MaterialHistoryType;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -33,8 +37,11 @@ public class MaterialFacade {
 
 	private final ProjectReadService projectReadService;
 	private final BranchReadService branchReadService;
+
 	private final MaterialWriteService materialWriteService;
 	private final MaterialReadService materialReadService;
+
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialInfo> getMaterialList(Long projectId, String keyword) {
@@ -46,12 +53,23 @@ public class MaterialFacade {
 	}
 
 	@Transactional
-	public void postMaterialInbound(Long projectId, List<MaterialRequest.PostMaterialInbound> postMaterialInboundList) {
-		// 1. 프로젝트 조회
+	public void postMaterialInbound(
+		Long projectId,
+		List<MaterialRequest.PostMaterialInbound> postMaterialInboundList,
+		Long userId
+	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
-
-		// 2. 신규 Material Inbound 추가
 		materialWriteService.postMaterialInbound(findProject, postMaterialInboundList);
+
+		List<MaterialHistoryEventDto> historyList = postMaterialInboundList.stream()
+			.map(req -> new MaterialHistoryEventDto(
+				req.getProjectMaterialStockId(),
+				req.getQuantity(),
+				MaterialHistoryType.INBOUND
+			))
+			.toList();
+
+		eventPublisher.publishEvent(new MaterialHistoryEvent(projectId, userId, historyList));
 	}
 
 	@Transactional(readOnly = true)

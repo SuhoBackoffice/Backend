@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -40,7 +41,6 @@ public class MaterialHistoryEntity extends TemporalEntity {
 	@Column(name = "id", nullable = false)
 	private Long id;
 
-	// 직선레일의 경우, materialCode 를 생성할 수 있도록 준비할 것.
 	@Column(name = "material_code", nullable = false, columnDefinition = "도번 혹은 식별자")
 	private String materialCode;
 
@@ -60,4 +60,33 @@ public class MaterialHistoryEntity extends TemporalEntity {
 	@Column(name = "type", nullable = false)
 	@Enumerated(EnumType.STRING)
 	private MaterialHistoryType type;
+
+	@Builder(access = AccessLevel.PRIVATE)
+	private MaterialHistoryEntity(String materialCode, String itemName, Long quantity, String description,
+		ProjectEntity project, MaterialHistoryType type) {
+		this.materialCode = materialCode;
+		this.itemName = itemName;
+		this.quantity = quantity;
+		this.description = description;
+		this.project = project;
+		this.type = type;
+	}
+
+	public static MaterialHistoryEntity createNewHistory(
+		ProjectEntity project,
+		String materialCode,
+		String itemName,
+		Long quantity,
+		MaterialHistoryType type,
+		String description
+	) {
+		return MaterialHistoryEntity.builder()
+			.project(project)
+			.materialCode(materialCode)
+			.itemName(itemName)
+			.quantity(quantity)
+			.type(type)
+			.description(description)
+			.build();
+	}
 }
