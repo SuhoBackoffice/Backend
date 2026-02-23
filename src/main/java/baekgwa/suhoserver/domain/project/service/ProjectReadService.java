@@ -436,4 +436,9 @@ public class ProjectReadService {
 	public List<ProjectBranchEntity> getProjectBranchListByIds(List<Long> projectBranchIds) {
 		return projectBranchRepository.findAllById(projectBranchIds);
 	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectStraightSerialEntity> getStraightSerialList(ProjectStraightEntity findStraight) {
+		return projectStraightSerialRepository.findAllByProjectStraightOrderBySequence(findStraight);
+	}
 }

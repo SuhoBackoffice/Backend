@@ -38,6 +38,7 @@ import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
@@ -354,6 +355,23 @@ public class ProjectFacade {
 	@Transactional(readOnly = true)
 	public List<ProjectResponse.OnGoingProjectInfo> getOnGoingProjectInfo() {
 		return projectReadService.getOnGoingProjectInfoList();
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectStraightDetailInfo getProjectStraightDetailInfo(
+		Long projectStraightId
+	) {
+		ProjectStraightEntity findStraight
+			= projectReadService.getProjectStraightOrThrow(projectStraightId);
+
+		List<ProjectStraightSerialEntity> straightSerialList
+			= projectReadService.getStraightSerialList(findStraight);
+
+		List<ProjectResponse.StraightSerialInfo> serialInfoList = straightSerialList.stream()
+			.map(ProjectResponse.StraightSerialInfo::of)
+			.toList();
+
+		return ProjectResponse.ProjectStraightDetailInfo.of(findStraight, serialInfoList);
 	}
 
 	private void deleteProjectBranchBom(ProjectBranchEntity findProjectBranch) {

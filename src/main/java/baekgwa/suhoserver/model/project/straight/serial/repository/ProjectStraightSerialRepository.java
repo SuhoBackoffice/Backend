@@ -53,4 +53,6 @@ public interface ProjectStraightSerialRepository extends JpaRepository<ProjectSt
 	);
 
 	List<ProjectStraightSerialEntity> findAllByProjectStraight(ProjectStraightEntity projectStraight);
+
+	List<ProjectStraightSerialEntity> findAllByProjectStraightOrderBySequence(ProjectStraightEntity projectStraight);
 }

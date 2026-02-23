@@ -9,6 +9,7 @@ import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -107,6 +108,79 @@ public class ProjectResponse {
 				.branchTypeId(projectBranch.getBranchType().getId())
 				.branchName(projectBranch.getBranchType().getName())
 				.imageUrl(projectBranch.getBranchType().getImageUrl())
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectStraightDetailInfo {
+		private final String serial;
+		private final Long length;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final Boolean isLoopRail;
+		private final BigDecimal holePosition;
+		private final List<StraightSerialInfo> serialInfoList;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectStraightDetailInfo(String serial, Long length, Long totalQuantity, Long completedQuantity,
+			Boolean isLoopRail, BigDecimal holePosition, List<StraightSerialInfo> serialInfoList) {
+			this.serial = serial;
+			this.length = length;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.isLoopRail = isLoopRail;
+			this.holePosition = holePosition;
+			this.serialInfoList = serialInfoList;
+		}
+
+		public static ProjectStraightDetailInfo of(ProjectStraightEntity straight, List<StraightSerialInfo> serialInfoList) {
+			String straightSerial = ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(),
+				straight.getStraightType().getType());
+
+			return ProjectStraightDetailInfo
+				.builder()
+				.serial(straightSerial)
+				.length(straight.getLength())
+				.totalQuantity(straight.getTotalQuantity())
+				.completedQuantity(straight.getCompletedQuantity())
+				.isLoopRail(straight.getIsLoopRail())
+				.holePosition(straight.getHolePosition())
+				.serialInfoList(serialInfoList)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class StraightSerialInfo {
+		private final String serial;
+		private final String serialState;
+		private final String productionState;
+		private final LocalDate producedAt;
+		private final String inactiveReason;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private StraightSerialInfo(String serial, String serialState, String productionState, LocalDate producedAt,
+			String inactiveReason) {
+			this.serial = serial;
+			this.serialState = serialState;
+			this.productionState = productionState;
+			this.producedAt = producedAt;
+			this.inactiveReason = inactiveReason;
+		}
+
+		public static StraightSerialInfo of(ProjectStraightSerialEntity serial) {
+			return StraightSerialInfo
+				.builder()
+				.serial(serial.getSerial())
+				.serialState(serial.getState().getDescription())
+				.productionState(serial.getProductionState().getDescription())
+				.producedAt(serial.getProducedAt())
+				.inactiveReason(
+					serial.getReason() != null
+						? serial.getReason().getDescription()
+						: null
+				)
 				.build();
 		}
 	}

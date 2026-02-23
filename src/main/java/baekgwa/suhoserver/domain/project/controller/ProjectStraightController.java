@@ -64,6 +64,16 @@ public class ProjectStraightController {
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, response);
 	}
 
+	@GetMapping("/{projectId}/straight/{projectStraightId}")
+	@Operation(summary = "프로젝트 직선레일 상세 정보 조회")
+	public BaseResponse<ProjectResponse.ProjectStraightDetailInfo> getProjectStraightDetailInfo(
+		@PathVariable("projectId") Long projectId, //Not Use, REST-API Rules
+		@PathVariable("projectStraightId") Long projectStraightId
+	) {
+		ProjectResponse.ProjectStraightDetailInfo response = projectFacade.getProjectStraightDetailInfo(projectStraightId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_DETAIL_INFO_SUCCESS, response);
+	}
+
 	@DeleteMapping("/straight/{projectStraightId}")
 	@Operation(summary = "프로젝트의 직선레일 삭제")
 	public BaseResponse<Void> deleteProjectStraight(
