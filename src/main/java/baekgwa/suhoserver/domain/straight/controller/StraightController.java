@@ -3,6 +3,7 @@ package baekgwa.suhoserver.domain.straight.controller;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,5 +61,14 @@ public class StraightController {
 	public BaseResponse<List<StraightResponse.StraightTypeDto>> getLoopStraightTypeList() {
 		List<StraightResponse.StraightTypeDto> straightTypeDtoList = straightReadService.getStraightTypeList(true);
 		return BaseResponse.success(SuccessCode.GET_ALL_LOOP_STRAIGHT_TYPE_LIST_SUCCESS, straightTypeDtoList);
+	}
+
+	@GetMapping("/bom/{projectStraightId}")
+	@Operation(summary = "직선 레일 BOM 조회")
+	public BaseResponse<List<StraightResponse.StraightBom>> getBranchBomList(
+		@PathVariable("projectStraightId") Long projectStraightId
+	) {
+		List<StraightResponse.StraightBom> response = straightReadService.getStraightBom(projectStraightId);
+		return BaseResponse.success(SuccessCode.GET_STRAIGHT_BOM_SUCCESS, response);
 	}
 }

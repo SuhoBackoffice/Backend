@@ -38,12 +38,13 @@ public enum SuccessCode {
 	// Branch
 	CREATE_NEW_BRANCH_BOM_SUCCESS(CREATED, "분기 BOM 리스트 추가 성공"),
 	GET_LATEST_BRANCH_BOM_SUCCESS(OK, "해당 버전 최신 분기 레일 조회 성공"),
-	GET_BRANCH_BOM_SUCCESS(OK, "분기레일 BOM 리스트 조회 성공"),
+	GET_BRANCH_BOM_SUCCESS(OK, "분기 레일 BOM 리스트 조회 성공"),
 
 	// Straight
 	CREATE_NEW_STRAIGHT_TYPE_SUCCESS(CREATED, "신규 직선레일 타입 추가 완료"),
 	GET_ALL_STRAIGHT_TYPE_LIST_SUCCESS(OK, "직선 레일 타입 조회 성공"),
 	GET_ALL_LOOP_STRAIGHT_TYPE_LIST_SUCCESS(OK, "루프/직선 레일 타입 조회 성공"),
+	GET_STRAIGHT_BOM_SUCCESS(OK, "직선 레일 BOM 리스트 조회 성공"),
 
 	// Project
 	CREATE_NEW_PROJECT_SUCCESS(CREATED, "신규 프로젝트 생성 완료"),

@@ -3,6 +3,8 @@ package baekgwa.suhoserver.model.project.straight.bom.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
@@ -20,4 +22,7 @@ import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraight
  */
 public interface ProjectStraightBomRepository extends JpaRepository<ProjectStraightBomEntity, Long> {
 	List<ProjectStraightBomEntity> findAllByProjectStraight(ProjectStraightEntity projectStraight);
+
+	@Query("SELECT psb FROM ProjectStraightBomEntity psb WHERE psb.projectStraight.id = :projectStraightId")
+	List<ProjectStraightBomEntity> findByProjectStraight(@Param("projectStraightId") Long projectStraightId);
 }
