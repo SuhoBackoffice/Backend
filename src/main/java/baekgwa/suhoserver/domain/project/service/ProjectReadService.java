@@ -87,8 +87,8 @@ public class ProjectReadService {
 	@Transactional(readOnly = true)
 	public List<ProjectStraightEntity> getProjectStraightListOrThrow(ProjectEntity project, String length) {
 		return length == null ?
-			projectStraightRepository.findByProject(project) :
-			projectStraightRepository.findByProjectAndLengthLike(project, length);
+			projectStraightRepository.findByProjectOrderByLength(project) :
+			projectStraightRepository.findByProjectAndLengthLikeOrderByLength(project, length);
 	}
 
 	/**

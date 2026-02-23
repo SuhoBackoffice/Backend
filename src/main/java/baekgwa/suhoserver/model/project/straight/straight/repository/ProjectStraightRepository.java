@@ -22,6 +22,8 @@ import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraight
  */
 public interface ProjectStraightRepository extends JpaRepository<ProjectStraightEntity, Long> {
 
+	List<ProjectStraightEntity> findByProjectOrderByLength(ProjectEntity project);
+
 	List<ProjectStraightEntity> findByProject(ProjectEntity findProject);
 
 	@Query("SELECT ps FROM ProjectStraightEntity ps JOIN FETCH ps.straightType st WHERE ps.project = :project AND ps.isLoopRail = :isLoopRail ORDER BY ps.length DESC , st.type ASC")
@@ -36,7 +38,7 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 	List<ProjectStraightEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
 
 	@Query("SELECT ps FROM ProjectStraightEntity ps WHERE ps.project = :project  AND str(ps.length) LIKE concat('%', :length, '%')")
-	List<ProjectStraightEntity> findByProjectAndLengthLike(
+	List<ProjectStraightEntity> findByProjectAndLengthLikeOrderByLength(
 		@Param("project") ProjectEntity project,
 		@Param("length") String length
 	);
