@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
@@ -55,12 +56,12 @@ public class ProjectStraightController {
 
 	@GetMapping("/{projectId}/straight")
 	@Operation(summary = "프로젝트 직선레일 정보 조회")
-	public BaseResponse<List<ProjectResponse.ProjectStraightInfo>> getProjectStraightInfo(
-		@PathVariable("projectId") Long projectId
+	public BaseResponse<ProjectResponse.ProjectStraightInfo> getProjectStraightInfo(
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(value = "length", required = false) String length
 	) {
-		List<ProjectResponse.ProjectStraightInfo> projectStraightInfoList =
-			projectFacade.getProjectStraightInfo(projectId);
-		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, projectStraightInfoList);
+		ProjectResponse.ProjectStraightInfo response = projectFacade.getProjectStraightInfo(projectId, length);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS, response);
 	}
 
 	@DeleteMapping("/straight/{projectStraightId}")

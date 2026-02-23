@@ -80,12 +80,15 @@ public class ProjectReadService {
 
 	/**
 	 * 프로젝트에 저장된 직선레일 정보 조회
+	 * 길이가 있다면 길이 기반으로 검색
 	 * @param project 프로젝트 Entity
 	 * @return 직선레일 List
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectStraightEntity> getProjectStraightListOrThrow(ProjectEntity project) {
-		return projectStraightRepository.findByProject(project);
+	public List<ProjectStraightEntity> getProjectStraightListOrThrow(ProjectEntity project, String length) {
+		return length == null ?
+			projectStraightRepository.findByProject(project) :
+			projectStraightRepository.findByProjectAndLengthLike(project, length);
 	}
 
 	/**

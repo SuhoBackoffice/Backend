@@ -199,18 +199,23 @@ public class ProjectFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProjectResponse.ProjectStraightInfo> getProjectStraightInfo(Long projectId) {
-		// 1. 프로젝트 조회
+	public ProjectResponse.ProjectStraightInfo getProjectStraightInfo(Long projectId, String length) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 직선레일 정보 조회
-		List<ProjectStraightEntity> findProjectStraightList = projectReadService.getProjectStraightListOrThrow(
-			findProject);
+		List<ProjectStraightEntity> findProjectStraightList =
+			projectReadService.getProjectStraightListOrThrow(findProject, length);
 
-		// 3. DTO 변환 및 응답
-		return findProjectStraightList.stream()
-			.map(ProjectResponse.ProjectStraightInfo::from)
+		List<ProjectResponse.ProjectLoopStraightInfo> loopStraightList = findProjectStraightList.stream()
+			.filter(ProjectStraightEntity::getIsLoopRail)
+			.map(ProjectResponse.ProjectLoopStraightInfo::of)
 			.toList();
+
+		List<ProjectResponse.ProjectNormalStraightInfo> normalStraightList = findProjectStraightList.stream()
+			.filter(straight -> !straight.getIsLoopRail())
+			.map(ProjectResponse.ProjectNormalStraightInfo::of)
+			.toList();
+
+		return ProjectResponse.ProjectStraightInfo.of(normalStraightList, loopStraightList);
 	}
 
 	@Transactional(readOnly = true)

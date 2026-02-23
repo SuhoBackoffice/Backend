@@ -28,8 +28,6 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 	List<ProjectStraightEntity> findSortedWithType(@Param("project") ProjectEntity project,
 		@Param("isLoopRail") Boolean isLoopRail);
 
-	boolean existsByIdAndProjectId(Long projectStraightId, Long id);
-
 	@Query("SELECT ps "
 		+ "FROM ProjectStraightEntity ps "
 		+ "JOIN FETCH ps.straightType "
@@ -37,7 +35,9 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 		+ "AND ps.completedQuantity < ps.totalQuantity")
 	List<ProjectStraightEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
 
-	List<ProjectStraightEntity> findAllByIdIn(List<Long> projectStraightIds);
-
-	List<ProjectStraightEntity> findAllByProject(ProjectEntity project);
+	@Query("SELECT ps FROM ProjectStraightEntity ps WHERE ps.project = :project  AND str(ps.length) LIKE concat('%', :length, '%')")
+	List<ProjectStraightEntity> findByProjectAndLengthLike(
+		@Param("project") ProjectEntity project,
+		@Param("length") String length
+	);
 }

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
+import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -112,75 +113,87 @@ public class ProjectResponse {
 
 	@Getter
 	public static class ProjectStraightInfo {
-		private final Long straightRailId;
-		private final Long length;
-		private final Boolean isLoopRail;
-		private final String straightType;
-		private final Long totalQuantity;
-		private final LitzInfo litzInfo;
-		private final BigDecimal holePosition; //가공위치
+		private final List<ProjectNormalStraightInfo> normalStraightList;
+		private final List<ProjectLoopStraightInfo> loopStraightList;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectStraightInfo(Long straightRailId, Long length, Boolean isLoopRail, String straightType,
-			Long totalQuantity,
-			LitzInfo litzInfo, BigDecimal holePosition) {
-			this.straightRailId = straightRailId;
-			this.length = length;
-			this.isLoopRail = isLoopRail;
-			this.straightType = straightType;
-			this.totalQuantity = totalQuantity;
-			this.litzInfo = litzInfo;
-			this.holePosition = holePosition;
+		private ProjectStraightInfo(
+			List<ProjectNormalStraightInfo> normalStraightList,
+			List<ProjectLoopStraightInfo> loopStraightList
+		) {
+			this.normalStraightList = normalStraightList;
+			this.loopStraightList = loopStraightList;
 		}
 
-		public static ProjectStraightInfo from(ProjectStraightEntity projectStraight) {
+		public static ProjectStraightInfo of(List<ProjectNormalStraightInfo> normal, List<ProjectLoopStraightInfo> loop) {
 			return ProjectStraightInfo
 				.builder()
-				.straightRailId(projectStraight.getId())
-				.length(projectStraight.getLength())
-				.isLoopRail(projectStraight.getIsLoopRail())
-				.straightType(projectStraight.getStraightType().getType())
-				.totalQuantity(projectStraight.getTotalQuantity())
-				.litzInfo(LitzInfo.from(projectStraight))
-				.holePosition(projectStraight.getHolePosition())
+				.normalStraightList(normal)
+				.loopStraightList(loop)
 				.build();
 		}
 	}
 
 	@Getter
-	public static class LitzInfo {
-		private final BigDecimal litz1;
-		private final BigDecimal litz2;
-		private final BigDecimal litz3;
-		private final BigDecimal litz4;
-		private final BigDecimal litz5;
-		private final BigDecimal litz6;
+	public static class ProjectNormalStraightInfo {
+		private final Long straightRailId;
+		private final String serial;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private LitzInfo(BigDecimal litz1, BigDecimal litz2, BigDecimal litz3, BigDecimal litz4, BigDecimal litz5,
-			BigDecimal litz6) {
-			this.litz1 = litz1;
-			this.litz2 = litz2;
-			this.litz3 = litz3;
-			this.litz4 = litz4;
-			this.litz5 = litz5;
-			this.litz6 = litz6;
+		private ProjectNormalStraightInfo(Long totalQuantity, Long straightRailId, String serial,
+			Long completedQuantity) {
+			this.totalQuantity = totalQuantity;
+			this.straightRailId = straightRailId;
+			this.serial = serial;
+			this.completedQuantity = completedQuantity;
 		}
 
-		public static LitzInfo from(ProjectStraightEntity projectStraight) {
-			return LitzInfo
+		public static ProjectNormalStraightInfo of(ProjectStraightEntity straight) {
+			String straightSerial = ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(),
+				straight.getStraightType().getType());
+
+			return ProjectNormalStraightInfo
 				.builder()
-				.litz1(getOrZero(projectStraight.getLitzwire1()))
-				.litz2(getOrZero(projectStraight.getLitzwire2()))
-				.litz3(getOrZero(projectStraight.getLitzwire3()))
-				.litz4(getOrZero(projectStraight.getLitzwire4()))
-				.litz5(getOrZero(projectStraight.getLitzwire5()))
-				.litz6(getOrZero(projectStraight.getLitzwire6()))
+				.straightRailId(straight.getId())
+				.serial(straightSerial)
+				.totalQuantity(straight.getTotalQuantity())
+				.completedQuantity(straight.getCompletedQuantity())
 				.build();
 		}
+	}
 
-		private static BigDecimal getOrZero(BigDecimal bigDecimal) {
-			return bigDecimal == null ? BigDecimal.ZERO : bigDecimal;
+	@Getter
+	public static class ProjectLoopStraightInfo {
+		private final Long straightRailId;
+		private final String serial;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final BigDecimal holePosition;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectLoopStraightInfo(Long straightRailId, String serial, Long totalQuantity, Long completedQuantity,
+			BigDecimal holePosition) {
+			this.straightRailId = straightRailId;
+			this.serial = serial;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.holePosition = holePosition;
+		}
+
+		public static ProjectLoopStraightInfo of(ProjectStraightEntity straight) {
+			String straightSerial = ProductSerialFactory.generateStraightSerial(straight.getLength(), straight.getIsLoopRail(),
+				straight.getStraightType().getType());
+
+			return ProjectLoopStraightInfo
+				.builder()
+				.straightRailId(straight.getId())
+				.serial(straightSerial)
+				.totalQuantity(straight.getTotalQuantity())
+				.completedQuantity(straight.getCompletedQuantity())
+				.holePosition(straight.getHolePosition())
+				.build();
 		}
 	}
 
