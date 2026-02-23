@@ -1,5 +1,7 @@
 package baekgwa.suhoserver.domain.material.dto;
 
+import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.model.material.MaterialHistoryType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -19,6 +21,23 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MaterialRequest {
+
+	@Getter
+	public static class GetMaterialHistory {
+		final String keyword;
+		final MaterialHistoryType type;
+		final MaterialSort sort;
+		final int page;
+		final int size;
+
+		public GetMaterialHistory(String keyword, MaterialHistoryType type, MaterialSort sort, int page, int size) {
+			this.keyword = keyword;
+			this.type = type;
+			this.sort = sort;
+			this.page = page;
+			this.size = size;
+		}
+	}
 
 	@Getter
 	@NoArgsConstructor(access = AccessLevel.PROTECTED)

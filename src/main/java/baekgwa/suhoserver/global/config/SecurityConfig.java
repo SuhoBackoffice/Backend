@@ -130,8 +130,8 @@ public class SecurityConfig {
 				.requestMatchers(GET, "/material/{projectId}").hasRole(WORKER.name())
 				.requestMatchers(GET, "/material/inbound/{projectId}").hasRole(WORKER.name())
 				.requestMatchers(POST, "/material/inbound/{projectId}").hasRole(WORKER.name())
+				.requestMatchers(GET, "/material/history/types").hasRole(WORKER.name())
 				.requestMatchers(GET, "/material/history/{projectId}").hasRole(WORKER.name())
-				.requestMatchers(GET, "/material/history/detail/{projectId}").hasRole(WORKER.name())
 
 				// Worker
 				.requestMatchers(POST, "/work/report/project/{projectId}").hasRole(WORKER.name())

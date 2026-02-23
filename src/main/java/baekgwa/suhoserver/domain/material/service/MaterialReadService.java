@@ -2,15 +2,19 @@ package baekgwa.suhoserver.domain.material.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
-import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
+import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.model.material.history.repository.MaterialHistoryRepository;
 import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
 import baekgwa.suhoserver.model.material.project.repository.ProjectMaterialStockRepository;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -32,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class MaterialReadService {
 
 	private final ProjectMaterialStockRepository projectMaterialStockRepository;
+	private final MaterialHistoryRepository materialHistoryRepository;
 
 	@Transactional(readOnly = true)
 	public List<MaterialResponse.SearchMaterialInfo> searchMaterialListByKeyword(Long projectId, String keyword) {
@@ -41,30 +46,6 @@ public class MaterialReadService {
 		return stockList.stream()
 			.map(MaterialResponse.SearchMaterialInfo::from)
 			.toList();
-	}
-
-	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialHistory> getMaterialHistroyList(
-		Long projectId, String keyword, MaterialSort sort
-	) {
-		// 1. keyword 에 매칭되는 모든 material Info 조회
-		// return materialInboundRepository.findByProjectAndKeyword(projectId, keyword, sort);
-		return List.of();
-	}
-
-	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialHistoryDetail> getMaterialHistoryDetail(
-		Long projectId, String keyword, LocalDate date
-	) {
-		// // 1. materialInbound Entity List 조회
-		// List<MaterialInboundEntity> findMaterialInboundList =
-		// 	materialInboundRepository.findMaterialDetailByKeywordAndDate(projectId, keyword, date);
-		//
-		// // 2. dto 변환 및 return
-		// return findMaterialInboundList.stream()
-		// 	.map(MaterialResponse.MaterialHistoryDetail::of)
-		// 	.toList();
-		return List.of();
 	}
 
 	@Transactional(readOnly = true)
@@ -85,6 +66,27 @@ public class MaterialReadService {
 
 		return MaterialResponse.ProjectMaterialState
 			.from(inboundPercent, unitKindCount, totalCount, inboundCount, usedCount);
+	}
+
+	/**
+	 * 프로젝트 자재 이력 페이징 조회
+	 * @param projectId 프로젝트 PK
+	 * @param dto 페이징 및 필터 조건
+	 * @return 자재 이력 페이징 결과
+	 */
+	@Transactional(readOnly = true)
+	public PageResponse<MaterialResponse.MaterialHistoryInfo> getMaterialHistoryPage(
+		Long projectId,
+		MaterialRequest.GetMaterialHistory dto
+	) {
+		if (dto.getPage() < 0 || dto.getSize() < 1) {
+			throw new GlobalException(ErrorCode.INVALID_PAGINATION_PARAMETER);
+		}
+
+		Page<MaterialResponse.MaterialHistoryInfo> result =
+			materialHistoryRepository.searchHistoryList(projectId, dto);
+
+		return PageResponse.of(result);
 	}
 
 	/**

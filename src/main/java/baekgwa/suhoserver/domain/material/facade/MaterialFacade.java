@@ -1,6 +1,6 @@
 package baekgwa.suhoserver.domain.material.facade;
 
-import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,8 +11,8 @@ import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
-import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
+import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEventDto;
 import baekgwa.suhoserver.model.material.MaterialHistoryType;
@@ -65,22 +65,23 @@ public class MaterialFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialHistory> getMaterialHistoryList(
-		Long projectId, String keyword, MaterialSort sort
-	) {
-		return materialReadService.getMaterialHistroyList(projectId, keyword, sort);
-	}
-
-	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialHistoryDetail> getMaterialHistoryDetailList(
-		Long projectId, String keyword, LocalDate date
-	) {
-		return materialReadService.getMaterialHistoryDetail(projectId, keyword, date);
-	}
-
-	@Transactional(readOnly = true)
 	public MaterialResponse.ProjectMaterialState getProjectMaterialState(Long projectId) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 		return materialReadService.getMaterialState(findProject);
+	}
+
+	@Transactional(readOnly = true)
+	public PageResponse<MaterialResponse.MaterialHistoryInfo> getMaterialHistoryPage(
+		Long projectId,
+		MaterialRequest.GetMaterialHistory dto
+	) {
+		projectReadService.getProjectOrThrow(projectId);
+		return materialReadService.getMaterialHistoryPage(projectId, dto);
+	}
+
+	public List<MaterialResponse.MaterialHistoryTypeInfo> getMaterialHistoryTypes() {
+		return Arrays.stream(MaterialHistoryType.values())
+			.map(MaterialResponse.MaterialHistoryTypeInfo::from)
+			.toList();
 	}
 }

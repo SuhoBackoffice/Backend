@@ -1,6 +1,5 @@
 package baekgwa.suhoserver.domain.material.controller;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +18,9 @@ import baekgwa.suhoserver.domain.material.type.MaterialSort;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.ErrorCode;
+import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
+import baekgwa.suhoserver.model.material.MaterialHistoryType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -82,27 +83,27 @@ public class MaterialController {
 		return BaseResponse.success(SuccessCode.POST_MATERIAL_INBOUND_UPDATE_SUCCESS);
 	}
 
-	@GetMapping("/history/{projectId}")
-	@Operation(summary = "키워드에 매칭되는, 자재 입고 일자 확인")
-	public BaseResponse<List<MaterialResponse.MaterialHistory>> getMaterialInboundHistoryDateList(
-		@PathVariable("projectId") Long projectId,
-		@RequestParam(value = "keyword", required = false) String keyword,
-		@RequestParam(value = "sort", required = false, defaultValue = "LATEST") MaterialSort sort
-	) {
-		List<MaterialResponse.MaterialHistory> materialHistoryList =
-			materialFacade.getMaterialHistoryList(projectId, keyword, sort);
-		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_LIST_SUCCESS, materialHistoryList);
+	@GetMapping("/history/types")
+	@Operation(summary = "자재 이력 타입 목록 조회")
+	public BaseResponse<List<MaterialResponse.MaterialHistoryTypeInfo>> getMaterialHistoryTypes() {
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_TYPE_LIST_SUCCESS,
+			materialFacade.getMaterialHistoryTypes());
 	}
 
-	@GetMapping("/history/detail/{projectId}")
-	public BaseResponse<List<MaterialResponse.MaterialHistoryDetail>> getMaterialInboundHistoryDetail(
+	@GetMapping("/history/{projectId}")
+	@Operation(summary = "프로젝트 자재 이력 페이징 조회")
+	public BaseResponse<PageResponse<MaterialResponse.MaterialHistoryInfo>> getMaterialHistoryList(
 		@PathVariable("projectId") Long projectId,
 		@RequestParam(value = "keyword", required = false) String keyword,
-		@RequestParam(value = "date") LocalDate date
+		@RequestParam(value = "type", required = false) MaterialHistoryType type,
+		@RequestParam(value = "sort", required = false, defaultValue = "LATEST") MaterialSort sort,
+		@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+		@RequestParam(value = "size", required = false, defaultValue = "30") int size
 	) {
-		List<MaterialResponse.MaterialHistoryDetail> materialHistoryDetailList =
-			materialFacade.getMaterialHistoryDetailList(projectId, keyword, date);
+		MaterialRequest.GetMaterialHistory dto
+			= new MaterialRequest.GetMaterialHistory(keyword, type, sort, page, size);
 
-		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_DETAIL_SUCCESS, materialHistoryDetailList);
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_HISTORY_LIST_SUCCESS,
+			materialFacade.getMaterialHistoryPage(projectId, dto));
 	}
 }

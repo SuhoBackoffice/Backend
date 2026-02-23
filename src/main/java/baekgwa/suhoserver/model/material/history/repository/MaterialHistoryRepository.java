@@ -15,5 +15,5 @@ import baekgwa.suhoserver.model.material.history.entity.MaterialHistoryEntity;
  * ---------------------------------------------------------------------------------------------------------------------
  * 26. 2. 18.     Baekgwa               Initial creation
  */
-public interface MaterialHistoryRepository extends JpaRepository<MaterialHistoryEntity, Long> {
+public interface MaterialHistoryRepository extends JpaRepository<MaterialHistoryEntity, Long>, MaterialHistoryRepositoryCustom {
 }
