@@ -23,8 +23,7 @@ import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-08-07     Baekgwa               Initial creation
  */
-public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEntity, Long> {
-	List<ProjectBranchEntity> findByProject(ProjectEntity project);
+public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEntity, Long>, ProjectBranchRepositoryCustom {
 
 	List<ProjectBranchEntity> findAllByBranchTypeIdIn(List<Long> findBranchTypeIdList);
 

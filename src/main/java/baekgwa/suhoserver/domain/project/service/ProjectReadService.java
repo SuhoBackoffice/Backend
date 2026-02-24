@@ -32,6 +32,7 @@ import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStra
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
 import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -71,11 +72,12 @@ public class ProjectReadService {
 	/**
 	 * 프로젝트에 저장된 분기레일 정보 조회
 	 * @param project 프로젝트 Entity
+	 * @param keyword nullable 검색 keyword
 	 * @return 분기레일 List
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectBranchEntity> getProjectBranchInfoListOrThrow(ProjectEntity project) {
-		return projectBranchRepository.findByProject(project);
+	public List<ProjectBranchEntity> getProjectBranchInfoListOrThrow(ProjectEntity project, @Nullable String keyword) {
+		return projectBranchRepository.findByProjectWithKeyword(project, keyword);
 	}
 
 	/**

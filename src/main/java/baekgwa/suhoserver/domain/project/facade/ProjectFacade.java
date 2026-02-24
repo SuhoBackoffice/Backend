@@ -185,15 +185,12 @@ public class ProjectFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProjectResponse.ProjectBranchInfo> getProjectBranchInfo(Long projectId) {
-		// 1. 프로젝트 조회
+	public List<ProjectResponse.ProjectBranchInfo> getProjectBranchInfo(Long projectId, String keyword) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 분기레일 정보 조회
-		List<ProjectBranchEntity> findProjectBranchList = projectReadService.getProjectBranchInfoListOrThrow(
-			findProject);
+		List<ProjectBranchEntity> findProjectBranchList
+			= projectReadService.getProjectBranchInfoListOrThrow(findProject, keyword);
 
-		// 3. DTO 변환 및 응답
 		return findProjectBranchList.stream()
 			.map(ProjectResponse.ProjectBranchInfo::of)
 			.toList();

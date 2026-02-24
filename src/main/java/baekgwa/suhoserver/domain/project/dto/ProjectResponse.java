@@ -76,38 +76,30 @@ public class ProjectResponse {
 	@Getter
 	public static class ProjectBranchInfo {
 		private final Long projectBranchId;
-		private final String branchCode;
-		private final LocalDate branchVersion;
+		private final String branchName;
+		private final String branchSerial;
 		private final Long totalQuantity;
 		private final Long completedQuantity;
-		private final Long branchTypeId;
-		private final String branchName;
-		private final String imageUrl;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectBranchInfo(Long projectBranchId, String branchCode, LocalDate branchVersion, Long totalQuantity,
-			Long completedQuantity, Long branchTypeId, String branchName, String imageUrl) {
+		private ProjectBranchInfo(Long projectBranchId, String branchName, String branchSerial,
+			Long totalQuantity, Long completedQuantity) {
 			this.projectBranchId = projectBranchId;
-			this.branchCode = branchCode;
-			this.branchVersion = branchVersion;
+			this.branchName = branchName;
+			this.branchSerial = branchSerial;
 			this.totalQuantity = totalQuantity;
 			this.completedQuantity = completedQuantity;
-			this.branchTypeId = branchTypeId;
-			this.branchName = branchName;
-			this.imageUrl = imageUrl;
 		}
 
-		public static ProjectBranchInfo of(ProjectBranchEntity projectBranch) {
+		public static ProjectBranchInfo of(ProjectBranchEntity branch) {
+			String serial = ProductSerialFactory.generateBranchSerial(branch.getBranchType().getCode());
 			return ProjectBranchInfo
 				.builder()
-				.projectBranchId(projectBranch.getId())
-				.branchCode(projectBranch.getBranchType().getCode())
-				.branchVersion(projectBranch.getBranchType().getVersion())
-				.totalQuantity(projectBranch.getTotalQuantity())
-				.completedQuantity(projectBranch.getCompletedQuantity())
-				.branchTypeId(projectBranch.getBranchType().getId())
-				.branchName(projectBranch.getBranchType().getName())
-				.imageUrl(projectBranch.getBranchType().getImageUrl())
+				.projectBranchId(branch.getId())
+				.branchName(branch.getBranchType().getName())
+				.branchSerial(serial)
+				.totalQuantity(branch.getTotalQuantity())
+				.completedQuantity(branch.getCompletedQuantity())
 				.build();
 		}
 	}
