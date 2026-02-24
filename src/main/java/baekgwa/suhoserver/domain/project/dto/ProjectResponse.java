@@ -404,38 +404,44 @@ public class ProjectResponse {
 		private final String imageUrl;
 		private final Long projectBranchId;
 		private final String serial;
-		private final String code;
 		private final String name;
 		private final Long totalQuantity;
 		private final Long completedQuantity;
-		private final Long capacity;
+		private final Long capacity; // 생산 가능 수량(대수) - 입고된 자재 기준으로 물리적으로 제작 가능한 총 수량
+		private final Long remainingQuantity; // totalQuantity - completedQuantity
+		private final Long effectiveCapacity; // min(capacity, remainingQuantity)
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectBranchCapacity(String imageUrl, Long projectBranchId, String serial, String code, String name,
-			Long totalQuantity, Long completedQuantity, Long capacity) {
+		private ProjectBranchCapacity(String imageUrl, Long projectBranchId, String serial, String name,
+			Long totalQuantity, Long completedQuantity, Long capacity, Long remainingQuantity, Long effectiveCapacity) {
 			this.imageUrl = imageUrl;
 			this.projectBranchId = projectBranchId;
 			this.serial = serial;
-			this.code = code;
 			this.name = name;
 			this.totalQuantity = totalQuantity;
 			this.completedQuantity = completedQuantity;
 			this.capacity = capacity;
+			this.remainingQuantity = remainingQuantity;
+			this.effectiveCapacity = effectiveCapacity;
 		}
 
 		public static ProjectBranchCapacity of(ProjectBranchEntity pb, long capacity) {
 
 			String branchSerial = ProductSerialFactory.generateBranchSerial(pb.getBranchType().getCode());
 
+			long remainingQuantity = pb.getTotalQuantity() - pb.getCompletedQuantity();
+			long effectiveCapacity = Math.min(capacity, remainingQuantity);
+
 			return ProjectBranchCapacity.builder()
 				.imageUrl(pb.getBranchType().getImageUrl())
 				.projectBranchId(pb.getId())
 				.serial(branchSerial)
-				.code(pb.getBranchType().getCode())
 				.name(pb.getBranchType().getName())
 				.totalQuantity(pb.getTotalQuantity())
 				.completedQuantity(pb.getCompletedQuantity())
 				.capacity(capacity)
+				.remainingQuantity(remainingQuantity)
+				.effectiveCapacity(effectiveCapacity)
 				.build();
 		}
 	}

@@ -1,12 +1,14 @@
 package baekgwa.suhoserver.domain.project.facade;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,7 @@ import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightUpdatedEvent;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -341,8 +344,79 @@ public class ProjectFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProjectResponse.ProjectBranchCapacity> getProjectBranchCapacity(Long projectId) {
-		return List.of();
+	public List<ProjectResponse.ProjectBranchCapacity> getProjectBranchCapacity(
+		Long projectId, ProjectBranchCapacitySort sort, Sort.Direction dir
+	) {
+		// 1. 프로젝트 조회
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+
+		// 2. 분기레일 목록 조회 (branchType fetch join)
+		List<ProjectBranchEntity> projectBranchList =
+			projectReadService.getProjectBranchListByProject(findProject);
+
+		if (projectBranchList.isEmpty()) {
+			return List.of();
+		}
+
+		// 3. BOM Map 조회 (branchTypeId → List<BranchBomEntity>)
+		Set<Long> branchTypeIdSet = projectBranchList.stream()
+			.map(pb -> pb.getBranchType().getId())
+			.collect(Collectors.toSet());
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(branchTypeIdSet);
+
+		// 4. 자재 재고 Map 조회 (materialCode → ProjectMaterialStockEntity)
+		Set<String> allDrawingNumbers = branchBomMap.values().stream()
+			.flatMap(List::stream)
+			.map(BranchBomEntity::getDrawingNumber)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findProject, allDrawingNumbers);
+
+		// 5. (entity, capacity) 쌍 생성 → 정렬 → DTO 변환
+		return projectBranchList.stream()
+			.map(pb -> Map.entry(pb, calculateBranchCapacity(pb, branchBomMap, stockMap)))
+			.sorted(buildBranchCapacityComparator(sort, dir))
+			.map(entry -> ProjectResponse.ProjectBranchCapacity.of(entry.getKey(), entry.getValue()))
+			.toList();
+	}
+
+	private long calculateBranchCapacity(
+		ProjectBranchEntity projectBranch,
+		Map<Long, List<BranchBomEntity>> branchBomMap,
+		Map<String, ProjectMaterialStockEntity> stockMap
+	) {
+		List<BranchBomEntity> bomList = branchBomMap.get(projectBranch.getBranchType().getId());
+		if (bomList == null || bomList.isEmpty()) {
+			return 0L;
+		}
+
+		long minCapacity = Long.MAX_VALUE;
+		for (BranchBomEntity bom : bomList) {
+			ProjectMaterialStockEntity stock = stockMap.get(bom.getDrawingNumber());
+			if (stock == null) {
+				return 0L;
+			}
+
+			long remaining = stock.getTotalInboundQuantity() - stock.getTotalUsedQuantity();
+			if (remaining <= 0 || bom.getUnitQuantity() <= 0) {
+				return 0L;
+			}
+
+			minCapacity = Math.min(minCapacity, remaining / bom.getUnitQuantity());
+		}
+		return minCapacity == Long.MAX_VALUE ? 0L : minCapacity;
+	}
+
+	private Comparator<Map.Entry<ProjectBranchEntity, Long>> buildBranchCapacityComparator(
+		ProjectBranchCapacitySort sort,
+		Sort.Direction dir
+	) {
+		Comparator<Map.Entry<ProjectBranchEntity, Long>> comparator = switch (sort) {
+			case CAPACITY -> Comparator.comparingLong(Map.Entry::getValue);
+			case CODE -> Comparator.comparing(entry -> entry.getKey().getBranchType().getCode());
+			case TOTAL_QUANTITY -> Comparator.comparingLong(entry -> entry.getKey().getTotalQuantity());
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
 	}
 
 	@Transactional(readOnly = true)

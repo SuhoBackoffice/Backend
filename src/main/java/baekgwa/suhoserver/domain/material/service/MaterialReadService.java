@@ -3,6 +3,10 @@ package baekgwa.suhoserver.domain.material.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -65,6 +69,20 @@ public class MaterialReadService {
 
 		return MaterialResponse.ProjectMaterialState
 			.from(inboundPercent, unitKindCount, totalCount, inboundCount, usedCount);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<String, ProjectMaterialStockEntity> getMaterialStockMap(
+		ProjectEntity project,
+		Set<String> drawingNumbers
+	) {
+		List<ProjectMaterialStockEntity> stockList =
+			projectMaterialStockRepository.findExistMaterialStockList(project, drawingNumbers);
+		return stockList.stream()
+			.collect(Collectors.toMap(
+				ProjectMaterialStockEntity::getMaterialCode,
+				Function.identity()
+			));
 	}
 
 	/**

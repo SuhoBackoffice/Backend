@@ -412,6 +412,11 @@ public class ProjectReadService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<ProjectBranchEntity> getProjectBranchListByProject(ProjectEntity project) {
+		return projectBranchRepository.findByProjectOrderByBranchCode(project);
+	}
+
+	@Transactional(readOnly = true)
 	public List<ProjectBranchEntity> getProjectBranchListByIds(List<Long> projectBranchIds) {
 		return projectBranchRepository.findAllById(projectBranchIds);
 	}

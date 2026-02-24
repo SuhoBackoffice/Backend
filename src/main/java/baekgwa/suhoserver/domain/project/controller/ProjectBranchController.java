@@ -107,14 +107,14 @@ public class ProjectBranchController {
 	}
 
 	@GetMapping("/{projectId}/branch/capacity")
-	@Operation(summary = "프로젝트에 할당된 분기레일별 Capacity 간단 조회")
+	@Operation(summary = "프로젝트에 할당된 분기레일별 Capacity 조회")
 	public BaseResponse<List<ProjectResponse.ProjectBranchCapacity>> getProjectBranchCapacity(
 		@PathVariable("projectId") Long projectId,
 		@RequestParam(value = "sort", required = false, defaultValue = "CAPACITY") ProjectBranchCapacitySort sort,
 		@RequestParam(value = "dir", required = false, defaultValue = "ASC") Sort.Direction dir
 	) {
 		List<ProjectResponse.ProjectBranchCapacity> projectBranchCapacityList =
-			projectFacade.getProjectBranchCapacity(projectId);
+			projectFacade.getProjectBranchCapacity(projectId, sort, dir);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_BRANCH_CAPACITY, projectBranchCapacityList);
 	}
 }
