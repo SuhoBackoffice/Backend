@@ -443,4 +443,15 @@ public class ProjectReadService {
 	public List<ProjectStraightSerialEntity> getStraightSerialList(ProjectStraightEntity findStraight) {
 		return projectStraightSerialRepository.findAllByProjectStraightOrderBySequence(findStraight);
 	}
+
+	@Transactional(readOnly = true)
+	public ProjectBranchEntity getProjectBranchAndTypeOrThrow(Long projectBranchId) {
+		return projectBranchRepository.findByIdWithType(projectBranchId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectBranchSerialEntity> getBranchSerialList(ProjectBranchEntity findBranch) {
+		return projectBranchSerialRepository.findAllByProjectBranchSort(findBranch);
+	}
 }

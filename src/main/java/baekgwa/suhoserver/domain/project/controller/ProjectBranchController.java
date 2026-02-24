@@ -65,6 +65,16 @@ public class ProjectBranchController {
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS, projectBranchInfoList);
 	}
 
+	@GetMapping("/{projectId}/branch/{projectBranchId}")
+	@Operation(summary = "프로젝트 분기 레일 상세 정보 조회")
+	public BaseResponse<ProjectResponse.ProjectBranchDetailInfo> getProjectStraightDetailInfo(
+		@PathVariable("projectId") Long projectId, //Not Use, REST-API Rules
+		@PathVariable("projectBranchId") Long projectBranchId
+	) {
+		ProjectResponse.ProjectBranchDetailInfo response = projectFacade.getProjectBranchDetailInfo(projectBranchId);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_BRANCH_DETAIL_INFO_SUCCESS, response);
+	}
+
 	@DeleteMapping("/branch/{projectBranchId}")
 	@Operation(summary = "프로젝트 분기레일 삭제")
 	public BaseResponse<Void> deleteProjectBranch(

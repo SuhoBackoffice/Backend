@@ -8,6 +8,7 @@ import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
@@ -100,6 +101,82 @@ public class ProjectResponse {
 				.branchSerial(serial)
 				.totalQuantity(branch.getTotalQuantity())
 				.completedQuantity(branch.getCompletedQuantity())
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectBranchDetailInfo {
+		private final String serial; //generated serial
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final String code;
+		private final String name;
+		private final LocalDate branchVersion;
+		private final String imageUrl;
+		private final List<BranchSerialInfo> serialInfoList;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectBranchDetailInfo(String serial, Long totalQuantity, Long completedQuantity, String code,
+			String name,
+			LocalDate branchVersion, String imageUrl, List<BranchSerialInfo> serialInfoList) {
+			this.serial = serial;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.code = code;
+			this.name = name;
+			this.branchVersion = branchVersion;
+			this.imageUrl = imageUrl;
+			this.serialInfoList = serialInfoList;
+		}
+
+		public static ProjectBranchDetailInfo of(ProjectBranchEntity branch, List<BranchSerialInfo> serialInfoList) {
+			String branchSerial = ProductSerialFactory.generateBranchSerial(branch.getBranchType().getCode());
+
+			return ProjectBranchDetailInfo
+				.builder()
+				.serial(branchSerial)
+				.totalQuantity(branch.getTotalQuantity())
+				.completedQuantity(branch.getCompletedQuantity())
+				.code(branch.getBranchType().getName())
+				.name(branch.getBranchType().getName())
+				.branchVersion(branch.getBranchType().getVersion())
+				.imageUrl(branch.getBranchType().getImageUrl())
+				.serialInfoList(serialInfoList)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class BranchSerialInfo {
+		private final String serial;
+		private final String serialState;
+		private final String productionState;
+		private final LocalDate producedAt;
+		private final String inactiveReason;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private BranchSerialInfo(String serial, String serialState, String productionState, LocalDate producedAt,
+			String inactiveReason) {
+			this.serial = serial;
+			this.serialState = serialState;
+			this.productionState = productionState;
+			this.producedAt = producedAt;
+			this.inactiveReason = inactiveReason;
+		}
+
+		public static BranchSerialInfo of(ProjectBranchSerialEntity serial) {
+			return BranchSerialInfo
+				.builder()
+				.serial(serial.getSerial())
+				.serialState(serial.getState().getDescription())
+				.productionState(serial.getProductionState().getDescription())
+				.producedAt(serial.getProducedAt())
+				.inactiveReason(
+					serial.getReason() != null
+						? serial.getReason().getDescription()
+						: null
+				)
 				.build();
 		}
 	}

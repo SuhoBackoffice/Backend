@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.model.project.branch.branch.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -56,4 +57,7 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 		@Param("state") ProductSerialState state,
 		@Param("productionState") ProductProductionState productionState
 	);
+
+	@Query("SELECT pb FROM ProjectBranchEntity pb JOIN FETCH pb.branchType st WHERE pb.id = :projectBranchId")
+	Optional<ProjectBranchEntity> findByIdWithType(@Param("projectBranchId") Long projectBranchId);
 }

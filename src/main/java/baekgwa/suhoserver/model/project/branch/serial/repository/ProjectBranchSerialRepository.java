@@ -36,4 +36,7 @@ public interface ProjectBranchSerialRepository extends JpaRepository<ProjectBran
 	);
 
 	List<ProjectBranchSerialEntity> findAllByProjectBranch(ProjectBranchEntity projectBranch);
+
+	@Query("SELECT pbs FROM ProjectBranchSerialEntity pbs WHERE pbs.projectBranch = :projectBranch ORDER BY pbs.sequence")
+	List<ProjectBranchSerialEntity> findAllByProjectBranchSort(@Param("projectBranch") ProjectBranchEntity projectBranch);
 }
