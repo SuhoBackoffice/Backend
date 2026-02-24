@@ -2,6 +2,7 @@ package baekgwa.suhoserver.domain.project.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.facade.ProjectFacade;
+import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,7 +63,8 @@ public class ProjectBranchController {
 		@PathVariable("projectId") Long projectId,
 		@RequestParam(value = "keyword", required = false) String keyword
 	) {
-		List<ProjectResponse.ProjectBranchInfo> projectBranchInfoList = projectFacade.getProjectBranchInfo(projectId, keyword);
+		List<ProjectResponse.ProjectBranchInfo> projectBranchInfoList = projectFacade.getProjectBranchInfo(projectId,
+			keyword);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS, projectBranchInfoList);
 	}
 
@@ -96,10 +99,19 @@ public class ProjectBranchController {
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_BRANCH_SUCCESS);
 	}
 
+	@GetMapping("/branch/capacity/types")
+	@Operation(summary = "분기 레일 Capacity 정렬 조건")
+	public BaseResponse<List<ProjectResponse.BranchCapacitySortType>> getBranchCapacityTypes() {
+		return BaseResponse.success(SuccessCode.GET_BRANCH_CAPACITY_SORT_TYPE_SUCCESS,
+			projectFacade.getMaterialHistoryTypes());
+	}
+
 	@GetMapping("/{projectId}/branch/capacity")
-	@Operation(summary = "프로젝트의 분기레일의 생산 가능한 수량 확인")
+	@Operation(summary = "프로젝트에 할당된 분기레일별 Capacity 간단 조회")
 	public BaseResponse<List<ProjectResponse.ProjectBranchCapacity>> getProjectBranchCapacity(
-		@PathVariable("projectId") Long projectId
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(value = "sort", required = false, defaultValue = "CAPACITY") ProjectBranchCapacitySort sort,
+		@RequestParam(value = "dir", required = false, defaultValue = "ASC") Sort.Direction dir
 	) {
 		List<ProjectResponse.ProjectBranchCapacity> projectBranchCapacityList =
 			projectFacade.getProjectBranchCapacity(projectId);

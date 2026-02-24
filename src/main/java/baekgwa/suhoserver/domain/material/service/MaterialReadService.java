@@ -3,7 +3,6 @@ package baekgwa.suhoserver.domain.material.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -87,20 +86,5 @@ public class MaterialReadService {
 			materialHistoryRepository.searchHistoryList(projectId, dto);
 
 		return PageResponse.of(result);
-	}
-
-	/**
-	 * 프로젝트에 입고된 모든 자재 조회 후, 도번 기준으로 수량 정리
-	 * @param projectId 프로젝트 PK
-	 * @return Map<도번, 수량>
-	 */
-	public Map<String, Long> getAllProjectMaterial(Long projectId) {
-		// List<MaterialInboundEntity> findMaterialList = materialInboundRepository.findByProjectId(projectId);
-		// return findMaterialList.stream()
-		// 	.collect(Collectors.groupingBy(
-		// 		MaterialInboundEntity::getDrawingNumber,
-		// 		Collectors.summingLong(MaterialInboundEntity::getQuantity)
-		// 	));
-		return Map.of();
 	}
 }

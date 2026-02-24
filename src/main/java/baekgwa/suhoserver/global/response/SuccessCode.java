@@ -61,8 +61,11 @@ public enum SuccessCode {
 	PATCH_PROJECT_STRAIGHT_SUCCESS(OK, "프로젝트 직선레일 수정 완료"),
 	DELETE_PROJECT_BRANCH_SUCCESS(OK, "프로젝트 분기레일 삭제 완료"),
 	PATCH_PROJECT_BRANCH_SUCCESS(OK, "프로젝트 분기레일 수정 완료"),
-	GET_PROJECT_BRANCH_CAPACITY(OK, "분기레일 생산 가능 수량 조회 성공"),
 	GET_ON_GOING_PROJECT_INFO(OK, "현재 진행중인 프로젝트 목록 조회 성공"),
+
+	// Capacity
+	GET_BRANCH_CAPACITY_SORT_TYPE_SUCCESS(OK, "분기 레일 capa 정렬 조건 조회 성공"),
+	GET_PROJECT_BRANCH_CAPACITY(OK, "분기레일 생산 가능 수량 조회 성공"),
 
 	// File Uploader
 	UPLOAD_FILE_SUCCESS(CREATED, "파일 업로드 완료"),

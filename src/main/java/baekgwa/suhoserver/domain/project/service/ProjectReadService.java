@@ -100,42 +100,19 @@ public class ProjectReadService {
 	 */
 	@Transactional(readOnly = true)
 	public PageResponse<ProjectResponse.ProjectInfo> getProjectInfoListOrThrow(ProjectRequest.GetProjectInfo dto) {
-		// 1. 페이지네이션 파라미터 유효성 검증
 		if (dto.getPage() < 0 || dto.getSize() < 1) {
 			throw new GlobalException(ErrorCode.INVALID_PAGINATION_PARAMETER);
 		}
 
-		// 2. StartDate, EndDate 검증
 		if (dto.getStartDate() != null &&
 			dto.getEndDate() != null &&
 			!dto.getEndDate().isAfter(dto.getStartDate())) {
 			throw new GlobalException(ErrorCode.PROJECT_END_AFTER_START_ERROR);
 		}
 
-		// 3. list 조회
 		Page<ProjectResponse.ProjectInfo> findData = projectRepository.searchProjectList(dto);
 
 		return PageResponse.of(findData);
-	}
-
-	/**
-	 * 프로젝트에 할당된 분기레일의 종류 ID List 조회
-	 * @param projectId 프로젝트 PK
-	 * @return branchTypeIdList
-	 */
-	@Transactional(readOnly = true)
-	public List<Long> getBranchTypeIdList(Long projectId) {
-		return projectBranchRepository.findIdListByProjectId(projectId);
-	}
-
-	/**
-	 * 프로젝트에 할당된 분기레일 종류 List 조회
-	 * @param projectId 프로젝트 PK
-	 * @return List<ProjectBranchEntity>
-	 */
-	@Transactional(readOnly = true)
-	public List<ProjectBranchEntity> getBranchTypeList(Long projectId) {
-		return projectBranchRepository.findByProjectId(projectId);
 	}
 
 	@Transactional(readOnly = true)

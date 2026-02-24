@@ -1,5 +1,6 @@
 package baekgwa.suhoserver.domain.project.facade;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,7 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectBomService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
+import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.domain.straight.service.StraightReadService;
 import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
@@ -340,14 +342,7 @@ public class ProjectFacade {
 
 	@Transactional(readOnly = true)
 	public List<ProjectResponse.ProjectBranchCapacity> getProjectBranchCapacity(Long projectId) {
-		// 1. 프로젝트에 입고된 자재 목록 조회 (Map)
-		Map<String, Long> inboundedMaterialMap = materialReadService.getAllProjectMaterial(projectId);
-
-		// 2. 프로젝트에 할당된 분기레일 종류 조회 (수량포함 목적 Entity)
-		List<ProjectBranchEntity> projectBranchList = projectReadService.getBranchTypeList(projectId);
-
-		// 3. 분기레일별로 생산 가능량 조회
-		return branchReadService.getBranchCapacity(inboundedMaterialMap, projectBranchList);
+		return List.of();
 	}
 
 	@Transactional(readOnly = true)
@@ -397,5 +392,11 @@ public class ProjectFacade {
 		Map<Long, Long> quantityMap = Map.of(branchTypeId, diffQuantity);
 		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
 		materialWriteService.updateBranchMaterialPlanStock(quantityMap, branchBomMap, findProjectBranch.getProject());
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getMaterialHistoryTypes() {
+		return Arrays.stream(ProjectBranchCapacitySort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
 	}
 }

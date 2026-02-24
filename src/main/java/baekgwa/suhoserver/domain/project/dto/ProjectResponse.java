@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
-import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
@@ -402,69 +402,40 @@ public class ProjectResponse {
 	@Getter
 	public static class ProjectBranchCapacity {
 		private final String imageUrl;
-		private final Long branchTypeId;
+		private final Long projectBranchId;
+		private final String serial;
 		private final String code;
 		private final String name;
 		private final Long totalQuantity;
 		private final Long completedQuantity;
 		private final Long capacity;
-		private final List<BranchBomShortage> branchBomShortageList;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		private ProjectBranchCapacity(String imageUrl, Long branchTypeId, String code, String name, Long totalQuantity,
-			Long completedQuantity, Long capacity, List<BranchBomShortage> branchBomShortageList
-		) {
+		private ProjectBranchCapacity(String imageUrl, Long projectBranchId, String serial, String code, String name,
+			Long totalQuantity, Long completedQuantity, Long capacity) {
 			this.imageUrl = imageUrl;
-			this.branchTypeId = branchTypeId;
+			this.projectBranchId = projectBranchId;
+			this.serial = serial;
 			this.code = code;
 			this.name = name;
 			this.totalQuantity = totalQuantity;
 			this.completedQuantity = completedQuantity;
 			this.capacity = capacity;
-			this.branchBomShortageList = branchBomShortageList;
 		}
 
-		public static ProjectBranchCapacity of(ProjectBranchEntity pb, long capacity, List<BranchBomShortage> branchBomShortageList) {
+		public static ProjectBranchCapacity of(ProjectBranchEntity pb, long capacity) {
+
+			String branchSerial = ProductSerialFactory.generateBranchSerial(pb.getBranchType().getCode());
+
 			return ProjectBranchCapacity.builder()
 				.imageUrl(pb.getBranchType().getImageUrl())
-				.branchTypeId(pb.getBranchType().getId())
+				.projectBranchId(pb.getId())
+				.serial(branchSerial)
 				.code(pb.getBranchType().getCode())
 				.name(pb.getBranchType().getName())
 				.totalQuantity(pb.getTotalQuantity())
 				.completedQuantity(pb.getCompletedQuantity())
 				.capacity(capacity)
-				.branchBomShortageList(branchBomShortageList)
-				.build();
-		}
-	}
-
-	@Getter
-	public static class BranchBomShortage {
-		private final String drawingNumber;
-		private final String itemName;
-		private final Long shortage; // 부족 수량
-
-		@Builder(access = AccessLevel.PRIVATE)
-		private BranchBomShortage(String drawingNumber, String itemName, Long shortage) {
-			this.drawingNumber = drawingNumber;
-			this.itemName = itemName;
-			this.shortage = shortage;
-		}
-
-		public static BranchBomShortage of(BranchBomEntity bom, long available, long remainingTarget) {
-			long unit = (bom.getUnitQuantity() == null ? 0L : bom.getUnitQuantity());
-			if (unit <= 0L) return null;
-
-			// 목표 세트 수량 달성에 필요한 총 자재량
-			long requiredTotal = unit * remainingTarget;
-			long shortage = Math.max(0L, requiredTotal - available);
-
-			if (shortage == 0L) return null;
-
-			return BranchBomShortage.builder()
-				.drawingNumber(bom.getDrawingNumber())
-				.itemName(bom.getItemName())
-				.shortage(shortage)
 				.build();
 		}
 	}
@@ -490,6 +461,21 @@ public class ProjectResponse {
 				.startDate(project.getStartDate())
 				.endDate(project.getEndDate())
 				.build();
+		}
+	}
+
+	@Getter
+	public static class BranchCapacitySortType {
+		private final String sort;
+		private final String description;
+
+		private BranchCapacitySortType(String sort, String description) {
+			this.sort = sort;
+			this.description = description;
+		}
+
+		public static BranchCapacitySortType from(ProjectBranchCapacitySort sortType) {
+			return new BranchCapacitySortType(sortType.name(), sortType.getDescription());
 		}
 	}
 }
