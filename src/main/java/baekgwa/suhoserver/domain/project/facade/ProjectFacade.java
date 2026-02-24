@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
@@ -21,6 +22,7 @@ import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectBomService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
+import baekgwa.suhoserver.domain.project.type.ProjectBranchAnalyzeSort;
 import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.domain.straight.service.StraightReadService;
 import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
@@ -472,5 +474,60 @@ public class ProjectFacade {
 		return Arrays.stream(ProjectBranchCapacitySort.values())
 			.map(ProjectResponse.BranchCapacitySortType::from)
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectBranchCapacityAnalyze getProjectBranchCapacityAnalyze(
+		Long projectBranchId, ProjectBranchAnalyzeSort sort, Sort.Direction dir, boolean onlyShortage
+	) {
+		// 1. 분기레일 조회 (branchType fetch join)
+		ProjectBranchEntity findBranch = projectReadService.getProjectBranchAndTypeOrThrow(projectBranchId);
+
+		// 2. BOM 목록 조회
+		Long branchTypeId = findBranch.getBranchType().getId();
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
+		List<BranchBomEntity> bomList = branchBomMap.getOrDefault(branchTypeId, List.of());
+
+		// 3. 자재 재고 Map 조회
+		Set<String> drawingNumbers = bomList.stream()
+			.map(BranchBomEntity::getDrawingNumber)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findBranch.getProject(), drawingNumbers);
+
+		// 4. 부족 수량 계산 + 필터링 + 정렬
+		long remainingBranchQty = findBranch.getTotalQuantity() - findBranch.getCompletedQuantity();
+		Stream<ProjectResponse.BomShortageInfo> stream = bomList.stream()
+			.map(bom -> ProjectResponse.BomShortageInfo.of(bom, stockMap.get(bom.getDrawingNumber()), remainingBranchQty));
+
+		if (onlyShortage) {
+			stream = stream.filter(ProjectResponse.BomShortageInfo::getIsShortage);
+		}
+
+		List<ProjectResponse.BomShortageInfo> bomShortageList = stream
+			.sorted(buildAnalyzeComparator(sort, dir))
+			.toList();
+
+		// 5. capacity 계산
+		long capacity = calculateBranchCapacity(findBranch, branchBomMap, stockMap);
+
+		return ProjectResponse.ProjectBranchCapacityAnalyze.of(findBranch, capacity, bomShortageList);
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getAnalyzeTypes() {
+		return Arrays.stream(ProjectBranchAnalyzeSort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	private Comparator<ProjectResponse.BomShortageInfo> buildAnalyzeComparator(
+		ProjectBranchAnalyzeSort sort, Sort.Direction dir
+	) {
+		Comparator<ProjectResponse.BomShortageInfo> comparator = switch (sort) {
+			case SHORTAGE_QUANTITY -> Comparator.comparingLong(ProjectResponse.BomShortageInfo::getShortageQuantity);
+			case DRAWING_NUMBER -> Comparator.comparing(ProjectResponse.BomShortageInfo::getDrawingNumber);
+			case ITEM_NAME -> Comparator.comparing(ProjectResponse.BomShortageInfo::getItemName);
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
 	}
 }

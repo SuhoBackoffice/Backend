@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.facade.ProjectFacade;
+import baekgwa.suhoserver.domain.project.type.ProjectBranchAnalyzeSort;
 import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
@@ -116,5 +117,29 @@ public class ProjectBranchController {
 		List<ProjectResponse.ProjectBranchCapacity> projectBranchCapacityList =
 			projectFacade.getProjectBranchCapacity(projectId, sort, dir);
 		return BaseResponse.success(SuccessCode.GET_PROJECT_BRANCH_CAPACITY, projectBranchCapacityList);
+	}
+
+	@GetMapping("/branch/capacity/analyze/types")
+	@Operation(summary = "분기 레일 Capacity 분석 정렬 조건")
+	public BaseResponse<List<ProjectResponse.BranchCapacitySortType>> getBranchCapacityAnalyzeTypes() {
+		return BaseResponse.success(
+			SuccessCode.GET_BRANCH_ANALYZE_SORT_TYPE_SUCCESS,
+			projectFacade.getAnalyzeTypes()
+		);
+	}
+
+	@GetMapping("/{projectId}/branch/{projectBranchId}/capacity")
+	@Operation(summary = "프로젝트에 할당된 분기레일별 Capacity 분석")
+	public BaseResponse<ProjectResponse.ProjectBranchCapacityAnalyze> getProjectBranchCapacityAnalyze(
+		@PathVariable("projectId") Long projectId,
+		@PathVariable("projectBranchId") Long projectBranchId,
+		@RequestParam(value = "sort", required = false, defaultValue = "SHORTAGE_QUANTITY") ProjectBranchAnalyzeSort sort,
+		@RequestParam(value = "dir", required = false, defaultValue = "DESC") Sort.Direction dir,
+		@RequestParam(value = "onlyShortage", required = false, defaultValue = "false") boolean onlyShortage
+	) {
+		return BaseResponse.success(
+			SuccessCode.GET_PROJECT_BRANCH_CAPACITY_ANALYZE,
+			projectFacade.getProjectBranchCapacityAnalyze(projectBranchId, sort, dir, onlyShortage)
+		);
 	}
 }

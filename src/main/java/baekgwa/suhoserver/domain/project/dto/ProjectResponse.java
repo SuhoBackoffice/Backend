@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
+
+import baekgwa.suhoserver.domain.project.type.ProjectBranchAnalyzeSort;
 import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
@@ -482,6 +486,117 @@ public class ProjectResponse {
 
 		public static BranchCapacitySortType from(ProjectBranchCapacitySort sortType) {
 			return new BranchCapacitySortType(sortType.name(), sortType.getDescription());
+		}
+
+		public static BranchCapacitySortType from(ProjectBranchAnalyzeSort sortType) {
+			return new BranchCapacitySortType(sortType.name(), sortType.getDescription());
+		}
+	}
+
+	@Getter
+	public static class BomShortageInfo {
+		private final String drawingNumber;
+		private final String itemName;
+		private final String itemType;
+		private final String specification;
+		private final Long unitQuantity;
+		private final String unit;
+		private final Boolean suppliedMaterial;
+		private final Long stockQuantity;
+		private final Long requiredQuantity;
+		private final Long shortageQuantity;
+		private final Boolean isShortage;
+		private final Long availableCapacity;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private BomShortageInfo(String drawingNumber, String itemName, String itemType, String specification,
+			Long unitQuantity, String unit, Boolean suppliedMaterial, Long stockQuantity, Long requiredQuantity,
+			Long shortageQuantity, Boolean isShortage, Long availableCapacity) {
+			this.drawingNumber = drawingNumber;
+			this.itemName = itemName;
+			this.itemType = itemType;
+			this.specification = specification;
+			this.unitQuantity = unitQuantity;
+			this.unit = unit;
+			this.suppliedMaterial = suppliedMaterial;
+			this.stockQuantity = stockQuantity;
+			this.requiredQuantity = requiredQuantity;
+			this.shortageQuantity = shortageQuantity;
+			this.isShortage = isShortage;
+			this.availableCapacity = availableCapacity;
+		}
+
+		public static BomShortageInfo of(BranchBomEntity bom, ProjectMaterialStockEntity stock, long remainingBranchQty) {
+			long inboundQty = stock != null ? stock.getTotalInboundQuantity() : 0L;
+			long usedQty = stock != null ? stock.getTotalUsedQuantity() : 0L;
+			long stockQty = inboundQty - usedQty;
+			long requiredQty = bom.getUnitQuantity() * remainingBranchQty;
+			long shortageQty = Math.max(0L, requiredQty - stockQty);
+			long availableCap = (stockQty > 0 && bom.getUnitQuantity() > 0)
+				? stockQty / bom.getUnitQuantity() : 0L;
+
+			return BomShortageInfo.builder()
+				.drawingNumber(bom.getDrawingNumber())
+				.itemName(bom.getItemName())
+				.itemType(bom.getItemType())
+				.specification(bom.getSpecification())
+				.unitQuantity(bom.getUnitQuantity())
+				.unit(bom.getUnit())
+				.suppliedMaterial(bom.getSuppliedMaterial())
+				.stockQuantity(stockQty)
+				.requiredQuantity(requiredQty)
+				.shortageQuantity(shortageQty)
+				.isShortage(shortageQty > 0)
+				.availableCapacity(availableCap)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectBranchCapacityAnalyze {
+		private final String serial;
+		private final String code;
+		private final String name;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final Long remainingQuantity;
+		private final Long capacity;
+		private final Long effectiveCapacity;
+		private final List<BomShortageInfo> bomShortageList;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectBranchCapacityAnalyze(String serial, String code, String name, Long totalQuantity,
+			Long completedQuantity, Long remainingQuantity, Long capacity, Long effectiveCapacity,
+			List<BomShortageInfo> bomShortageList) {
+			this.serial = serial;
+			this.code = code;
+			this.name = name;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.remainingQuantity = remainingQuantity;
+			this.capacity = capacity;
+			this.effectiveCapacity = effectiveCapacity;
+			this.bomShortageList = bomShortageList;
+		}
+
+		public static ProjectBranchCapacityAnalyze of(ProjectBranchEntity pb, long capacity,
+			List<BomShortageInfo> bomShortageList) {
+			String branchSerial = baekgwa.suhoserver.global.factory.ProductSerialFactory
+				.generateBranchSerial(pb.getBranchType().getCode());
+			long remainingQuantity = pb.getTotalQuantity() - pb.getCompletedQuantity();
+			long effectiveCapacity = Math.min(capacity, remainingQuantity);
+
+			return ProjectBranchCapacityAnalyze.builder()
+				.serial(branchSerial)
+				.code(pb.getBranchType().getCode())
+				.name(pb.getBranchType().getName())
+				.totalQuantity(pb.getTotalQuantity())
+				.completedQuantity(pb.getCompletedQuantity())
+				.remainingQuantity(remainingQuantity)
+				.capacity(capacity)
+				.effectiveCapacity(effectiveCapacity)
+				.bomShortageList(bomShortageList)
+				.build();
 		}
 	}
 }
