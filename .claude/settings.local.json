@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Skill(create-api)"
+      "Skill(create-api)",
+      "Bash(*)",
+      "File(*)",
+      "EditFile(*)"
     ]
   }
 }
