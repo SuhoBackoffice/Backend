@@ -21,7 +21,8 @@ import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
  * ---------------------------------------------------------------------------------------------------------------------
  * 26. 2. 18.     Baekgwa               Initial creation
  */
-public interface ProjectMaterialStockRepository extends JpaRepository<ProjectMaterialStockEntity, Long> {
+public interface ProjectMaterialStockRepository
+	extends JpaRepository<ProjectMaterialStockEntity, Long>, ProjectMaterialStockRepositoryCustom {
 
 	@Query("SELECT pms FROM ProjectMaterialStockEntity pms WHERE pms.project = :findProject AND pms.materialCode in :drawingNumberSet")
 	List<ProjectMaterialStockEntity> findExistMaterialStockList(

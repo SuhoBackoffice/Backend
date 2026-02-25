@@ -9,11 +9,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
+import baekgwa.suhoserver.domain.material.type.MaterialStockSort;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
@@ -83,6 +85,18 @@ public class MaterialReadService {
 				ProjectMaterialStockEntity::getMaterialCode,
 				Function.identity()
 			));
+	}
+
+	public List<MaterialResponse.MaterialStockInfo> getMaterialStockList(
+		Long projectId,
+		String keyword,
+		MaterialStockSort sort,
+		Sort.Direction dir
+	) {
+		return projectMaterialStockRepository.searchStockList(projectId, keyword, sort, dir)
+			.stream()
+			.map(MaterialResponse.MaterialStockInfo::from)
+			.toList();
 	}
 
 	/**

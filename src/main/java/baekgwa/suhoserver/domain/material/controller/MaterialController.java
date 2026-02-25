@@ -2,6 +2,7 @@ package baekgwa.suhoserver.domain.material.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.facade.MaterialFacade;
 import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.domain.material.type.MaterialStockSort;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.ErrorCode;
@@ -81,6 +83,25 @@ public class MaterialController {
 		materialFacade.postMaterialInbound(projectId, postMaterialInboundList, userId);
 
 		return BaseResponse.success(SuccessCode.POST_MATERIAL_INBOUND_UPDATE_SUCCESS);
+	}
+
+	@GetMapping("/stock/types")
+	@Operation(summary = "자재 재고 목록 정렬 조건 조회")
+	public BaseResponse<List<MaterialResponse.MaterialSortType>> getMaterialStockSortTypes() {
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_STOCK_SORT_TYPE_SUCCESS,
+			materialFacade.getMaterialStockSortTypes());
+	}
+
+	@GetMapping("/stock/{projectId}")
+	@Operation(summary = "프로젝트 자재 재고 목록 조회")
+	public BaseResponse<List<MaterialResponse.MaterialStockInfo>> getMaterialStockList(
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(value = "keyword", required = false) String keyword,
+		@RequestParam(value = "sort", defaultValue = "MATERIAL_CODE") MaterialStockSort sort,
+		@RequestParam(value = "dir", defaultValue = "ASC") Sort.Direction dir
+	) {
+		return BaseResponse.success(SuccessCode.GET_MATERIAL_STOCK_LIST_SUCCESS,
+			materialFacade.getMaterialStockList(projectId, keyword, sort, dir));
 	}
 
 	@GetMapping("/history/types")

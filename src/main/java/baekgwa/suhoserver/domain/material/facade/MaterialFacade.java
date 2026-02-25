@@ -7,10 +7,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Sort;
+
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
+import baekgwa.suhoserver.domain.material.type.MaterialStockSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
@@ -83,5 +86,22 @@ public class MaterialFacade {
 		return Arrays.stream(MaterialHistoryType.values())
 			.map(MaterialResponse.MaterialHistoryTypeInfo::from)
 			.toList();
+	}
+
+	public List<MaterialResponse.MaterialSortType> getMaterialStockSortTypes() {
+		return Arrays.stream(MaterialStockSort.values())
+			.map(MaterialResponse.MaterialSortType::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<MaterialResponse.MaterialStockInfo> getMaterialStockList(
+		Long projectId,
+		String keyword,
+		MaterialStockSort sort,
+		Sort.Direction dir
+	) {
+		projectReadService.getProjectOrThrow(projectId);
+		return materialReadService.getMaterialStockList(projectId, keyword, sort, dir);
 	}
 }

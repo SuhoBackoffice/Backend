@@ -84,6 +84,8 @@ public enum SuccessCode {
 	GET_MATERIAL_HISTORY_DETAIL_SUCCESS(OK, "자재 입고 이력 상세 불러오기 성공"),
 	GET_MATERIAL_STATE_SUCCESS(OK, "프로젝트 자재 현황 로드 성공"),
 	GET_MATERIAL_HISTORY_TYPE_LIST_SUCCESS(OK, "자재 이력 타입 목록 조회 성공"),
+	GET_MATERIAL_STOCK_SORT_TYPE_SUCCESS(OK, "자재 재고 정렬 조건 조회 성공"),
+	GET_MATERIAL_STOCK_LIST_SUCCESS(OK, "자재 재고 목록 조회 성공"),
 
 	// Report
 	POST_WORK_REPORT_SUCCESS(CREATED, "업무 보고가 완료되었습니다. 수고하셨습니다."),

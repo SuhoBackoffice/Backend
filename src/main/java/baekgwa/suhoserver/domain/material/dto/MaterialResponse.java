@@ -3,6 +3,7 @@ package baekgwa.suhoserver.domain.material.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import baekgwa.suhoserver.domain.material.type.MaterialStockSort;
 import baekgwa.suhoserver.model.material.MaterialHistoryType;
 import baekgwa.suhoserver.model.material.history.entity.MaterialHistoryEntity;
 import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
@@ -100,6 +101,56 @@ public class MaterialResponse {
 				.drawingNumber(stock.getMaterialCode())
 				.itemName(stock.getItemName())
 				.needInboundQuantity(needInboundQuantity)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class MaterialSortType {
+		private final String sort;
+		private final String description;
+
+		private MaterialSortType(String sort, String description) {
+			this.sort = sort;
+			this.description = description;
+		}
+
+		public static MaterialSortType from(MaterialStockSort sortType) {
+			return new MaterialSortType(sortType.name(), sortType.getDescription());
+		}
+	}
+
+	@Getter
+	public static class MaterialStockInfo {
+		private final Long id;
+		private final String materialCode;
+		private final String itemName;
+		private final Long totalPlanQuantity;
+		private final Long totalInboundQuantity;
+		private final Long totalUsedQuantity;
+		private final Long remainingInbound;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private MaterialStockInfo(Long id, String materialCode, String itemName, Long totalPlanQuantity,
+			Long totalInboundQuantity, Long totalUsedQuantity, Long remainingInbound) {
+			this.id = id;
+			this.materialCode = materialCode;
+			this.itemName = itemName;
+			this.totalPlanQuantity = totalPlanQuantity;
+			this.totalInboundQuantity = totalInboundQuantity;
+			this.totalUsedQuantity = totalUsedQuantity;
+			this.remainingInbound = remainingInbound;
+		}
+
+		public static MaterialStockInfo from(ProjectMaterialStockEntity stock) {
+			return MaterialStockInfo.builder()
+				.id(stock.getId())
+				.materialCode(stock.getMaterialCode())
+				.itemName(stock.getItemName())
+				.totalPlanQuantity(stock.getTotalPlanQuantity())
+				.totalInboundQuantity(stock.getTotalInboundQuantity())
+				.totalUsedQuantity(stock.getTotalUsedQuantity())
+				.remainingInbound(stock.getTotalPlanQuantity() - stock.getTotalInboundQuantity())
 				.build();
 		}
 	}
