@@ -21,6 +21,12 @@
 
 ---
 
+## ERD Diagram
+[ERD Cloud](https://www.erdcloud.com/d/BdBpNtukjEQ8bjLfC)
+
+
+---
+
 ## 아키텍처
 
 ```
