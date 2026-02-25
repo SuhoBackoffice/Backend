@@ -466,13 +466,11 @@ public class MaterialWriteService {
 		return ruleList.stream()
 			.filter(rule -> rule.getMinConditionValue().compareTo(lengthDecimal) <= 0) //이상
 			.filter(rule -> rule.getMaxConditionValue().compareTo(lengthDecimal) > 0) //미만
-			.findFirst()
 			.map(rule -> ProjectStraightBomEntity.of(
 				straight,
 				rule.getMaterialCode(),
 				rule.getItemName(),
 				rule.getQuantity()
-			)).map(List::of)
-			.orElseGet(List::of);
+			)).toList();
 	}
 }
