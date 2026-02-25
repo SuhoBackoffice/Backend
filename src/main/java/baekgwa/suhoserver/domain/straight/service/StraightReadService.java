@@ -64,4 +64,18 @@ public class StraightReadService {
 			.map(StraightResponse.StraightBom::from)
 			.toList();
 	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectStraightBomEntity> getStraightBomList(Long projectStraightId) {
+		return projectStraightBomRepository.findByProjectStraight(projectStraightId);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, List<ProjectStraightBomEntity>> getStraightBomMap(List<Long> projectStraightIds) {
+		List<ProjectStraightBomEntity> allBomList =
+			projectStraightBomRepository.findAllByProjectStraightIdIn(projectStraightIds);
+
+		return allBomList.stream()
+			.collect(Collectors.groupingBy(bom -> bom.getProjectStraight().getId()));
+	}
 }

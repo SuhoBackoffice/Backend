@@ -10,6 +10,9 @@ import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEnti
 import baekgwa.suhoserver.domain.project.type.ProjectBranchAnalyzeSort;
 import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
 import baekgwa.suhoserver.domain.project.type.ProjectSort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightAnalyzeSort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightCapacitySort;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
@@ -491,6 +494,14 @@ public class ProjectResponse {
 		public static BranchCapacitySortType from(ProjectBranchAnalyzeSort sortType) {
 			return new BranchCapacitySortType(sortType.name(), sortType.getDescription());
 		}
+
+		public static BranchCapacitySortType from(ProjectStraightCapacitySort sortType) {
+			return new BranchCapacitySortType(sortType.name(), sortType.getDescription());
+		}
+
+		public static BranchCapacitySortType from(ProjectStraightAnalyzeSort sortType) {
+			return new BranchCapacitySortType(sortType.name(), sortType.getDescription());
+		}
 	}
 
 	@Getter
@@ -592,6 +603,152 @@ public class ProjectResponse {
 				.name(pb.getBranchType().getName())
 				.totalQuantity(pb.getTotalQuantity())
 				.completedQuantity(pb.getCompletedQuantity())
+				.remainingQuantity(remainingQuantity)
+				.capacity(capacity)
+				.effectiveCapacity(effectiveCapacity)
+				.bomShortageList(bomShortageList)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class StraightBomShortageInfo {
+		private final String materialCode;
+		private final String itemName;
+		private final Long unitQuantity;
+		private final Long stockQuantity;
+		private final Long requiredQuantity;
+		private final Long shortageQuantity;
+		private final Boolean isShortage;
+		private final Long availableCapacity;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private StraightBomShortageInfo(String materialCode, String itemName, Long unitQuantity,
+			Long stockQuantity, Long requiredQuantity, Long shortageQuantity, Boolean isShortage,
+			Long availableCapacity) {
+			this.materialCode = materialCode;
+			this.itemName = itemName;
+			this.unitQuantity = unitQuantity;
+			this.stockQuantity = stockQuantity;
+			this.requiredQuantity = requiredQuantity;
+			this.shortageQuantity = shortageQuantity;
+			this.isShortage = isShortage;
+			this.availableCapacity = availableCapacity;
+		}
+
+		public static StraightBomShortageInfo of(
+			ProjectStraightBomEntity bom,
+			baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity stock,
+			long remainingQty
+		) {
+			long inboundQty = stock != null ? stock.getTotalInboundQuantity() : 0L;
+			long usedQty = stock != null ? stock.getTotalUsedQuantity() : 0L;
+			long stockQty = inboundQty - usedQty;
+			long requiredQty = bom.getUnitQuantity() * remainingQty;
+			long shortageQty = Math.max(0L, requiredQty - stockQty);
+			long availableCap = (stockQty > 0 && bom.getUnitQuantity() > 0)
+				? stockQty / bom.getUnitQuantity() : 0L;
+
+			return StraightBomShortageInfo.builder()
+				.materialCode(bom.getMaterialCode())
+				.itemName(bom.getItemName())
+				.unitQuantity(bom.getUnitQuantity())
+				.stockQuantity(stockQty)
+				.requiredQuantity(requiredQty)
+				.shortageQuantity(shortageQty)
+				.isShortage(shortageQty > 0)
+				.availableCapacity(availableCap)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectStraightCapacity {
+		private final Long projectStraightId;
+		private final String serial;
+		private final Long length;
+		private final Boolean isLoopRail;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final Long capacity;
+		private final Long remainingQuantity;
+		private final Long effectiveCapacity;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectStraightCapacity(Long projectStraightId, String serial, Long length, Boolean isLoopRail,
+			Long totalQuantity, Long completedQuantity, Long capacity, Long remainingQuantity,
+			Long effectiveCapacity) {
+			this.projectStraightId = projectStraightId;
+			this.serial = serial;
+			this.length = length;
+			this.isLoopRail = isLoopRail;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.capacity = capacity;
+			this.remainingQuantity = remainingQuantity;
+			this.effectiveCapacity = effectiveCapacity;
+		}
+
+		public static ProjectStraightCapacity of(ProjectStraightEntity ps, long capacity) {
+			String straightSerial = ProductSerialFactory.generateStraightSerial(
+				ps.getLength(), ps.getIsLoopRail(), ps.getStraightType().getType());
+			long remainingQuantity = ps.getTotalQuantity() - ps.getCompletedQuantity();
+			long effectiveCapacity = Math.min(capacity, remainingQuantity);
+
+			return ProjectStraightCapacity.builder()
+				.projectStraightId(ps.getId())
+				.serial(straightSerial)
+				.length(ps.getLength())
+				.isLoopRail(ps.getIsLoopRail())
+				.totalQuantity(ps.getTotalQuantity())
+				.completedQuantity(ps.getCompletedQuantity())
+				.capacity(capacity)
+				.remainingQuantity(remainingQuantity)
+				.effectiveCapacity(effectiveCapacity)
+				.build();
+		}
+	}
+
+	@Getter
+	public static class ProjectStraightCapacityAnalyze {
+		private final String serial;
+		private final Long length;
+		private final Boolean isLoopRail;
+		private final Long totalQuantity;
+		private final Long completedQuantity;
+		private final Long remainingQuantity;
+		private final Long capacity;
+		private final Long effectiveCapacity;
+		private final List<StraightBomShortageInfo> bomShortageList;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private ProjectStraightCapacityAnalyze(String serial, Long length, Boolean isLoopRail,
+			Long totalQuantity, Long completedQuantity, Long remainingQuantity, Long capacity,
+			Long effectiveCapacity, List<StraightBomShortageInfo> bomShortageList) {
+			this.serial = serial;
+			this.length = length;
+			this.isLoopRail = isLoopRail;
+			this.totalQuantity = totalQuantity;
+			this.completedQuantity = completedQuantity;
+			this.remainingQuantity = remainingQuantity;
+			this.capacity = capacity;
+			this.effectiveCapacity = effectiveCapacity;
+			this.bomShortageList = bomShortageList;
+		}
+
+		public static ProjectStraightCapacityAnalyze of(ProjectStraightEntity ps, long capacity,
+			List<StraightBomShortageInfo> bomShortageList) {
+			String straightSerial = ProductSerialFactory.generateStraightSerial(
+				ps.getLength(), ps.getIsLoopRail(), ps.getStraightType().getType());
+			long remainingQuantity = ps.getTotalQuantity() - ps.getCompletedQuantity();
+			long effectiveCapacity = Math.min(capacity, remainingQuantity);
+
+			return ProjectStraightCapacityAnalyze.builder()
+				.serial(straightSerial)
+				.length(ps.getLength())
+				.isLoopRail(ps.getIsLoopRail())
+				.totalQuantity(ps.getTotalQuantity())
+				.completedQuantity(ps.getCompletedQuantity())
 				.remainingQuantity(remainingQuantity)
 				.capacity(capacity)
 				.effectiveCapacity(effectiveCapacity)

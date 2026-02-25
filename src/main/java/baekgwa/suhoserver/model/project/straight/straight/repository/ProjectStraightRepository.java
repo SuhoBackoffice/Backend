@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.model.project.straight.straight.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +15,7 @@ import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraight
  * FileName    : ProjectStraightRepository
  * Author      : Baekgwa
  * Date        : 2025-08-09
- * Description : 
+ * Description :
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
@@ -42,4 +43,10 @@ public interface ProjectStraightRepository extends JpaRepository<ProjectStraight
 		@Param("project") ProjectEntity project,
 		@Param("length") String length
 	);
+
+	@Query("SELECT ps FROM ProjectStraightEntity ps JOIN FETCH ps.straightType st WHERE ps.project = :project ORDER BY ps.length ASC, st.type ASC")
+	List<ProjectStraightEntity> findByProjectWithStraightType(@Param("project") ProjectEntity project);
+
+	@Query("SELECT ps FROM ProjectStraightEntity ps JOIN FETCH ps.straightType WHERE ps.id = :id")
+	Optional<ProjectStraightEntity> findByIdWithStraightType(@Param("id") Long id);
 }

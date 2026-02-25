@@ -417,6 +417,17 @@ public class ProjectReadService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<ProjectStraightEntity> getProjectStraightListByProject(ProjectEntity project) {
+		return projectStraightRepository.findByProjectWithStraightType(project);
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectStraightEntity getProjectStraightWithTypeOrThrow(Long projectStraightId) {
+		return projectStraightRepository.findByIdWithStraightType(projectStraightId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
+	}
+
+	@Transactional(readOnly = true)
 	public List<ProjectBranchEntity> getProjectBranchListByIds(List<Long> projectBranchIds) {
 		return projectBranchRepository.findAllById(projectBranchIds);
 	}

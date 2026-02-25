@@ -14,7 +14,7 @@ import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraight
  * FileName    : ProjectStraightBomRepository
  * Author      : Baekgwa
  * Date        : 26. 2. 21.
- * Description : 
+ * Description :
  * =====================================================================================================================
  * DATE          AUTHOR               NOTE
  * ---------------------------------------------------------------------------------------------------------------------
@@ -25,4 +25,8 @@ public interface ProjectStraightBomRepository extends JpaRepository<ProjectStrai
 
 	@Query("SELECT psb FROM ProjectStraightBomEntity psb WHERE psb.projectStraight.id = :projectStraightId")
 	List<ProjectStraightBomEntity> findByProjectStraight(@Param("projectStraightId") Long projectStraightId);
+
+	@Query("SELECT psb FROM ProjectStraightBomEntity psb WHERE psb.projectStraight.id IN :projectStraightIds")
+	List<ProjectStraightBomEntity> findAllByProjectStraightIdIn(
+		@Param("projectStraightIds") List<Long> projectStraightIds);
 }

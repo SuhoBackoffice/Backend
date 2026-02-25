@@ -24,6 +24,8 @@ import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
 import baekgwa.suhoserver.domain.project.type.ProjectBranchAnalyzeSort;
 import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightAnalyzeSort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightCapacitySort;
 import baekgwa.suhoserver.domain.straight.service.StraightReadService;
 import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
@@ -527,6 +529,147 @@ public class ProjectFacade {
 			case SHORTAGE_QUANTITY -> Comparator.comparingLong(ProjectResponse.BomShortageInfo::getShortageQuantity);
 			case DRAWING_NUMBER -> Comparator.comparing(ProjectResponse.BomShortageInfo::getDrawingNumber);
 			case ITEM_NAME -> Comparator.comparing(ProjectResponse.BomShortageInfo::getItemName);
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getStraightCapacityTypes() {
+		return Arrays.stream(ProjectStraightCapacitySort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getStraightCapacityAnalyzeTypes() {
+		return Arrays.stream(ProjectStraightAnalyzeSort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.ProjectStraightCapacity> getProjectStraightCapacity(
+		Long projectId, ProjectStraightCapacitySort sort, Sort.Direction dir
+	) {
+		// 1. 프로젝트 조회
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+
+		// 2. 직선레일 목록 조회 (straightType fetch join)
+		List<ProjectStraightEntity> projectStraightList =
+			projectReadService.getProjectStraightListByProject(findProject);
+
+		if (projectStraightList.isEmpty()) {
+			return List.of();
+		}
+
+		// 3. BOM Map 조회 (projectStraightId → List<ProjectStraightBomEntity>)
+		List<Long> projectStraightIds = projectStraightList.stream()
+			.map(ProjectStraightEntity::getId)
+			.toList();
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap =
+			straightReadService.getStraightBomMap(projectStraightIds);
+
+		// 4. 자재 재고 Map 조회 (materialCode → ProjectMaterialStockEntity)
+		Set<String> allMaterialCodes = straightBomMap.values().stream()
+			.flatMap(List::stream)
+			.map(ProjectStraightBomEntity::getMaterialCode)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findProject, allMaterialCodes);
+
+		// 5. (entity, capacity) 쌍 생성 → 정렬 → DTO 변환
+		return projectStraightList.stream()
+			.map(ps -> Map.entry(ps, calculateStraightCapacity(ps, straightBomMap, stockMap)))
+			.sorted(buildStraightCapacityComparator(sort, dir))
+			.map(entry -> ProjectResponse.ProjectStraightCapacity.of(entry.getKey(), entry.getValue()))
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectStraightCapacityAnalyze getProjectStraightCapacityAnalyze(
+		Long projectStraightId, ProjectStraightAnalyzeSort sort, Sort.Direction dir, boolean onlyShortage
+	) {
+		// 1. 직선레일 조회 (straightType fetch join)
+		ProjectStraightEntity findStraight =
+			projectReadService.getProjectStraightWithTypeOrThrow(projectStraightId);
+
+		// 2. BOM 목록 조회
+		List<ProjectStraightBomEntity> bomList =
+			straightReadService.getStraightBomList(projectStraightId);
+
+		// 3. 자재 재고 Map 조회
+		Set<String> materialCodes = bomList.stream()
+			.map(ProjectStraightBomEntity::getMaterialCode)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findStraight.getProject(), materialCodes);
+
+		// 4. 부족 수량 계산 + 필터링 + 정렬
+		long remainingStraightQty = findStraight.getTotalQuantity() - findStraight.getCompletedQuantity();
+		Stream<ProjectResponse.StraightBomShortageInfo> stream = bomList.stream()
+			.map(bom -> ProjectResponse.StraightBomShortageInfo.of(
+				bom, stockMap.get(bom.getMaterialCode()), remainingStraightQty));
+
+		if (onlyShortage) {
+			stream = stream.filter(ProjectResponse.StraightBomShortageInfo::getIsShortage);
+		}
+
+		List<ProjectResponse.StraightBomShortageInfo> bomShortageList = stream
+			.sorted(buildStraightAnalyzeComparator(sort, dir))
+			.toList();
+
+		// 5. capacity 계산
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap =
+			Map.of(findStraight.getId(), bomList);
+		long capacity = calculateStraightCapacity(findStraight, straightBomMap, stockMap);
+
+		return ProjectResponse.ProjectStraightCapacityAnalyze.of(findStraight, capacity, bomShortageList);
+	}
+
+	private long calculateStraightCapacity(
+		ProjectStraightEntity projectStraight,
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap,
+		Map<String, ProjectMaterialStockEntity> stockMap
+	) {
+		List<ProjectStraightBomEntity> bomList = straightBomMap.get(projectStraight.getId());
+		if (bomList == null || bomList.isEmpty()) {
+			return 0L;
+		}
+
+		long minCapacity = Long.MAX_VALUE;
+		for (ProjectStraightBomEntity bom : bomList) {
+			ProjectMaterialStockEntity stock = stockMap.get(bom.getMaterialCode());
+			if (stock == null) {
+				return 0L;
+			}
+
+			long remaining = stock.getTotalInboundQuantity() - stock.getTotalUsedQuantity();
+			if (remaining <= 0 || bom.getUnitQuantity() <= 0) {
+				return 0L;
+			}
+
+			minCapacity = Math.min(minCapacity, remaining / bom.getUnitQuantity());
+		}
+		return minCapacity == Long.MAX_VALUE ? 0L : minCapacity;
+	}
+
+	private Comparator<Map.Entry<ProjectStraightEntity, Long>> buildStraightCapacityComparator(
+		ProjectStraightCapacitySort sort, Sort.Direction dir
+	) {
+		Comparator<Map.Entry<ProjectStraightEntity, Long>> comparator = switch (sort) {
+			case CAPACITY -> Comparator.comparingLong(Map.Entry::getValue);
+			case LENGTH -> Comparator.comparingLong(entry -> entry.getKey().getLength());
+			case TOTAL_QUANTITY -> Comparator.comparingLong(entry -> entry.getKey().getTotalQuantity());
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
+	}
+
+	private Comparator<ProjectResponse.StraightBomShortageInfo> buildStraightAnalyzeComparator(
+		ProjectStraightAnalyzeSort sort, Sort.Direction dir
+	) {
+		Comparator<ProjectResponse.StraightBomShortageInfo> comparator = switch (sort) {
+			case SHORTAGE_QUANTITY ->
+				Comparator.comparingLong(ProjectResponse.StraightBomShortageInfo::getShortageQuantity);
+			case MATERIAL_CODE -> Comparator.comparing(ProjectResponse.StraightBomShortageInfo::getMaterialCode);
+			case ITEM_NAME -> Comparator.comparing(ProjectResponse.StraightBomShortageInfo::getItemName);
 		};
 		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
 	}

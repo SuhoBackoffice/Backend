@@ -68,6 +68,10 @@ public enum SuccessCode {
 	GET_PROJECT_BRANCH_CAPACITY(OK, "분기레일 생산 가능 수량 조회 성공"),
 	GET_BRANCH_ANALYZE_SORT_TYPE_SUCCESS(OK, "분기 레일 분석 정렬 조건 조회 성공"),
 	GET_PROJECT_BRANCH_CAPACITY_ANALYZE(OK, "분기레일 자재 부족 분석 조회 성공"),
+	GET_STRAIGHT_CAPACITY_SORT_TYPE_SUCCESS(OK, "직선 레일 capa 정렬 조건 조회 성공"),
+	GET_PROJECT_STRAIGHT_CAPACITY(OK, "직선레일 생산 가능 수량 조회 성공"),
+	GET_STRAIGHT_ANALYZE_SORT_TYPE_SUCCESS(OK, "직선 레일 분석 정렬 조건 조회 성공"),
+	GET_PROJECT_STRAIGHT_CAPACITY_ANALYZE(OK, "직선레일 자재 부족 분석 조회 성공"),
 
 	// File Uploader
 	UPLOAD_FILE_SUCCESS(CREATED, "파일 업로드 완료"),

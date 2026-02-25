@@ -2,6 +2,7 @@ package baekgwa.suhoserver.domain.project.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.facade.ProjectFacade;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightAnalyzeSort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightCapacitySort;
 import baekgwa.suhoserver.global.response.BaseResponse;
 import baekgwa.suhoserver.global.response.SuccessCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,5 +96,45 @@ public class ProjectStraightController {
 	) {
 		projectFacade.patchProjectStraight(projectStraightId, patchProjectStraightDto, userId);
 		return BaseResponse.success(SuccessCode.PATCH_PROJECT_STRAIGHT_SUCCESS);
+	}
+
+	@GetMapping("/straight/capacity/types")
+	@Operation(summary = "직선레일 Capacity 정렬 조건 목록 조회")
+	public BaseResponse<List<ProjectResponse.BranchCapacitySortType>> getStraightCapacityTypes() {
+		List<ProjectResponse.BranchCapacitySortType> response = projectFacade.getStraightCapacityTypes();
+		return BaseResponse.success(SuccessCode.GET_STRAIGHT_CAPACITY_SORT_TYPE_SUCCESS, response);
+	}
+
+	@GetMapping("/{projectId}/straight/capacity")
+	@Operation(summary = "직선레일별 생산 가능 수량(Capacity) 조회")
+	public BaseResponse<List<ProjectResponse.ProjectStraightCapacity>> getProjectStraightCapacity(
+		@PathVariable("projectId") Long projectId,
+		@RequestParam(defaultValue = "CAPACITY") ProjectStraightCapacitySort sort,
+		@RequestParam(defaultValue = "ASC") Sort.Direction dir
+	) {
+		List<ProjectResponse.ProjectStraightCapacity> response =
+			projectFacade.getProjectStraightCapacity(projectId, sort, dir);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_STRAIGHT_CAPACITY, response);
+	}
+
+	@GetMapping("/straight/capacity/analyze/types")
+	@Operation(summary = "직선레일 Capacity 분석 정렬 조건 목록 조회")
+	public BaseResponse<List<ProjectResponse.BranchCapacitySortType>> getStraightCapacityAnalyzeTypes() {
+		List<ProjectResponse.BranchCapacitySortType> response = projectFacade.getStraightCapacityAnalyzeTypes();
+		return BaseResponse.success(SuccessCode.GET_STRAIGHT_ANALYZE_SORT_TYPE_SUCCESS, response);
+	}
+
+	@GetMapping("/{projectId}/straight/{projectStraightId}/capacity")
+	@Operation(summary = "특정 직선레일 자재 부족 분석(Capacity Analyze) 조회")
+	public BaseResponse<ProjectResponse.ProjectStraightCapacityAnalyze> getProjectStraightCapacityAnalyze(
+		@PathVariable("projectId") Long projectId, //Not Use, REST-API Rules
+		@PathVariable("projectStraightId") Long projectStraightId,
+		@RequestParam(defaultValue = "SHORTAGE_QUANTITY") ProjectStraightAnalyzeSort sort,
+		@RequestParam(defaultValue = "DESC") Sort.Direction dir,
+		@RequestParam(defaultValue = "false") boolean onlyShortage
+	) {
+		ProjectResponse.ProjectStraightCapacityAnalyze response =
+			projectFacade.getProjectStraightCapacityAnalyze(projectStraightId, sort, dir, onlyShortage);
+		return BaseResponse.success(SuccessCode.GET_PROJECT_STRAIGHT_CAPACITY_ANALYZE, response);
 	}
 }
