@@ -54,7 +54,8 @@ public class ProjectMaterialStockRepositoryImpl implements ProjectMaterialStockR
 	private BooleanBuilder createWhereCondition(Long projectId, String keyword) {
 		BooleanBuilder builder = new BooleanBuilder();
 
-		builder.and(stock.project.id.eq(projectId));
+		builder.and(stock.project.id.eq(projectId))
+			.and(stock.totalPlanQuantity.gt(0));
 
 		if (StringUtils.hasText(keyword)) {
 			builder.and(

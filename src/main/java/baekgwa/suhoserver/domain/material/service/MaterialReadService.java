@@ -87,6 +87,7 @@ public class MaterialReadService {
 			));
 	}
 
+	@Transactional(readOnly = true)
 	public List<MaterialResponse.MaterialStockInfo> getMaterialStockList(
 		Long projectId,
 		String keyword,
