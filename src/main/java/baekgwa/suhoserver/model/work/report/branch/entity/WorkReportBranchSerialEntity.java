@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.model.work.report.branch.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,30 +42,25 @@ public class WorkReportBranchSerialEntity extends TemporalEntity {
 	@JoinColumn(name = "work_report_branch_id", nullable = false)
 	private WorkReportBranchEntity workReportBranch;
 
-	@Column(name = "project_branch_serial_id", nullable = false)
-	private Long projectBranchSerialId;
-
-	@Column(name = "project_branch_serial", nullable = false)
-	private String serial;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "project_branch_serial_id", nullable = false)
+	private ProjectBranchSerialEntity projectBranchSerial;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private WorkReportBranchSerialEntity(WorkReportBranchEntity workReportBranch, Long projectBranchSerialId,
-		String serial) {
+	private WorkReportBranchSerialEntity(WorkReportBranchEntity workReportBranch,
+		ProjectBranchSerialEntity projectBranchSerial) {
 		this.workReportBranch = workReportBranch;
-		this.projectBranchSerialId = projectBranchSerialId;
-		this.serial = serial;
+		this.projectBranchSerial = projectBranchSerial;
 	}
 
 	public static WorkReportBranchSerialEntity of(
 		WorkReportBranchEntity workReportBranch,
-		Long projectBranchSerialId,
-		String serial
+		ProjectBranchSerialEntity projectBranchSerial
 	) {
 		return WorkReportBranchSerialEntity
 			.builder()
 			.workReportBranch(workReportBranch)
-			.projectBranchSerialId(projectBranchSerialId)
-			.serial(serial)
+			.projectBranchSerial(projectBranchSerial)
 			.build();
 	}
 }

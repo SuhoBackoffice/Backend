@@ -1,6 +1,5 @@
 package baekgwa.suhoserver.domain.project.service;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStra
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.repository.WorkReportBranchSerialRepository;
 import baekgwa.suhoserver.model.work.report.straight.repository.WorkReportStraightSerialRepository;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -72,21 +72,25 @@ public class ProjectReadService {
 	/**
 	 * 프로젝트에 저장된 분기레일 정보 조회
 	 * @param project 프로젝트 Entity
+	 * @param keyword nullable 검색 keyword
 	 * @return 분기레일 List
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectBranchEntity> getProjectBranchInfoListOrThrow(ProjectEntity project) {
-		return projectBranchRepository.findByProject(project);
+	public List<ProjectBranchEntity> getProjectBranchInfoListOrThrow(ProjectEntity project, @Nullable String keyword) {
+		return projectBranchRepository.findByProjectWithKeyword(project, keyword);
 	}
 
 	/**
 	 * 프로젝트에 저장된 직선레일 정보 조회
+	 * 길이가 있다면 길이 기반으로 검색
 	 * @param project 프로젝트 Entity
 	 * @return 직선레일 List
 	 */
 	@Transactional(readOnly = true)
-	public List<ProjectStraightEntity> getProjectStraightListOrThrow(ProjectEntity project) {
-		return projectStraightRepository.findByProject(project);
+	public List<ProjectStraightEntity> getProjectStraightListOrThrow(ProjectEntity project, String length) {
+		return length == null ?
+			projectStraightRepository.findByProjectOrderByLength(project) :
+			projectStraightRepository.findByProjectAndLengthLikeOrderByLength(project, length);
 	}
 
 	/**
@@ -96,42 +100,19 @@ public class ProjectReadService {
 	 */
 	@Transactional(readOnly = true)
 	public PageResponse<ProjectResponse.ProjectInfo> getProjectInfoListOrThrow(ProjectRequest.GetProjectInfo dto) {
-		// 1. 페이지네이션 파라미터 유효성 검증
 		if (dto.getPage() < 0 || dto.getSize() < 1) {
 			throw new GlobalException(ErrorCode.INVALID_PAGINATION_PARAMETER);
 		}
 
-		// 2. StartDate, EndDate 검증
 		if (dto.getStartDate() != null &&
 			dto.getEndDate() != null &&
 			!dto.getEndDate().isAfter(dto.getStartDate())) {
 			throw new GlobalException(ErrorCode.PROJECT_END_AFTER_START_ERROR);
 		}
 
-		// 3. list 조회
 		Page<ProjectResponse.ProjectInfo> findData = projectRepository.searchProjectList(dto);
 
 		return PageResponse.of(findData);
-	}
-
-	/**
-	 * 프로젝트에 할당된 분기레일의 종류 ID List 조회
-	 * @param projectId 프로젝트 PK
-	 * @return branchTypeIdList
-	 */
-	@Transactional(readOnly = true)
-	public List<Long> getBranchTypeIdList(Long projectId) {
-		return projectBranchRepository.findIdListByProjectId(projectId);
-	}
-
-	/**
-	 * 프로젝트에 할당된 분기레일 종류 List 조회
-	 * @param projectId 프로젝트 PK
-	 * @return List<ProjectBranchEntity>
-	 */
-	@Transactional(readOnly = true)
-	public List<ProjectBranchEntity> getBranchTypeList(Long projectId) {
-		return projectBranchRepository.findByProjectId(projectId);
 	}
 
 	@Transactional(readOnly = true)
@@ -273,12 +254,12 @@ public class ProjectReadService {
 	}
 
 	/**
-	 * 직선레일 시리얼 ID 를 기반으로 serial 이름을 찾아오는 메서드
+	 * 직선레일 시리얼 ID 를 기반으로 serial Entity 찾아오는 메서드
 	 * @param request
-	 * @return Map<프로젝트에 할당된 직선레일 PK, Map<직선레일 시리얼 PK, 직선레일 시리얼 이름>>
+	 * @return Map<프로젝트에 할당된 직선레일 PK, List<직선레일 시리얼 Entity>>
 	 */
 	@Transactional(readOnly = true)
-	public Map<Long, Map<Long, String>> getStraightSerialSnapshot(
+	public Map<Long, List<ProjectStraightSerialEntity>> getStraightSerialEntityMap(
 		WorkReportRequest.PostNewWorkReport request
 	) {
 		if (request.getStraightReportList().isEmpty()) {
@@ -345,36 +326,19 @@ public class ProjectReadService {
 			throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
 		}
 
-		Map<Long, String> serialMap =
-			serialEntities.stream()
-				.collect(Collectors.toMap(
-					ProjectStraightSerialEntity::getId,
-					ProjectStraightSerialEntity::getSerial
-				));
-
-		Map<Long, Map<Long, String>> result = new HashMap<>();
-
-		for (WorkReportRequest.PostNewWorkStraightReport straight : request.getStraightReportList()) {
-
-			Map<Long, String> map = new HashMap<>();
-
-			for (Long serialId : straight.getProjectStraightSerialIdList()) {
-				map.put(serialId, serialMap.get(serialId));
-			}
-
-			result.put(straight.getProjectStraightId(), map);
-		}
-
-		return result;
+		return serialEntities.stream()
+			.collect(Collectors.groupingBy(
+				s -> s.getProjectStraight().getId()
+			));
 	}
 
 	/**
-	 * 분기레일 시리얼 ID 를 기반으로 serial 이름 찾아오는 메서드
+	 * 분기레일 시리얼 ID 를 기반으로 serial Entity 찾아오는 메서드
 	 * @param request
-	 * @return Map<프로젝트에 할당된 분기레일 PK, Map<분기레일 시리얼 PK, 분기레일 시리얼 이름>>
+	 * @return Map<프로젝트에 할당된 분기레일 PK, List<분기레일 시리얼 Entity>>
 	 */
 	@Transactional(readOnly = true)
-	public Map<Long, Map<Long, String>> getBranchSerialSnapshot(
+	public Map<Long, List<ProjectBranchSerialEntity>> getBranchSerialEntityMap(
 		WorkReportRequest.PostNewWorkReport request
 	) {
 		if (request.getBranchReportList().isEmpty()) {
@@ -441,26 +405,46 @@ public class ProjectReadService {
 			throw new GlobalException(ErrorCode.ALREADY_USED_STRAIGHT_SERIAL);
 		}
 
-		Map<Long, String> serialMap =
-			serialEntities.stream()
-				.collect(Collectors.toMap(
-					ProjectBranchSerialEntity::getId,
-					ProjectBranchSerialEntity::getSerial
-				));
+		return serialEntities.stream()
+			.collect(Collectors.groupingBy(
+				s -> s.getProjectBranch().getId()
+			));
+	}
 
-		Map<Long, Map<Long, String>> result = new HashMap<>();
+	@Transactional(readOnly = true)
+	public List<ProjectBranchEntity> getProjectBranchListByProject(ProjectEntity project) {
+		return projectBranchRepository.findByProjectOrderByBranchCode(project);
+	}
 
-		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
+	@Transactional(readOnly = true)
+	public List<ProjectStraightEntity> getProjectStraightListByProject(ProjectEntity project) {
+		return projectStraightRepository.findByProjectWithStraightType(project);
+	}
 
-			Map<Long, String> map = new HashMap<>();
+	@Transactional(readOnly = true)
+	public ProjectStraightEntity getProjectStraightWithTypeOrThrow(Long projectStraightId) {
+		return projectStraightRepository.findByIdWithStraightType(projectStraightId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_STRAIGHT));
+	}
 
-			for (Long serialId : branch.getProjectBranchSerialIdList()) {
-				map.put(serialId, serialMap.get(serialId));
-			}
+	@Transactional(readOnly = true)
+	public List<ProjectBranchEntity> getProjectBranchListByIds(List<Long> projectBranchIds) {
+		return projectBranchRepository.findAllById(projectBranchIds);
+	}
 
-			result.put(branch.getProjectBranchId(), map);
-		}
+	@Transactional(readOnly = true)
+	public List<ProjectStraightSerialEntity> getStraightSerialList(ProjectStraightEntity findStraight) {
+		return projectStraightSerialRepository.findAllByProjectStraightOrderBySequence(findStraight);
+	}
 
-		return result;
+	@Transactional(readOnly = true)
+	public ProjectBranchEntity getProjectBranchAndTypeOrThrow(Long projectBranchId) {
+		return projectBranchRepository.findByIdWithType(projectBranchId)
+			.orElseThrow(() -> new GlobalException(ErrorCode.NOT_EXIST_PROJECT_BRANCH));
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectBranchSerialEntity> getBranchSerialList(ProjectBranchEntity findBranch) {
+		return projectBranchSerialRepository.findAllByProjectBranchSort(findBranch);
 	}
 }

@@ -69,6 +69,13 @@ public class StraightSerialWriteService {
 		projectStraightSerialRepository.saveAll(projectStraightSerialList);
 	}
 
+	public void deleteProjectStraightSerial(ProjectStraightEntity findProjectStraight) {
+		List<ProjectStraightSerialEntity> findStraightSerialList
+			= projectStraightSerialRepository.findAllByProjectStraight(findProjectStraight);
+
+		findStraightSerialList.forEach(pss -> pss.deactivate(ProductInactiveReason.DESIGN_CHANGE));
+	}
+
 	private void increaseSerials(ProjectStraightEntity projectStraight, List<ProjectStraightSerialEntity> serials,
 		Long newQuantity) {
 		serials.stream()

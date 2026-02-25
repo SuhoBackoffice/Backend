@@ -2,12 +2,12 @@ package baekgwa.suhoserver.domain.project.service;
 
 import static java.lang.Boolean.*;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -17,18 +17,18 @@ import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
-import baekgwa.suhoserver.model.project.ProductProductionState;
-import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomRuleEntity;
+import baekgwa.suhoserver.model.project.straight.bom.repository.ProjectStraightBomRuleRepository;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
-import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
-import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
+import baekgwa.suhoserver.model.straight.bom.entity.StraightBomStandardEntity;
+import baekgwa.suhoserver.model.straight.bom.repository.StraightBomStandardRepository;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
@@ -62,11 +62,15 @@ public class ProjectWriteService {
 	private final ProjectRepository projectRepository;
 	private final ProjectBranchRepository projectBranchRepository;
 	private final ProjectStraightRepository projectStraightRepository;
-	private final ProjectStraightSerialRepository projectStraightSerialRepository;
+
 	private final WorkReportStraightRepository workReportStraightRepository;
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
+
 	private final WorkReportBranchRepository workReportBranchRepository;
 	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
+
+	private final StraightBomStandardRepository straightBomStandardRepository;
+	private final ProjectStraightBomRuleRepository projectStraightBomRuleRepository;
 
 	/**
 	 * 신규 프로젝트 생성 메서드
@@ -86,7 +90,6 @@ public class ProjectWriteService {
 			throw new GlobalException(ErrorCode.PROJECT_END_AFTER_START_ERROR);
 		}
 
-		// 2. 프로젝트 Entity 생성 및 저장
 		ProjectEntity newProject = ProjectEntity.createNewProject(findVersion, postNewProjectDto.getName(),
 			postNewProjectDto.getRegion(), postNewProjectDto.getStartDate(), postNewProjectDto.getEndDate());
 		return projectRepository.save(newProject);
@@ -104,12 +107,10 @@ public class ProjectWriteService {
 		ProjectEntity findProject,
 		Map<Long, BranchTypeEntity> findBranchTypeMap
 	) {
-		// 1. 현재 프로젝트에 등록된 분기레일 코드 조회 (중복 확인용)
 		List<String> existBranchCode = projectBranchRepository.findAllByBranchTypeIdIn(
 				findBranchTypeMap.keySet().stream().toList())
 			.stream().map(data -> data.getBranchType().getCode()).toList();
 
-		// 2. 프로젝트 분기레일 Entity List 생성
 		List<ProjectBranchEntity> newProjectBranchList = postProjectBranchInfoList.stream()
 			.map(dto -> {
 				BranchTypeEntity branchType = findBranchTypeMap.get(dto.getBranchTypeId());
@@ -125,7 +126,6 @@ public class ProjectWriteService {
 				return ProjectBranchEntity.createNewProjectBranch(findProject, branchType, dto.getQuantity());
 			}).toList();
 
-		// 3. 프로젝트 분기레일 등록
 		return projectBranchRepository.saveAll(newProjectBranchList);
 	}
 
@@ -141,7 +141,7 @@ public class ProjectWriteService {
 		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList,
 		ProjectEntity findProject,
 		Map<Long, StraightTypeEntity> findStraightTypeMap,
-		Map<ProjectRequest.PostProjectStraightInfo, StraightInfoEntity> straightInfoMap
+		Map<ProjectRequest.PostProjectStraightInfo, Map<String, Object>> straightInfoMap
 	) {
 		// 1. 입력 데이터 중복 검증
 		// db에 이미 있거나, 중복된 요청이 오는 경우 [3600A, 3600A 2번 요청] 필터링
@@ -162,7 +162,9 @@ public class ProjectWriteService {
 						}
 					}
 
-					StraightInfoEntity findStraightInfo = straightInfoMap.get(dto);
+					Map<String, Object> info = straightInfoMap.get(dto);
+					BigDecimal holePosition = (BigDecimal) info.get("holePosition");
+					BigDecimal[] wires = (BigDecimal[]) info.get("wires");
 
 					return ProjectStraightEntity.createNewStraight(
 						findProject,
@@ -170,7 +172,8 @@ public class ProjectWriteService {
 						dto.getTotalQuantity(),
 						dto.getIsLoopRail(),
 						dto.getLength(),
-						findStraightInfo);
+						holePosition,
+						wires);
 				})
 			.toList();
 
@@ -184,7 +187,7 @@ public class ProjectWriteService {
 	 */
 	@Transactional
 	public void deleteProjectStraightOrThrow(ProjectStraightEntity projectStraight) {
-		projectStraightRepository.delete(projectStraight);
+		projectStraight.softDelete();
 	}
 
 	/**
@@ -206,7 +209,7 @@ public class ProjectWriteService {
 	 */
 	@Transactional
 	public void deleteProjectBranch(ProjectBranchEntity projectBranch) {
-		projectBranchRepository.delete(projectBranch);
+		projectBranch.softDelete();
 	}
 
 	/**
@@ -264,26 +267,8 @@ public class ProjectWriteService {
 			return List.of();
 		}
 
-		Set<Long> projectStraightIdSet =
-			workReportStraightList.stream()
-				.map(WorkReportStraightEntity::getProjectStraightId)
-				.collect(Collectors.toSet());
-
-		Map<Long, ProjectStraightEntity> projectStraightMap =
-			projectStraightRepository.findAllById(projectStraightIdSet)
-				.stream().collect(Collectors.toMap(
-					ProjectStraightEntity::getId,
-					Function.identity()
-				));
-
 		workReportStraightList.forEach(wrs -> {
-			ProjectStraightEntity ps =
-				projectStraightMap.get(wrs.getProjectStraightId());
-
-			if (ps == null) {
-				throw new GlobalException(ErrorCode.REPORT_PROJECT_STRAIGHT_NOT_FOUND);
-			}
-
+			ProjectStraightEntity ps = wrs.getProjectStraight();
 			ps.updateCompleteQuantity(wrs.getProductionQuantity());
 		});
 
@@ -301,26 +286,8 @@ public class ProjectWriteService {
 			return List.of();
 		}
 
-		Set<Long> projectBranchIdSet =
-			workReportBranchList.stream()
-				.map(WorkReportBranchEntity::getProjectBranchId)
-				.collect(Collectors.toSet());
-
-		Map<Long, ProjectBranchEntity> projectBranchMap =
-			projectBranchRepository.findAllById(projectBranchIdSet)
-				.stream().collect(Collectors.toMap(
-					ProjectBranchEntity::getId,
-					Function.identity()
-				));
-
 		workReportBranchList.forEach(wrb -> {
-			ProjectBranchEntity pb =
-				projectBranchMap.get(wrb.getProjectBranchId());
-
-			if (pb == null) {
-				throw new GlobalException(ErrorCode.REPORT_PROJECT_BRANCH_NOT_FOUND);
-			}
-
+			ProjectBranchEntity pb = wrb.getProjectBranch();
 			pb.updateCompleteQuantity(wrb.getProductionQuantity());
 		});
 
@@ -339,17 +306,10 @@ public class ProjectWriteService {
 		List<WorkReportStraightSerialEntity> targetStraightSerialList =
 			workReportStraightSerialRepository.findAllByWorkReportStraightIn(reportedStraightIdList);
 
-		List<Long> targetProjectStraightserialIdList = targetStraightSerialList.stream()
-			.map(WorkReportStraightSerialEntity::getProjectStraightSerialId)
-			.toList();
-
-		List<ProjectStraightSerialEntity> serialList = projectStraightSerialRepository.findReportTargetSerialList(
-			targetProjectStraightserialIdList,
-			ProductSerialState.ACTIVE,
-			ProductProductionState.NOT_PRODUCED
-		);
-
-		serialList.forEach(ProjectStraightSerialEntity::markProduced);
+		targetStraightSerialList.forEach(wrs -> {
+			ProjectStraightSerialEntity straightSerial = wrs.getProjectStraightSerial();
+			straightSerial.markProduced();
+		});
 	}
 
 	/**
@@ -365,16 +325,28 @@ public class ProjectWriteService {
 		List<WorkReportBranchSerialEntity> targetBranchSerialList =
 			workReportBranchSerialRepository.findAllByWorkReportBranchIn(reportedBranchIdList);
 
-		List<Long> targetProjectBranchSerialIdList = targetBranchSerialList.stream()
-			.map(WorkReportBranchSerialEntity::getProjectBranchSerialId)
+		targetBranchSerialList.forEach(wrb -> {
+			ProjectBranchSerialEntity serial = wrb.getProjectBranchSerial();
+			serial.markProduced();
+		});
+	}
+
+	/**
+	 * 프로젝트에 직선레일의 기본 조립 기준을 할당합니다.
+	 * 해당 기준에는, BOM 과 관련있는 자재에 대한 정보
+	 * 길이별 소요 자재 등이 포함됩니다.
+	 * @param findVersion
+	 * @param savedProject
+	 */
+	@Transactional
+	public void setProjectStraightRule(VersionInfoEntity findVersion, ProjectEntity savedProject) {
+		List<StraightBomStandardEntity> baseBomRuleList
+			= straightBomStandardRepository.findAllByVersionInfo(findVersion);
+
+		List<ProjectStraightBomRuleEntity> projectBomRuleList = baseBomRuleList.stream()
+			.map(sbs -> ProjectStraightBomRuleEntity.of(savedProject, sbs))
 			.toList();
 
-		List<ProjectBranchSerialEntity> serialList = projectBranchRepository.findReportTargetSerialList(
-			targetProjectBranchSerialIdList,
-			ProductSerialState.ACTIVE,
-			ProductProductionState.NOT_PRODUCED
-		);
-
-		serialList.forEach(ProjectBranchSerialEntity::markProduced);
+		projectStraightBomRuleRepository.saveAll(projectBomRuleList);
 	}
 }

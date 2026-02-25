@@ -1,10 +1,14 @@
 package baekgwa.suhoserver.model.project.straight.straight.entity;
 
-import baekgwa.suhoserver.global.entity.TemporalEntity;
+import java.math.BigDecimal;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import baekgwa.suhoserver.global.entity.SoftDeleteEntity;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -37,7 +41,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Table(name = "project_straight")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProjectStraightEntity extends TemporalEntity {
+@SQLDelete(sql = "UPDATE project_straight SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = 0")
+public class ProjectStraightEntity extends SoftDeleteEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,10 +58,6 @@ public class ProjectStraightEntity extends TemporalEntity {
 	@JoinColumn(name = "straight_type_id", nullable = false)
 	private StraightTypeEntity straightType;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "straight_info_id", nullable = false)
-	private StraightInfoEntity straightInfo;
-
 	@Column(name = "total_quantity", nullable = false)
 	private Long totalQuantity;
 
@@ -68,9 +70,32 @@ public class ProjectStraightEntity extends TemporalEntity {
 	@Column(name = "length", nullable = false)
 	private Long length;
 
+	@Column(name = "hole_position", precision = 4, scale = 1)
+	private BigDecimal holePosition;
+
+	@Column(name = "litzwire1", precision = 4, scale = 1)
+	private BigDecimal litzwire1;
+
+	@Column(name = "litzwire2", precision = 4, scale = 1)
+	private BigDecimal litzwire2;
+
+	@Column(name = "litzwire3", precision = 4, scale = 1)
+	private BigDecimal litzwire3;
+
+	@Column(name = "litzwire4", precision = 4, scale = 1)
+	private BigDecimal litzwire4;
+
+	@Column(name = "litzwire5", precision = 4, scale = 1)
+	private BigDecimal litzwire5;
+
+	@Column(name = "litzwire6", precision = 4, scale = 1)
+	private BigDecimal litzwire6;
+
 	@Builder
 	private ProjectStraightEntity(ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity,
-		Long completedQuantity, Boolean isLoopRail, Long length, StraightInfoEntity straightInfo
+		Long completedQuantity, Boolean isLoopRail, Long length,
+		BigDecimal holePosition, BigDecimal litzwire1, BigDecimal litzwire2,
+		BigDecimal litzwire3, BigDecimal litzwire4, BigDecimal litzwire5, BigDecimal litzwire6
 	) {
 		this.project = project;
 		this.straightType = straightType;
@@ -78,13 +103,27 @@ public class ProjectStraightEntity extends TemporalEntity {
 		this.completedQuantity = completedQuantity;
 		this.isLoopRail = isLoopRail;
 		this.length = length;
-		this.straightInfo = straightInfo;
+		this.holePosition = holePosition;
+		this.litzwire1 = litzwire1;
+		this.litzwire2 = litzwire2;
+		this.litzwire3 = litzwire3;
+		this.litzwire4 = litzwire4;
+		this.litzwire5 = litzwire5;
+		this.litzwire6 = litzwire6;
 	}
 
 	public static ProjectStraightEntity createNewStraight(
 		ProjectEntity project, StraightTypeEntity straightType, Long totalQuantity, Boolean isLoopRail, Long length,
-		StraightInfoEntity straightInfo
+		BigDecimal holePosition, BigDecimal[] wires
 	) {
+		if (holePosition == null) {
+			throw new IllegalArgumentException("holePosition must not be null");
+		}
+		if (wires == null) wires = new BigDecimal[0];
+		if (wires.length > 6) {
+			throw new IllegalArgumentException("LitzWire supporter size must be <= 6");
+		}
+
 		return ProjectStraightEntity
 			.builder()
 			.project(project)
@@ -93,7 +132,13 @@ public class ProjectStraightEntity extends TemporalEntity {
 			.completedQuantity(0L)
 			.isLoopRail(isLoopRail)
 			.length(length)
-			.straightInfo(straightInfo)
+			.holePosition(holePosition)
+			.litzwire1(getOrNull(wires, 0))
+			.litzwire2(getOrNull(wires, 1))
+			.litzwire3(getOrNull(wires, 2))
+			.litzwire4(getOrNull(wires, 3))
+			.litzwire5(getOrNull(wires, 4))
+			.litzwire6(getOrNull(wires, 5))
 			.build();
 	}
 
@@ -118,5 +163,9 @@ public class ProjectStraightEntity extends TemporalEntity {
 			throw new GlobalException(ErrorCode.REPORT_UPDATE_FAIL_PRODUCTION_QUANTITY_EXCEEDED);
 		}
 		this.completedQuantity = targetQuantity;
+	}
+
+	private static BigDecimal getOrNull(BigDecimal[] arr, int idx) {
+		return (arr != null && idx < arr.length) ? arr[idx] : null;
 	}
 }

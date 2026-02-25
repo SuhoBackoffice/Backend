@@ -25,12 +25,12 @@ public interface WorkReportStraightRepository extends JpaRepository<WorkReportSt
 
 	List<WorkReportStraightEntity> findByWorkReportIn(List<WorkReportEntity> workReportList);
 
-	@Query("SELECT wrss.projectStraightSerialId "
+	@Query("SELECT wrss.projectStraightSerial.id "
 		+ "FROM WorkReportStraightSerialEntity wrss "
 		+ "JOIN wrss.workReportStraight wrs "
 		+ "JOIN wrs.workReport wr "
 		+ "WHERE wr.status = :status "
-		+ "AND wrs.projectStraightId = :projectStraightId")
+		+ "AND wrs.projectStraight.id = :projectStraightId")
 	List<Long> findPendingSerialIdList(
 		@Param("status") WorkReportStatus status,
 		@Param("projectStraightId") Long projectStraightId

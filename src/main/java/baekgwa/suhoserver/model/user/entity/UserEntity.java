@@ -1,6 +1,9 @@
 package baekgwa.suhoserver.model.user.entity;
 
-import baekgwa.suhoserver.global.entity.TemporalEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import baekgwa.suhoserver.global.entity.SoftDeleteEntity;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,9 +31,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserEntity extends TemporalEntity {
+@SQLDelete(sql = "UPDATE users SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = 0")
+public class UserEntity extends SoftDeleteEntity {
 
-	@Id @Tsid
+	@Id
+	@Tsid
 	@Column(name = "id")
 	private Long id;
 

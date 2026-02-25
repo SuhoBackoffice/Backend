@@ -15,7 +15,6 @@ public record ProjectBranchUpdatedEvent(
 	Long projectId,
 	Long userId,
 	Long projectBranchId,
-	Long branchTypeId,
 	Long beforeQuantity,
 	Long afterQuantity,
 	String code

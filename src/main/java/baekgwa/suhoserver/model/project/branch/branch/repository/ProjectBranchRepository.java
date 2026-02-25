@@ -1,15 +1,13 @@
 package baekgwa.suhoserver.model.project.branch.branch.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import baekgwa.suhoserver.model.project.ProductProductionState;
-import baekgwa.suhoserver.model.project.ProductSerialState;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
-import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 
 /**
@@ -23,8 +21,7 @@ import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
  * ---------------------------------------------------------------------------------------------------------------------
  * 2025-08-07     Baekgwa               Initial creation
  */
-public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEntity, Long> {
-	List<ProjectBranchEntity> findByProject(ProjectEntity project);
+public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEntity, Long>, ProjectBranchRepositoryCustom {
 
 	List<ProjectBranchEntity> findAllByBranchTypeIdIn(List<Long> findBranchTypeIdList);
 
@@ -34,11 +31,6 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 	@Query("SELECT pb.branchType.id FROM ProjectBranchEntity pb WHERE pb.project.id = :projectId ORDER BY pb.id ASC")
 	List<Long> findIdListByProjectId(@Param("projectId") Long projectId);
 
-	@Query("SELECT pb FROM ProjectBranchEntity pb WHERE pb.project.id = :projectId")
-	List<ProjectBranchEntity> findByProjectId(@Param("projectId") Long projectId);
-
-	boolean existsByIdAndProject(Long projectBranchId, ProjectEntity project);
-
 	@Query("SELECT pb "
 		+ "FROM ProjectBranchEntity pb "
 		+ "JOIN FETCH pb.branchType "
@@ -46,15 +38,6 @@ public interface ProjectBranchRepository extends JpaRepository<ProjectBranchEnti
 		+ "AND pb.completedQuantity < pb.totalQuantity")
 	List<ProjectBranchEntity> findUnCompletedByProject(@Param("project") ProjectEntity findProject);
 
-	@Query("SELECT pbs "
-		+ "FROM ProjectBranchSerialEntity pbs "
-		+ "WHERE pbs.id "
-		+ "IN :projectBranchSerialIds "
-		+ "AND pbs.state = :state "
-		+ "AND pbs.productionState = :productionState")
-	List<ProjectBranchSerialEntity> findReportTargetSerialList(
-		@Param("projectBranchSerialIds") List<Long> projectBranchSerialIds,
-		@Param("state") ProductSerialState state,
-		@Param("productionState") ProductProductionState productionState
-	);
+	@Query("SELECT pb FROM ProjectBranchEntity pb JOIN FETCH pb.branchType st WHERE pb.id = :projectBranchId")
+	Optional<ProjectBranchEntity> findByIdWithType(@Param("projectBranchId") Long projectBranchId);
 }

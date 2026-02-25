@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.straight.dto.StraightResponse;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
+import baekgwa.suhoserver.model.project.straight.bom.repository.ProjectStraightBomRepository;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.straight.type.repository.StraightTypeRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class StraightReadService {
 
 	private final StraightTypeRepository straightTypeRepository;
+	private final ProjectStraightBomRepository projectStraightBomRepository;
 
 	@Transactional(readOnly = true)
 	public List<StraightResponse.StraightTypeDto> getStraightTypeList(boolean isLoopRail) {
@@ -50,5 +53,29 @@ public class StraightReadService {
 		List<StraightTypeEntity> findStraightTypeList = straightTypeRepository.findAllById(straightTypeIdList);
 
 		return findStraightTypeList.stream().collect(Collectors.toMap(StraightTypeEntity::getId, Function.identity()));
+	}
+
+	@Transactional(readOnly = true)
+	public List<StraightResponse.StraightBom> getStraightBom(Long projectStraightId) {
+		List<ProjectStraightBomEntity> findBomList
+			= projectStraightBomRepository.findByProjectStraight(projectStraightId);
+
+		return findBomList.stream()
+			.map(StraightResponse.StraightBom::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectStraightBomEntity> getStraightBomList(Long projectStraightId) {
+		return projectStraightBomRepository.findByProjectStraight(projectStraightId);
+	}
+
+	@Transactional(readOnly = true)
+	public Map<Long, List<ProjectStraightBomEntity>> getStraightBomMap(List<Long> projectStraightIds) {
+		List<ProjectStraightBomEntity> allBomList =
+			projectStraightBomRepository.findAllByProjectStraightIdIn(projectStraightIds);
+
+		return allBomList.stream()
+			.collect(Collectors.groupingBy(bom -> bom.getProjectStraight().getId()));
 	}
 }

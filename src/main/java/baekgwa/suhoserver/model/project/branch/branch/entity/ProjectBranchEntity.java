@@ -1,6 +1,9 @@
 package baekgwa.suhoserver.model.project.branch.branch.entity;
 
-import baekgwa.suhoserver.global.entity.TemporalEntity;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import baekgwa.suhoserver.global.entity.SoftDeleteEntity;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
@@ -36,7 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Table(name = "project_branch")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProjectBranchEntity extends TemporalEntity {
+@SQLDelete(sql = "UPDATE project_branch SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = 0")
+public class ProjectBranchEntity extends SoftDeleteEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -86,7 +91,7 @@ public class ProjectBranchEntity extends TemporalEntity {
 	 */
 	public void updateCompleteQuantity(Long productionQuantity) {
 		long targetQuantity = this.completedQuantity + productionQuantity;
-		if(targetQuantity > this.totalQuantity) {
+		if (targetQuantity > this.totalQuantity) {
 			log.debug("총 수량 {}EA / 총 생산량 {}EA", this.totalQuantity, targetQuantity);
 			throw new GlobalException(ErrorCode.REPORT_UPDATE_FAIL_PRODUCTION_QUANTITY_EXCEEDED);
 		}

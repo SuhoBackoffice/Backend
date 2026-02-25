@@ -51,4 +51,8 @@ public interface ProjectStraightSerialRepository extends JpaRepository<ProjectSt
 		@Param("state") ProductSerialState state,
 		@Param("productionState") ProductProductionState productionState
 	);
+
+	List<ProjectStraightSerialEntity> findAllByProjectStraight(ProjectStraightEntity projectStraight);
+
+	List<ProjectStraightSerialEntity> findAllByProjectStraightOrderBySequence(ProjectStraightEntity projectStraight);
 }

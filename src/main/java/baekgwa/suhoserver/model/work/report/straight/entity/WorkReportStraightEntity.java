@@ -1,6 +1,7 @@
 package baekgwa.suhoserver.model.work.report.straight.entity;
 
 import baekgwa.suhoserver.global.entity.TemporalEntity;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.work.report.report.entity.WorkReportEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,36 +43,31 @@ public class WorkReportStraightEntity extends TemporalEntity {
 	@JoinColumn(name = "work_report_id", nullable = false)
 	private WorkReportEntity workReport;
 
-	@Column(name = "project_straight_id")
-	private Long projectStraightId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "project_straight_id", nullable = false)
+	private ProjectStraightEntity projectStraight;
 
 	@Column(name = "production_quantity")
 	private Long productionQuantity;
 
-	@Column(name = "snapshot_serial", nullable = false)
-	private String serial;
-
 	@Builder(access = AccessLevel.PRIVATE)
-	public WorkReportStraightEntity(WorkReportEntity workReport, Long projectStraightId, Long productionQuantity,
-		String serial) {
+	private WorkReportStraightEntity(WorkReportEntity workReport, ProjectStraightEntity projectStraight,
+		Long productionQuantity) {
 		this.workReport = workReport;
-		this.projectStraightId = projectStraightId;
+		this.projectStraight = projectStraight;
 		this.productionQuantity = productionQuantity;
-		this.serial = serial;
 	}
 
 	public static WorkReportStraightEntity of(
 		WorkReportEntity workReport,
-		Long projectStraightId,
-		Long productionQuantity,
-		String snapshotSerial
+		ProjectStraightEntity projectStraight,
+		Long productionQuantity
 	) {
 		return WorkReportStraightEntity
 			.builder()
 			.workReport(workReport)
-			.projectStraightId(projectStraightId)
+			.projectStraight(projectStraight)
 			.productionQuantity(productionQuantity)
-			.serial(snapshotSerial)
 			.build();
 	}
 }

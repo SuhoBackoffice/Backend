@@ -1,13 +1,18 @@
 package baekgwa.suhoserver.domain.worker.facade;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import baekgwa.suhoserver.domain.branch.service.BranchReadService;
+import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
 import baekgwa.suhoserver.domain.user.service.UserService;
@@ -18,11 +23,18 @@ import baekgwa.suhoserver.domain.worker.service.WorkReportWriteService;
 import baekgwa.suhoserver.global.exception.GlobalException;
 import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
+import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
+import baekgwa.suhoserver.infra.history.event.MaterialHistoryEventDto;
 import baekgwa.suhoserver.infra.notification.event.NotificationEvent;
+import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
+import baekgwa.suhoserver.model.material.MaterialHistoryType;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
 import baekgwa.suhoserver.model.notification.NotificationType;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
 import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
+import baekgwa.suhoserver.model.project.straight.bom.repository.ProjectStraightBomRepository;
 import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
@@ -50,10 +62,20 @@ import lombok.RequiredArgsConstructor;
 public class WorkReportFacade {
 
 	private final UserService userService;
+
 	private final ProjectReadService projectReadService;
+
 	private final WorkReportReadService workReportReadService;
 	private final WorkReportWriteService workReportWriteService;
+
 	private final ProjectWriteService projectWriteService;
+
+	private final BranchReadService branchReadService;
+
+	private final MaterialWriteService materialWriteService;
+
+	private final ProjectStraightBomRepository projectStraightBomRepository;
+
 	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
@@ -74,27 +96,27 @@ public class WorkReportFacade {
 		Map<Long, ProjectStraightEntity> projectStraightMap =
 			projectReadService.getProjectStraightMap(request);
 
-		Map<Long, Map<Long, String>> straightSerialSnapshot =
-			projectReadService.getStraightSerialSnapshot(request);
+		Map<Long, List<ProjectStraightSerialEntity>> straightSerialMap =
+			projectReadService.getStraightSerialEntityMap(request);
 
 		workReportWriteService.createNewStraightWorkReport(
 			savedWorkReport,
 			request,
-			straightSerialSnapshot,
+			straightSerialMap,
 			projectStraightMap
 		);
 
 		Map<Long, ProjectBranchEntity> projectBranchMap =
 			projectReadService.getProjectBranchMap(request);
 
-		Map<Long, Map<Long, String>> branchSerialSnapshot =
-			projectReadService.getBranchSerialSnapshot(request);
+		Map<Long, List<ProjectBranchSerialEntity>> branchSerialMap =
+			projectReadService.getBranchSerialEntityMap(request);
 
 		workReportWriteService.createNewBranchWorkReport(
 			savedWorkReport,
 			request,
 			projectBranchMap,
-			branchSerialSnapshot
+			branchSerialMap
 		);
 
 		publishNotification(findUser, findProject, savedWorkReport);
@@ -273,6 +295,130 @@ public class WorkReportFacade {
 			List<Long> reportedBranchIdList =
 				projectWriteService.applyBranchProductionQuantityFromReport(findWorkReport);
 			projectWriteService.markBranchSerialProduced(reportedBranchIdList);
+
+			Map<Long, Long> branchUsedMap = updateBranchMaterialCompleteStock(findWorkReport);
+			Map<Long, Long> straightUsedMap = updateStraightMaterialCompleteStock(findWorkReport);
+
+			publishMaterialHistoryEvent(findWorkReport, branchUsedMap, straightUsedMap);
 		}
+	}
+
+	private void publishMaterialHistoryEvent(
+		WorkReportEntity workReport,
+		Map<Long, Long> branchUsedMap,
+		Map<Long, Long> straightUsedMap
+	) {
+		List<MaterialHistoryEventDto> historyList = new ArrayList<>();
+
+		historyList.addAll(branchUsedMap.entrySet().stream()
+			.map(entry -> new MaterialHistoryEventDto(
+				entry.getKey(),
+				entry.getValue(),
+				MaterialHistoryType.PRODUCTION_USE
+			))
+			.toList());
+
+		historyList.addAll(straightUsedMap.entrySet().stream()
+			.map(entry -> new MaterialHistoryEventDto(
+				entry.getKey(),
+				entry.getValue(),
+				MaterialHistoryType.PRODUCTION_USE
+			))
+			.toList());
+
+		if (historyList.isEmpty())
+			return;
+
+		eventPublisher.publishEvent(new MaterialHistoryEvent(
+			workReport.getProject().getId(),
+			workReport.getReportUser().getId(),
+			historyList
+		));
+	}
+
+	private Map<Long, Long> updateBranchMaterialCompleteStock(WorkReportEntity findWorkReport) {
+		List<WorkReportBranchEntity> branchReports = workReportReadService.getWorkReportBranch(findWorkReport);
+
+		if (branchReports.isEmpty())
+			return Map.of();
+
+		Map<Long, Long> branchQuantityMap = branchReports.stream()
+			.collect(Collectors.toMap(
+				report -> report.getProjectBranch().getBranchType().getId(),
+				WorkReportBranchEntity::getProductionQuantity,
+				Long::sum
+			));
+
+		Map<Long, List<BranchBomEntity>> branchBomMap =
+			branchReadService.getBranchBomMap(branchQuantityMap.keySet());
+
+		List<ProjectMaterialStockEntity> updatedStocks = materialWriteService.updateBranchMaterialCompleteStock(
+			branchQuantityMap, branchBomMap, findWorkReport.getProject());
+
+		Map<String, Long> stockIdMap = updatedStocks.stream()
+			.collect(Collectors.toMap(ProjectMaterialStockEntity::getMaterialCode, ProjectMaterialStockEntity::getId));
+
+		Map<Long, Long> usedQuantityMap = new HashMap<>();
+		for (Map.Entry<Long, Long> entry : branchQuantityMap.entrySet()) {
+			Long branchTypeId = entry.getKey();
+			Long quantity = entry.getValue();
+			List<BranchBomEntity> bomList = branchBomMap.get(branchTypeId);
+			if (bomList != null) {
+				for (BranchBomEntity bom : bomList) {
+					Long stockId = stockIdMap.get(bom.getDrawingNumber());
+					if (stockId != null) {
+						long usedAmount = bom.getUnitQuantity() * quantity;
+						usedQuantityMap.merge(stockId, usedAmount, Long::sum);
+					}
+				}
+			}
+		}
+		return usedQuantityMap;
+	}
+
+	private Map<Long, Long> updateStraightMaterialCompleteStock(WorkReportEntity workReport) {
+		List<WorkReportStraightEntity> straightReportList = workReportReadService.getWorkReportStraight(workReport);
+
+		if (straightReportList.isEmpty()) {
+			return Map.of();
+		}
+
+		Map<Long, Long> straightQuantityMap = straightReportList.stream()
+			.collect(Collectors.toMap(
+				report -> report.getProjectStraight().getId(),
+				WorkReportStraightEntity::getProductionQuantity,
+				Long::sum
+			));
+
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap = straightReportList.stream()
+			.map(WorkReportStraightEntity::getProjectStraight)
+			.distinct()
+			.collect(Collectors.toMap(
+				ProjectStraightEntity::getId,
+				projectStraightBomRepository::findAllByProjectStraight
+			));
+
+		List<ProjectMaterialStockEntity> updatedStocks = materialWriteService.updateStraightMaterialCompleteStock(
+			straightQuantityMap, straightBomMap, workReport.getProject());
+
+		Map<String, Long> stockIdMap = updatedStocks.stream()
+			.collect(Collectors.toMap(ProjectMaterialStockEntity::getMaterialCode, ProjectMaterialStockEntity::getId));
+
+		Map<Long, Long> usedQuantityMap = new HashMap<>();
+		for (Map.Entry<Long, Long> entry : straightQuantityMap.entrySet()) {
+			Long straightId = entry.getKey();
+			Long quantity = entry.getValue();
+			List<ProjectStraightBomEntity> bomList = straightBomMap.get(straightId);
+			if (bomList != null) {
+				for (ProjectStraightBomEntity bom : bomList) {
+					Long stockId = stockIdMap.get(bom.getMaterialCode());
+					if (stockId != null) {
+						long usedAmount = bom.getUnitQuantity() * quantity;
+						usedQuantityMap.merge(stockId, usedAmount, Long::sum);
+					}
+				}
+			}
+		}
+		return usedQuantityMap;
 	}
 }

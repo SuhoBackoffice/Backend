@@ -1,12 +1,12 @@
 package baekgwa.suhoserver.domain.material.dto;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
-import baekgwa.suhoserver.model.material.inbound.entity.MaterialInboundEntity;
+import baekgwa.suhoserver.domain.material.type.MaterialStockSort;
+import baekgwa.suhoserver.model.material.MaterialHistoryType;
+import baekgwa.suhoserver.model.material.history.entity.MaterialHistoryEntity;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,71 +27,130 @@ import lombok.NoArgsConstructor;
 public class MaterialResponse {
 
 	@Getter
-	public static class MaterialInfo {
-		private final Long id;
-		private final String drawingNumber;
-		private final String itemName;
+	public static class MaterialHistoryTypeInfo {
+		private final String code;
+		private final String description;
 
-		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialInfo(String drawingNumber, String itemName, Long id) {
-			this.id = id;
-			this.drawingNumber = drawingNumber;
-			this.itemName = itemName;
+		private MaterialHistoryTypeInfo(String code, String description) {
+			this.code = code;
+			this.description = description;
 		}
 
-		public static MaterialInfo of(BranchBomEntity branchBomEntity) {
-			return MaterialInfo
-				.builder()
-				.id(branchBomEntity.getId())
-				.drawingNumber(branchBomEntity.getDrawingNumber())
-				.itemName(branchBomEntity.getItemName())
+		public static MaterialHistoryTypeInfo from(MaterialHistoryType type) {
+			return new MaterialHistoryTypeInfo(type.name(), type.getDescription());
+		}
+	}
+
+	@Getter
+	public static class MaterialHistoryInfo {
+		private final Long id;
+		private final String materialCode;
+		private final String itemName;
+		private final Long quantity;
+		private final String description;
+		private final String type;
+		private final LocalDateTime createdAt;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private MaterialHistoryInfo(Long id, String materialCode, String itemName, Long quantity,
+			String description, String type, LocalDateTime createdAt) {
+			this.id = id;
+			this.materialCode = materialCode;
+			this.itemName = itemName;
+			this.quantity = quantity;
+			this.description = description;
+			this.type = type;
+			this.createdAt = createdAt;
+		}
+
+		public static MaterialHistoryInfo of(MaterialHistoryEntity history) {
+			return MaterialHistoryInfo.builder()
+				.id(history.getId())
+				.materialCode(history.getMaterialCode())
+				.itemName(history.getItemName())
+				.quantity(history.getQuantity())
+				.description(history.getDescription())
+				.type(history.getType().getDescription())
+				.createdAt(history.getCreatedAt())
 				.build();
 		}
 	}
 
 	@Getter
-	public static class MaterialHistory {
-		private final LocalDate date;
-		private final Long kindCount;
-		private final Long totalCount;
+	public static class SearchMaterialInfo {
+		private final Long id;
+		private final String drawingNumber;
+		private final String itemName;
+		private final Long needInboundQuantity;
 
 		@Builder(access = AccessLevel.PRIVATE)
-		public MaterialHistory(LocalDate date, Long kindCount, Long totalCount) {
-			this.date = date;
-			this.kindCount = kindCount;
-			this.totalCount = totalCount;
+		public SearchMaterialInfo(Long id, String drawingNumber, String itemName, Long needInboundQuantity) {
+			this.id = id;
+			this.drawingNumber = drawingNumber;
+			this.itemName = itemName;
+			this.needInboundQuantity = needInboundQuantity;
 		}
 
-		public static MaterialHistory of(LocalDate date, Long kindCount, Long totalCount) {
-			return MaterialHistory.builder().date(date).kindCount(kindCount).totalCount(totalCount).build();
+		public static SearchMaterialInfo from(ProjectMaterialStockEntity stock) {
+
+			Long needInboundQuantity = stock.getTotalPlanQuantity() - stock.getTotalInboundQuantity();
+
+			return SearchMaterialInfo
+				.builder()
+				.id(stock.getId())
+				.drawingNumber(stock.getMaterialCode())
+				.itemName(stock.getItemName())
+				.needInboundQuantity(needInboundQuantity)
+				.build();
 		}
 	}
 
 	@Getter
-	public static class MaterialHistoryDetail {
-		private final Long id;
-		private final String drawingNumber;
-		private final String itemName;
-		private final LocalDateTime receivedAt;
-		private final Long quantity;
+	public static class MaterialSortType {
+		private final String sort;
+		private final String description;
 
-		@Builder(access = AccessLevel.PRIVATE)
-		private MaterialHistoryDetail(Long id, String drawingNumber, String itemName, LocalDateTime receivedAt, Long quantity) {
-			this.id = id;
-			this.drawingNumber = drawingNumber;
-			this.itemName = itemName;
-			this.receivedAt = receivedAt;
-			this.quantity = quantity;
+		private MaterialSortType(String sort, String description) {
+			this.sort = sort;
+			this.description = description;
 		}
 
-		public static MaterialHistoryDetail of(MaterialInboundEntity materialInbound) {
-			return MaterialHistoryDetail
-				.builder()
-				.id(materialInbound.getId())
-				.drawingNumber(materialInbound.getDrawingNumber())
-				.itemName(materialInbound.getItemName())
-				.receivedAt(materialInbound.getCreatedAt())
-				.quantity(materialInbound.getQuantity())
+		public static MaterialSortType from(MaterialStockSort sortType) {
+			return new MaterialSortType(sortType.name(), sortType.getDescription());
+		}
+	}
+
+	@Getter
+	public static class MaterialStockInfo {
+		private final Long id;
+		private final String materialCode;
+		private final String itemName;
+		private final Long totalPlanQuantity;
+		private final Long totalInboundQuantity;
+		private final Long totalUsedQuantity;
+		private final Long remainingInbound;
+
+		@Builder(access = AccessLevel.PRIVATE)
+		private MaterialStockInfo(Long id, String materialCode, String itemName, Long totalPlanQuantity,
+			Long totalInboundQuantity, Long totalUsedQuantity, Long remainingInbound) {
+			this.id = id;
+			this.materialCode = materialCode;
+			this.itemName = itemName;
+			this.totalPlanQuantity = totalPlanQuantity;
+			this.totalInboundQuantity = totalInboundQuantity;
+			this.totalUsedQuantity = totalUsedQuantity;
+			this.remainingInbound = remainingInbound;
+		}
+
+		public static MaterialStockInfo from(ProjectMaterialStockEntity stock) {
+			return MaterialStockInfo.builder()
+				.id(stock.getId())
+				.materialCode(stock.getMaterialCode())
+				.itemName(stock.getItemName())
+				.totalPlanQuantity(stock.getTotalPlanQuantity())
+				.totalInboundQuantity(stock.getTotalInboundQuantity())
+				.totalUsedQuantity(stock.getTotalUsedQuantity())
+				.remainingInbound(stock.getTotalPlanQuantity() - stock.getTotalInboundQuantity())
 				.build();
 		}
 	}
@@ -114,24 +173,16 @@ public class MaterialResponse {
 			this.usedCount = usedCount;
 		}
 
-		public static ProjectMaterialState from(Long unitKindCount, Long totalCount, Long usedCount) {
+		public static ProjectMaterialState from(
+			BigDecimal inboundPercent, Long unitKindCount, Long totalCount, Long inboundCount, Long usedCount
+		) {
 			return ProjectMaterialState
 				.builder()
+				.inboundPercent(inboundPercent)
 				.unitKindCount(unitKindCount)
 				.totalCount(totalCount)
-				.usedCount(usedCount)
-				.build();
-		}
-
-		public static ProjectMaterialState from(ProjectMaterialState materialState, Long inboundCount) {
-			return ProjectMaterialState
-				.builder()
-				.inboundPercent(BigDecimal.valueOf(inboundCount).multiply(BigDecimal.valueOf(100))
-					.divide(BigDecimal.valueOf(materialState.getTotalCount()), 1, RoundingMode.HALF_UP))
-				.unitKindCount(materialState.getUnitKindCount())
-				.totalCount(materialState.getTotalCount())
 				.inboundCount(inboundCount)
-				.usedCount(materialState.getUsedCount())
+				.usedCount(usedCount)
 				.build();
 		}
 	}

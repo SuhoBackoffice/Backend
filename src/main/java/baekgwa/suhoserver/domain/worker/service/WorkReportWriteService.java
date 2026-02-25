@@ -8,15 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.worker.dto.WorkReportRequest;
 import baekgwa.suhoserver.global.exception.GlobalException;
-import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
-import baekgwa.suhoserver.model.project.branch.branch.repository.ProjectBranchRepository;
-import baekgwa.suhoserver.model.project.branch.serial.repository.ProjectBranchSerialRepository;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
-import baekgwa.suhoserver.model.project.straight.serial.repository.ProjectStraightSerialRepository;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.work.report.WorkReportStatus;
 import baekgwa.suhoserver.model.work.report.branch.entity.WorkReportBranchEntity;
@@ -49,11 +46,7 @@ public class WorkReportWriteService {
 	private final WorkReportRepository workReportRepository;
 	private final WorkReportStraightRepository workReportStraightRepository;
 	private final WorkReportStraightSerialRepository workReportStraightSerialRepository;
-	private final ProjectStraightRepository projectStraightRepository;
-	private final ProjectStraightSerialRepository projectStraightSerialRepository;
-	private final ProjectBranchRepository projectBranchRepository;
 	private final WorkReportBranchRepository workReportBranchRepository;
-	private final ProjectBranchSerialRepository projectBranchSerialRepository;
 	private final WorkReportBranchSerialRepository workReportBranchSerialRepository;
 
 	/**
@@ -91,7 +84,7 @@ public class WorkReportWriteService {
 	public void createNewStraightWorkReport(
 		WorkReportEntity savedWorkReport,
 		WorkReportRequest.PostNewWorkReport request,
-		Map<Long, Map<Long, String>> straightSerialSnapshot,
+		Map<Long, List<ProjectStraightSerialEntity>> straightSerialMap,
 		Map<Long, ProjectStraightEntity> projectStraightMap
 	) {
 		if (request.getStraightReportList().isEmpty()) {
@@ -100,32 +93,25 @@ public class WorkReportWriteService {
 
 		for (WorkReportRequest.PostNewWorkStraightReport straightReport : request.getStraightReportList()) {
 			ProjectStraightEntity ps = projectStraightMap.get(straightReport.getProjectStraightId());
-			String serial = ProductSerialFactory.generateStraightSerial(
-				ps.getLength(),
-				ps.getIsLoopRail(),
-				ps.getStraightType().getType()
-			);
 
 			WorkReportStraightEntity workReportStraight =
 				workReportStraightRepository.save(
 					WorkReportStraightEntity.of(
 						savedWorkReport,
-						straightReport.getProjectStraightId(),
-						straightReport.getProductionQuantity(),
-						serial
+						ps,
+						straightReport.getProductionQuantity()
 					)
 				);
 
-			Map<Long, String> serialSnapshot =
-				straightSerialSnapshot.get(straightReport.getProjectStraightId());
+			List<ProjectStraightSerialEntity> serialList =
+				straightSerialMap.get(straightReport.getProjectStraightId());
 
 			List<WorkReportStraightSerialEntity> straightSerialList =
-				straightReport.getProjectStraightSerialIdList().stream()
-					.map(serialId ->
+				serialList.stream()
+					.map(serial ->
 						WorkReportStraightSerialEntity.of(
 							workReportStraight,
-							serialId,
-							serialSnapshot.get(serialId)
+							serial
 						)
 					)
 					.toList();
@@ -139,32 +125,29 @@ public class WorkReportWriteService {
 		WorkReportEntity savedWorkReport,
 		WorkReportRequest.PostNewWorkReport request,
 		Map<Long, ProjectBranchEntity> projectBranchMap,
-		Map<Long, Map<Long, String>> branchSerialSnapshot
+		Map<Long, List<ProjectBranchSerialEntity>> branchSerialMap
 	) {
 		for (WorkReportRequest.PostNewWorkBranchReport branch : request.getBranchReportList()) {
 			ProjectBranchEntity pb = projectBranchMap.get(branch.getProjectBranchId());
-			String serial = ProductSerialFactory.generateBranchSerial(pb.getBranchType().getCode());
 
 			WorkReportBranchEntity workReportBranch =
 				workReportBranchRepository.save(
 					WorkReportBranchEntity.of(
 						savedWorkReport,
-						branch.getProjectBranchId(),
-						branch.getProductionQuantity(),
-						serial
+						pb,
+						branch.getProductionQuantity()
 					)
 				);
 
-			Map<Long, String> serialSnapshot =
-				branchSerialSnapshot.get(branch.getProjectBranchId());
+			List<ProjectBranchSerialEntity> serialList =
+				branchSerialMap.get(branch.getProjectBranchId());
 
 			List<WorkReportBranchSerialEntity> branchSerialList =
-				branch.getProjectBranchSerialIdList().stream()
-					.map(serialId ->
+				serialList.stream()
+					.map(serial ->
 						WorkReportBranchSerialEntity.of(
 							workReportBranch,
-							serialId,
-							serialSnapshot.get(serialId)
+							serial
 						)
 					)
 					.toList();
@@ -178,16 +161,15 @@ public class WorkReportWriteService {
 		WorkReportEntity findWorkReport,
 		WorkReportRequest.PostDailyReport request
 	) {
-		if(request.isApproved() && request.getRejectReason() != null) {
+		if (request.isApproved() && request.getRejectReason() != null) {
 			throw new GlobalException(ErrorCode.REPORT_APPROVED_BUT_REJECT_REASON_EXIST);
 		}
 
-		if(request.isRejected() && request.getRejectReason() == null) {
+		if (request.isRejected() && request.getRejectReason() == null) {
 			throw new GlobalException(ErrorCode.REPORT_REJECTED_BUT_REJECT_REASON_NOT_EXIST);
 		}
 
-		// 이미 반려된 작업 보고서는 수정이 불가능 합니다.
-		if(!findWorkReport.isEditable()) {
+		if (!findWorkReport.isEditable()) {
 			throw new GlobalException(ErrorCode.ALREADY_UPDATED_REPORT);
 		}
 

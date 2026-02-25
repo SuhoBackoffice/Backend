@@ -27,12 +27,12 @@ public interface WorkReportBranchRepository extends JpaRepository<WorkReportBran
 
 	List<WorkReportBranchEntity> findByWorkReport(WorkReportEntity findWorkReport);
 
-	@Query("SELECT wrbs.projectBranchSerialId "
+	@Query("SELECT wrbs.projectBranchSerial.id "
 		+ "FROM WorkReportBranchSerialEntity wrbs "
 		+ "JOIN wrbs.workReportBranch wrb "
 		+ "JOIN wrb.workReport wr "
 		+ "WHERE wr.status = :status "
-		+ "AND wrb.projectBranchId = :projectBranchId")
+		+ "AND wrb.projectBranch.id = :projectBranchId")
 	List<Long> findPendingSerialIdList(
 		@Param("status") WorkReportStatus workReportStatus,
 		@Param("projectBranchId") Long projectBranchId

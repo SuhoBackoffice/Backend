@@ -38,12 +38,13 @@ public enum SuccessCode {
 	// Branch
 	CREATE_NEW_BRANCH_BOM_SUCCESS(CREATED, "분기 BOM 리스트 추가 성공"),
 	GET_LATEST_BRANCH_BOM_SUCCESS(OK, "해당 버전 최신 분기 레일 조회 성공"),
-	GET_BRANCH_BOM_SUCCESS(OK, "분기레일 BOM 리스트 조회 성공"),
+	GET_BRANCH_BOM_SUCCESS(OK, "분기 레일 BOM 리스트 조회 성공"),
 
 	// Straight
 	CREATE_NEW_STRAIGHT_TYPE_SUCCESS(CREATED, "신규 직선레일 타입 추가 완료"),
 	GET_ALL_STRAIGHT_TYPE_LIST_SUCCESS(OK, "직선 레일 타입 조회 성공"),
 	GET_ALL_LOOP_STRAIGHT_TYPE_LIST_SUCCESS(OK, "루프/직선 레일 타입 조회 성공"),
+	GET_STRAIGHT_BOM_SUCCESS(OK, "직선 레일 BOM 리스트 조회 성공"),
 
 	// Project
 	CREATE_NEW_PROJECT_SUCCESS(CREATED, "신규 프로젝트 생성 완료"),
@@ -52,14 +53,25 @@ public enum SuccessCode {
 	GET_PROJECT_DETAIL_INFORMATION_SUCCESS(OK, "프로젝트 상세 정보 조회 성공"),
 	GET_PROJECT_INFORMATION_SUCCESS(OK, "프로젝트 정보 조회 성공"),
 	GET_PROJECT_SEARCH_SORT_SUCCESS(OK, "프로젝트 정렬 조건 조회/패칭 성공"),
-	GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS(OK, "프로젝트 분기레일 상세 정보 조회 성공"),
-	GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS(OK, "프로젝트 분기레일 상세 정보 조회 성공"),
+	GET_PROJECT_DETAIL_BRANCH_INFO_SUCCESS(OK, "프로젝트 분기 레일 정보 조회 성공"),
+	GET_PROJECT_DETAIL_BRANCH_DETAIL_INFO_SUCCESS(OK, "프로젝트 분기 레일 상세 정보 조회 성공"),
+	GET_PROJECT_DETAIL_STRAIGHT_INFO_SUCCESS(OK, "프로젝트 직선 레일 정보 조회 성공"),
+	GET_PROJECT_DETAIL_STRAIGHT_DETAIL_INFO_SUCCESS(OK, "프로젝트 직선 레일 상세 정보 조회 성공"),
 	DELETE_PROJECT_STRAIGHT_SUCCESS(OK, "프로젝트 직선레일 삭제 완료"),
 	PATCH_PROJECT_STRAIGHT_SUCCESS(OK, "프로젝트 직선레일 수정 완료"),
 	DELETE_PROJECT_BRANCH_SUCCESS(OK, "프로젝트 분기레일 삭제 완료"),
 	PATCH_PROJECT_BRANCH_SUCCESS(OK, "프로젝트 분기레일 수정 완료"),
-	GET_PROJECT_BRANCH_CAPACITY(OK, "분기레일 생산 가능 수량 조회 성공"),
 	GET_ON_GOING_PROJECT_INFO(OK, "현재 진행중인 프로젝트 목록 조회 성공"),
+
+	// Capacity
+	GET_BRANCH_CAPACITY_SORT_TYPE_SUCCESS(OK, "분기 레일 capa 정렬 조건 조회 성공"),
+	GET_PROJECT_BRANCH_CAPACITY(OK, "분기레일 생산 가능 수량 조회 성공"),
+	GET_BRANCH_ANALYZE_SORT_TYPE_SUCCESS(OK, "분기 레일 분석 정렬 조건 조회 성공"),
+	GET_PROJECT_BRANCH_CAPACITY_ANALYZE(OK, "분기레일 자재 부족 분석 조회 성공"),
+	GET_STRAIGHT_CAPACITY_SORT_TYPE_SUCCESS(OK, "직선 레일 capa 정렬 조건 조회 성공"),
+	GET_PROJECT_STRAIGHT_CAPACITY(OK, "직선레일 생산 가능 수량 조회 성공"),
+	GET_STRAIGHT_ANALYZE_SORT_TYPE_SUCCESS(OK, "직선 레일 분석 정렬 조건 조회 성공"),
+	GET_PROJECT_STRAIGHT_CAPACITY_ANALYZE(OK, "직선레일 자재 부족 분석 조회 성공"),
 
 	// File Uploader
 	UPLOAD_FILE_SUCCESS(CREATED, "파일 업로드 완료"),
@@ -71,6 +83,9 @@ public enum SuccessCode {
 	GET_MATERIAL_HISTORY_LIST_SUCCESS(OK, "자재 입고 이력 목록 불러오기 성공"),
 	GET_MATERIAL_HISTORY_DETAIL_SUCCESS(OK, "자재 입고 이력 상세 불러오기 성공"),
 	GET_MATERIAL_STATE_SUCCESS(OK, "프로젝트 자재 현황 로드 성공"),
+	GET_MATERIAL_HISTORY_TYPE_LIST_SUCCESS(OK, "자재 이력 타입 목록 조회 성공"),
+	GET_MATERIAL_STOCK_SORT_TYPE_SUCCESS(OK, "자재 재고 정렬 조건 조회 성공"),
+	GET_MATERIAL_STOCK_LIST_SUCCESS(OK, "자재 재고 목록 조회 성공"),
 
 	// Report
 	POST_WORK_REPORT_SUCCESS(CREATED, "업무 보고가 완료되었습니다. 수고하셨습니다."),

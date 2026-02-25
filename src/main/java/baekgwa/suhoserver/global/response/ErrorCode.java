@@ -55,6 +55,8 @@ public enum ErrorCode {
 	ALREADY_EXIST_PROJECT_BRANCH_DATA(BAD_REQUEST, "5007",
 		"이미 동일한 분기레일이 존재합니다. 변경이 필요하다면 수정/삭제 기능을 사용해 주세요."),
 	CREATE_QUANTITY_LIST_BRANCH_BOM_VALID_FAIL(BAD_REQUEST, "5008", "프로젝트 BOM List 생성 실패. 관리자에게 문의해 주세요."),
+	PATCH_BRANCH_COUNT_FAIL_DIFF_ZERO(BAD_REQUEST, "5009", "수량 업데이트 취소. 이전 수량과 동일합니다."),
+	PATCH_STRAIGHT_COUNT_FAIL_DIFF_ZERO(BAD_REQUEST, "5010", "수량 업데이트 취소. 이전 수량과 동일합니다."),
 
 	// Straight : 6000 ~ 6999
 	DUPLICATE_STRAIGHT_TYPE(BAD_REQUEST, "6000", "이미 존재하는 직선레일 타입 입니다."),
@@ -67,6 +69,7 @@ public enum ErrorCode {
 
 	// Material : 7000 ~ 7999
 	INVALID_MATERIAL_KEYWORD_OVER_2(BAD_REQUEST, "7000", "키워드는 2글자 이상이어야 합니다."),
+	NOT_EXIST_MATERIAL(BAD_REQUEST, "7001", "등록되지 않은 제품입니다."),
 
 	// Work : 8000 ~ 8999
 	ALREADY_EXIST_DAILY_REPORT(BAD_REQUEST, "8000", "이미 해당일에 업무 보고를 진행하였습니다."),
@@ -91,10 +94,10 @@ public enum ErrorCode {
 	REPORT_UPDATE_FAIL_PENDING_IMPOSSIBLE(BAD_REQUEST, "8019", "보고서는 승인 혹은 반려만 가능합니다."),
 	REPORT_PROJECT_BRANCH_NOT_FOUND(BAD_REQUEST, "8020", "보고서에 작성된 분기 레일은 더 이상 존재하지 않습니다."),
 
-	//Notification: 9000 ~ 9499
+	// Notification: 9000 ~ 9499
 	NOT_FOUNT_NOTIFICATION(NOT_FOUND, "9000", "존재하지 않는 알림 입니다."),
 
-	//Common: 9500 ~ 9999
+	// Common: 9500 ~ 9999
 	NOT_FOUND_URL(NOT_FOUND, "9500", "요청하신 URL 을 찾을 수 없습니다."),
 	NOT_SUPPORTED_METHOD(METHOD_NOT_ALLOWED, "9501", "요청 메서드를 찾을 수 없습니다."),
 	VALIDATION_FAIL_ERROR(BAD_REQUEST, "9502", ""),

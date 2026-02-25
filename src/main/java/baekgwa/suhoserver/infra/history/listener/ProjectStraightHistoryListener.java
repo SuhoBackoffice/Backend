@@ -1,7 +1,6 @@
 package baekgwa.suhoserver.infra.history.listener;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -12,8 +11,12 @@ import baekgwa.suhoserver.global.factory.ProductSerialFactory;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightUpdatedEvent;
+import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.project.repository.ProjectRepository;
 import baekgwa.suhoserver.model.project.straight.history.entity.ProjectStraightHistoryEntity;
 import baekgwa.suhoserver.model.project.straight.history.repository.ProjectStraightHistoryRepository;
+import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
+import baekgwa.suhoserver.model.project.straight.straight.repository.ProjectStraightRepository;
 import baekgwa.suhoserver.model.user.entity.UserEntity;
 import baekgwa.suhoserver.model.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,32 +42,32 @@ public class ProjectStraightHistoryListener {
 
 	private final ProjectStraightHistoryRepository projectStraightHistoryRepository;
 	private final UserRepository userRepository;
+	private final ProjectRepository projectRepository;
+	private final ProjectStraightRepository projectStraightRepository;
 
 	@Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void registerProjectStraightHistory(ProjectStraightCreatedEvent event) {
 		log.debug("{} Registering Project Straight History", LOG_PREFIX);
 
-		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
-		if (optionalFindUser.isEmpty()) {
-			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
-			return;
-		}
-		UserEntity findUser = optionalFindUser.get();
+		UserEntity user = userRepository.getReferenceById(event.userId());
+		ProjectEntity project = projectRepository.getReferenceById(event.projectId());
 
 		List<ProjectStraightHistoryEntity> straightHistoryList = event.projectStraightList().stream()
-			.map(ps -> ProjectStraightHistoryEntity.create(
-				findUser.getId(),
-				findUser.getUsername(),
-				event.projectId(),
-				ps.projectStraightId(),
-				ProductSerialFactory.generateStraightSerial(
-					ps.length(),
-					ps.isLoopRail(),
-					ps.straightType()
-				),
-				ps.totalQuantity()
-			))
+			.map(ps -> {
+				ProjectStraightEntity straight = projectStraightRepository.getReferenceById(ps.projectStraightId());
+				return ProjectStraightHistoryEntity.create(
+					user,
+					project,
+					straight,
+					ProductSerialFactory.generateStraightSerial(
+						ps.length(),
+						ps.isLoopRail(),
+						ps.straightType()
+					),
+					ps.totalQuantity()
+				);
+			})
 			.toList();
 
 		projectStraightHistoryRepository.saveAll(straightHistoryList);
@@ -75,18 +78,14 @@ public class ProjectStraightHistoryListener {
 	public void deleteProjectStraightHistory(ProjectStraightDeletedEvent event) {
 		log.debug("{} Deleting Project Straight History", LOG_PREFIX);
 
-		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
-		if (optionalFindUser.isEmpty()) {
-			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
-			return;
-		}
-		UserEntity findUser = optionalFindUser.get();
+		UserEntity user = userRepository.getReferenceById(event.userId());
+		ProjectEntity project = projectRepository.getReferenceById(event.projectId());
+		ProjectStraightEntity straight = projectStraightRepository.getReferenceById(event.projectStraightId());
 
 		ProjectStraightHistoryEntity history = ProjectStraightHistoryEntity.delete(
-			findUser.getId(),
-			findUser.getUsername(),
-			event.projectId(),
-			event.projectStraightId(),
+			user,
+			project,
+			straight,
 			ProductSerialFactory.generateStraightSerial(event.length(), event.isLoopRail(), event.straightType()),
 			event.totalQuantity()
 		);
@@ -99,18 +98,14 @@ public class ProjectStraightHistoryListener {
 	public void updateProjectStraightHistory(ProjectStraightUpdatedEvent event) {
 		log.debug("{} Updating Project Straight History", LOG_PREFIX);
 
-		Optional<UserEntity> optionalFindUser = userRepository.findById(event.userId());
-		if (optionalFindUser.isEmpty()) {
-			log.warn("{} 회원 정보를 찾을 수 없어, history 저장을 종료합니다. event = {}", LOG_PREFIX, event);
-			return;
-		}
-		UserEntity findUser = optionalFindUser.get();
+		UserEntity user = userRepository.getReferenceById(event.userId());
+		ProjectEntity project = projectRepository.getReferenceById(event.projectId());
+		ProjectStraightEntity straight = projectStraightRepository.getReferenceById(event.projectStraightId());
 
 		ProjectStraightHistoryEntity history = ProjectStraightHistoryEntity.update(
-			findUser.getId(),
-			findUser.getUsername(),
-			event.projectId(),
-			event.projectStraightId(),
+			user,
+			project,
+			straight,
 			ProductSerialFactory.generateStraightSerial(event.length(), event.isLoopRail(), event.straightType()),
 			event.beforeQuantity(),
 			event.afterQuantity()

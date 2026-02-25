@@ -1,19 +1,24 @@
 package baekgwa.suhoserver.domain.material.facade;
 
-import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import baekgwa.suhoserver.domain.branch.service.BranchReadService;
+import org.springframework.data.domain.Sort;
+
 import baekgwa.suhoserver.domain.material.dto.MaterialRequest;
 import baekgwa.suhoserver.domain.material.dto.MaterialResponse;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
 import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
-import baekgwa.suhoserver.domain.material.type.MaterialSort;
+import baekgwa.suhoserver.domain.material.type.MaterialStockSort;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
-import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.global.response.PageResponse;
+import baekgwa.suhoserver.infra.history.event.MaterialHistoryEvent;
+import baekgwa.suhoserver.infra.history.event.MaterialHistoryEventDto;
+import baekgwa.suhoserver.model.material.MaterialHistoryType;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
 import lombok.RequiredArgsConstructor;
 
@@ -33,58 +38,70 @@ import lombok.RequiredArgsConstructor;
 public class MaterialFacade {
 
 	private final ProjectReadService projectReadService;
-	private final BranchReadService branchReadService;
 	private final MaterialWriteService materialWriteService;
 	private final MaterialReadService materialReadService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialInfo> getMaterialList(Long projectId, String keyword) {
-		// 1. 프로젝트에 할당된, 분기 리스트 조회
-		List<Long> findBranchTypeIdList = projectReadService.getBranchTypeIdList(projectId);
-
-		// 2. 분기레일 자재 목록 조회
-		return branchReadService.getAllBranchBomList(findBranchTypeIdList, keyword);
+	public List<MaterialResponse.SearchMaterialInfo> searchMaterialListByKeyword(Long projectId, String keyword) {
+		return materialReadService.searchMaterialListByKeyword(projectId, keyword);
 	}
 
 	@Transactional
-	public void postMaterialInbound(Long projectId, List<MaterialRequest.PostMaterialInbound> postMaterialInboundList) {
-		// 1. 프로젝트 조회
+	public void postMaterialInbound(
+		Long projectId,
+		List<MaterialRequest.PostMaterialInbound> postMaterialInboundList,
+		Long userId
+	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
-
-		// 2. 신규 Material Inbound 추가
 		materialWriteService.postMaterialInbound(findProject, postMaterialInboundList);
-	}
 
-	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialHistory> getMaterialHistoryList(
-		Long projectId, String keyword, MaterialSort sort
-	) {
-		return materialReadService.getMaterialHistroyList(projectId, keyword, sort);
-	}
+		List<MaterialHistoryEventDto> historyList = postMaterialInboundList.stream()
+			.map(req -> new MaterialHistoryEventDto(
+				req.getProjectMaterialStockId(),
+				req.getQuantity(),
+				MaterialHistoryType.INBOUND
+			))
+			.toList();
 
-	@Transactional(readOnly = true)
-	public List<MaterialResponse.MaterialHistoryDetail> getMaterialHistoryDetailList(
-		Long projectId, String keyword, LocalDate date
-	) {
-		return materialReadService.getMaterialHistoryDetail(projectId, keyword, date);
+		eventPublisher.publishEvent(new MaterialHistoryEvent(projectId, userId, historyList));
 	}
 
 	@Transactional(readOnly = true)
 	public MaterialResponse.ProjectMaterialState getProjectMaterialState(Long projectId) {
-		// 1. 프로젝트 정보 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+		return materialReadService.getMaterialState(findProject);
+	}
 
-		// 2. 프로젝트에 할당된 분기레일 정보 조회
-		List<ProjectBranchEntity> findProjectBranchList =
-			projectReadService.getProjectBranchInfoListOrThrow(findProject);
-		// 추후, 직선레일 관련된 BOM List 가 정비되고, 직선레일 또한 입/출고 관리를 진행한다면, 관련 내용 추가 필요
+	@Transactional(readOnly = true)
+	public PageResponse<MaterialResponse.MaterialHistoryInfo> getMaterialHistoryPage(
+		Long projectId,
+		MaterialRequest.GetMaterialHistory dto
+	) {
+		projectReadService.getProjectOrThrow(projectId);
+		return materialReadService.getMaterialHistoryPage(projectId, dto);
+	}
 
-		// 3. 분기레일 BOM 목록 조회
-		// 반환되는 자재는, 같은 것(도번)은 합쳐지고, 생산 목표 생산 수량과 생산 완료 수량에 영향을 받아 계산될 것
-		MaterialResponse.ProjectMaterialState findMaterialState =
-			branchReadService.getBranchBomList(findProjectBranchList);
+	public List<MaterialResponse.MaterialHistoryTypeInfo> getMaterialHistoryTypes() {
+		return Arrays.stream(MaterialHistoryType.values())
+			.map(MaterialResponse.MaterialHistoryTypeInfo::from)
+			.toList();
+	}
 
-		// 4. 현재 입고 된 자재를 기반으로, 내용 추가
-		return materialReadService.getMaterialState(findMaterialState, findProject);
+	public List<MaterialResponse.MaterialSortType> getMaterialStockSortTypes() {
+		return Arrays.stream(MaterialStockSort.values())
+			.map(MaterialResponse.MaterialSortType::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<MaterialResponse.MaterialStockInfo> getMaterialStockList(
+		Long projectId,
+		String keyword,
+		MaterialStockSort sort,
+		Sort.Direction dir
+	) {
+		projectReadService.getProjectOrThrow(projectId);
+		return materialReadService.getMaterialStockList(projectId, keyword, sort, dir);
 	}
 }

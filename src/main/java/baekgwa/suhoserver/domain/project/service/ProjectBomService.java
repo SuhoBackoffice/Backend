@@ -423,19 +423,19 @@ public class ProjectBomService {
 				r.createCell(STRAIGHT_COL_KIND).setCellValue("LOOP");
 				r.createCell(STRAIGHT_COL_LEN).setCellValue(e.getLength());
 				r.createCell(STRAIGHT_COL_TYPE).setCellValue(e.getStraightType().getType());
-				r.createCell(STRAIGHT_COL_PROC).setCellValue(String.valueOf(e.getStraightInfo().getHolePosition()));
+				r.createCell(STRAIGHT_COL_PROC).setCellValue(String.valueOf(e.getHolePosition()));
 				r.createCell(STRAIGHT_COL_NUM).setCellValue(ProductSerialFactory.generateStraightSerial(
 					e.getLength(),
 					e.getIsLoopRail(),
 					e.getStraightType().getType()
 				));
 				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
-				r.createCell(6).setCellValue(toDouble(e.getStraightInfo().getLitzwire1()));
-				r.createCell(7).setCellValue(toDouble(e.getStraightInfo().getLitzwire2()));
-				r.createCell(8).setCellValue(toDouble(e.getStraightInfo().getLitzwire3()));
-				r.createCell(9).setCellValue(toDouble(e.getStraightInfo().getLitzwire4()));
-				r.createCell(10).setCellValue(toDouble(e.getStraightInfo().getLitzwire5()));
-				r.createCell(11).setCellValue(toDouble(e.getStraightInfo().getLitzwire6()));
+				r.createCell(6).setCellValue(toDouble(e.getLitzwire1()));
+				r.createCell(7).setCellValue(toDouble(e.getLitzwire2()));
+				r.createCell(8).setCellValue(toDouble(e.getLitzwire3()));
+				r.createCell(9).setCellValue(toDouble(e.getLitzwire4()));
+				r.createCell(10).setCellValue(toDouble(e.getLitzwire5()));
+				r.createCell(11).setCellValue(toDouble(e.getLitzwire6()));
 			});
 
 			ExcelStyler.fontSize(row, ExcelStyler.P1);
@@ -494,12 +494,12 @@ public class ProjectBomService {
 					e.getStraightType().getType()
 				));
 				r.createCell(STRAIGHT_COL_QTY).setCellValue(e.getTotalQuantity());
-				r.createCell(6).setCellValue(toDouble(e.getStraightInfo().getLitzwire1()));
-				r.createCell(7).setCellValue(toDouble(e.getStraightInfo().getLitzwire2()));
-				r.createCell(8).setCellValue(toDouble(e.getStraightInfo().getLitzwire3()));
-				r.createCell(9).setCellValue(toDouble(e.getStraightInfo().getLitzwire4()));
-				r.createCell(10).setCellValue(toDouble(e.getStraightInfo().getLitzwire5()));
-				r.createCell(11).setCellValue(toDouble(e.getStraightInfo().getLitzwire6()));
+				r.createCell(6).setCellValue(toDouble(e.getLitzwire1()));
+				r.createCell(7).setCellValue(toDouble(e.getLitzwire2()));
+				r.createCell(8).setCellValue(toDouble(e.getLitzwire3()));
+				r.createCell(9).setCellValue(toDouble(e.getLitzwire4()));
+				r.createCell(10).setCellValue(toDouble(e.getLitzwire5()));
+				r.createCell(11).setCellValue(toDouble(e.getLitzwire6()));
 			});
 
 			ExcelStyler.fontSize(row, ExcelStyler.P1);

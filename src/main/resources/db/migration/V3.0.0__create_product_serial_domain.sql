@@ -23,7 +23,7 @@ CREATE TABLE `project_straight_serial`
     `modified_at`         DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_project_straight_serial_project_straight_id`
-        FOREIGN KEY (`project_straight_id`) REFERENCES `project_straight` (`id`) ON DELETE CASCADE
+        FOREIGN KEY (`project_straight_id`) REFERENCES `project_straight` (`id`)
 );
 
 CREATE TABLE `project_branch_serial`
@@ -40,5 +40,5 @@ CREATE TABLE `project_branch_serial`
     `modified_at`       DATETIME              NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_project_branch_serial_project_straight_id`
-        FOREIGN KEY (`project_branch_id`) REFERENCES `project_branch` (`id`) ON DELETE CASCADE
+        FOREIGN KEY (`project_branch_id`) REFERENCES `project_branch` (`id`)
 );

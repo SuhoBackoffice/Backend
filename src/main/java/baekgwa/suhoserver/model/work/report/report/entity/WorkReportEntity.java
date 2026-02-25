@@ -44,11 +44,9 @@ public class WorkReportEntity extends TemporalEntity {
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "report_user_id", nullable = false)
-	private Long reportUserId;
-
-	@Column(name = "report_user_name", nullable = false)
-	private String reportUserName;
+	@JoinColumn(name = "report_user_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	private UserEntity reportUser;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "project_id", nullable = false)
@@ -68,21 +66,20 @@ public class WorkReportEntity extends TemporalEntity {
 	private String rejectReason;
 
 	@Builder(access = AccessLevel.PRIVATE)
-	private WorkReportEntity(Long reportUserId, String reportUserName, ProjectEntity project, String workSummary,
-		LocalDate workDate, WorkReportStatus status) {
-		this.reportUserId = reportUserId;
-		this.reportUserName = reportUserName;
+	private WorkReportEntity(UserEntity reportUser, ProjectEntity project, String workSummary, LocalDate workDate,
+		WorkReportStatus status, String rejectReason) {
+		this.reportUser = reportUser;
 		this.project = project;
 		this.workSummary = workSummary;
 		this.workDate = workDate;
 		this.status = status;
+		this.rejectReason = rejectReason;
 	}
 
 	public static WorkReportEntity of(UserEntity user, ProjectEntity project, String workSummary, LocalDate workDate) {
 		return WorkReportEntity
 			.builder()
-			.reportUserId(user.getId())
-			.reportUserName(user.getUsername())
+			.reportUser(user)
 			.project(project)
 			.workSummary(workSummary)
 			.workDate(workDate)

@@ -1,26 +1,37 @@
 package baekgwa.suhoserver.domain.project.facade;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import baekgwa.suhoserver.domain.branch.service.BranchReadService;
 import baekgwa.suhoserver.domain.branch.service.BranchSerialWriteService;
 import baekgwa.suhoserver.domain.material.service.MaterialReadService;
+import baekgwa.suhoserver.domain.material.service.MaterialWriteService;
 import baekgwa.suhoserver.domain.project.dto.ProjectRequest;
 import baekgwa.suhoserver.domain.project.dto.ProjectResponse;
 import baekgwa.suhoserver.domain.project.service.ProjectBomService;
 import baekgwa.suhoserver.domain.project.service.ProjectReadService;
 import baekgwa.suhoserver.domain.project.service.ProjectWriteService;
+import baekgwa.suhoserver.domain.project.type.ProjectBranchAnalyzeSort;
+import baekgwa.suhoserver.domain.project.type.ProjectBranchCapacitySort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightAnalyzeSort;
+import baekgwa.suhoserver.domain.project.type.ProjectStraightCapacitySort;
 import baekgwa.suhoserver.domain.straight.service.StraightReadService;
 import baekgwa.suhoserver.domain.straight.service.StraightSerialWriteService;
 import baekgwa.suhoserver.domain.straight.service.StraightWriteService;
 import baekgwa.suhoserver.domain.version.service.VersionReadService;
+import baekgwa.suhoserver.global.exception.GlobalException;
+import baekgwa.suhoserver.global.response.ErrorCode;
 import baekgwa.suhoserver.global.response.PageResponse;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectBranchCreatedEventDto;
@@ -30,11 +41,15 @@ import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightCreatedEventDto;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightDeletedEvent;
 import baekgwa.suhoserver.infra.history.event.ProjectStraightUpdatedEvent;
+import baekgwa.suhoserver.model.branch.bom.entity.BranchBomEntity;
 import baekgwa.suhoserver.model.branch.type.entity.BranchTypeEntity;
+import baekgwa.suhoserver.model.material.project.entity.ProjectMaterialStockEntity;
 import baekgwa.suhoserver.model.project.branch.branch.entity.ProjectBranchEntity;
+import baekgwa.suhoserver.model.project.branch.serial.entity.ProjectBranchSerialEntity;
 import baekgwa.suhoserver.model.project.project.entity.ProjectEntity;
+import baekgwa.suhoserver.model.project.straight.bom.entity.ProjectStraightBomEntity;
+import baekgwa.suhoserver.model.project.straight.serial.entity.ProjectStraightSerialEntity;
 import baekgwa.suhoserver.model.project.straight.straight.entity.ProjectStraightEntity;
-import baekgwa.suhoserver.model.straight.info.entity.StraightInfoEntity;
 import baekgwa.suhoserver.model.straight.type.entity.StraightTypeEntity;
 import baekgwa.suhoserver.model.version.entity.VersionInfoEntity;
 import lombok.RequiredArgsConstructor;
@@ -69,18 +84,18 @@ public class ProjectFacade {
 	private final StraightSerialWriteService straightSerialWriteService;
 	private final BranchSerialWriteService branchSerialWriteService;
 
+	private final MaterialWriteService materialWriteService;
+
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	public ProjectResponse.NewProjectDto createNewProject(ProjectRequest.PostNewProjectDto postNewProjectDto) {
-
-		// 1. 버전 정보 조회
 		VersionInfoEntity findVersion = versionReadService.getVersionInfoOrThrow(postNewProjectDto.getVersionId());
 
-		// 2. 신규 프로젝트 생성 및 저장
 		ProjectEntity savedProject = projectWriteService.createNewProjectOrThrow(postNewProjectDto, findVersion);
 
-		// 3. 응답 객체 생성 및 반환
+		projectWriteService.setProjectStraightRule(findVersion, savedProject);
+
 		return new ProjectResponse.NewProjectDto(savedProject.getId());
 	}
 
@@ -99,20 +114,26 @@ public class ProjectFacade {
 	) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		Set<Long> branchIdSet = postProjectBranchInfoList.stream()
+		Set<Long> branchTypeIdSet = postProjectBranchInfoList.stream()
 			.map(ProjectRequest.PostProjectBranchInfo::getBranchTypeId)
 			.collect(Collectors.toSet());
-		Map<Long, BranchTypeEntity> findBranchTypeMap = branchReadService.getBranchTypeListOrThrow(branchIdSet);
+		Map<Long, BranchTypeEntity> findBranchTypeMap = branchReadService.getBranchTypeListOrThrow(branchTypeIdSet);
 
 		List<ProjectBranchEntity> saveProjectBranchList = projectWriteService.registerProjectBranchOrThrow(
 			postProjectBranchInfoList, findProject, findBranchTypeMap);
 
 		branchSerialWriteService.registerProjectBranchSerial(saveProjectBranchList);
 
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(branchTypeIdSet);
+
+		Map<Long, Long> branchQuantityMap = postProjectBranchInfoList.stream()
+			.collect(Collectors.toMap(ProjectRequest.PostProjectBranchInfo::getBranchTypeId,
+				ProjectRequest.PostProjectBranchInfo::getQuantity));
+		materialWriteService.updateBranchMaterialPlanStock(branchQuantityMap, branchBomMap, findProject);
+
 		List<ProjectBranchCreatedEventDto> eventDtoList = saveProjectBranchList.stream().map(
 				pb -> new ProjectBranchCreatedEventDto(
 					pb.getId(),
-					pb.getBranchType().getId(),
 					pb.getTotalQuantity(),
 					pb.getBranchType().getCode()))
 			.toList();
@@ -127,24 +148,20 @@ public class ProjectFacade {
 	public void registerProjectStraight(
 		List<ProjectRequest.PostProjectStraightInfo> postProjectStraightInfoList, Long projectId, Long userId
 	) {
-		// 1. 프로젝트 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 필요한 직선레일 타입정보 조회
 		Set<Long> straightTypeIdList = postProjectStraightInfoList.stream()
 			.map(ProjectRequest.PostProjectStraightInfo::getStraightTypeId)
 			.collect(Collectors.toSet());
 		Map<Long, StraightTypeEntity> findStraightTypeMap = straightReadService.getStraightTypeList(straightTypeIdList);
 
-		// 2. 직선레일 홀 위치 및 LitzWire 정보 생성 및 저장
-		Map<ProjectRequest.PostProjectStraightInfo, StraightInfoEntity> straightInfoMap =
-			straightWriteService.registerNewStraightInfo(
+		Map<ProjectRequest.PostProjectStraightInfo, Map<String, Object>> straightInfoMap =
+			straightWriteService.calculateStraightInfo(
 				postProjectStraightInfoList,
 				findProject.getVersionInfoEntity(),
 				findStraightTypeMap
 			);
 
-		// 3. 신규 직선레일 생성 및 등록
 		List<ProjectStraightEntity> saveProjectStraightList = projectWriteService.registerProjectStraightOrThrow(
 			postProjectStraightInfoList,
 			findProject,
@@ -152,10 +169,13 @@ public class ProjectFacade {
 			straightInfoMap
 		);
 
-		// 4. 신규 등록된 직선레일 Serial 등록
 		straightSerialWriteService.registerProjectStraightSerial(saveProjectStraightList);
 
-		// 5. history 등록
+		List<ProjectStraightBomEntity> savedStraightBom
+			= materialWriteService.createProjectStraightBom(saveProjectStraightList, findProject);
+
+		materialWriteService.updateStraightMaterialPlanStock(savedStraightBom, findProject);
+
 		List<ProjectStraightCreatedEventDto> eventDtoList = saveProjectStraightList.stream()
 			.map(ps -> new ProjectStraightCreatedEventDto(
 				ps.getId(),
@@ -175,33 +195,35 @@ public class ProjectFacade {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProjectResponse.ProjectBranchInfo> getProjectBranchInfo(Long projectId) {
-		// 1. 프로젝트 조회
+	public List<ProjectResponse.ProjectBranchInfo> getProjectBranchInfo(Long projectId, String keyword) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 분기레일 정보 조회
-		List<ProjectBranchEntity> findProjectBranchList = projectReadService.getProjectBranchInfoListOrThrow(
-			findProject);
+		List<ProjectBranchEntity> findProjectBranchList
+			= projectReadService.getProjectBranchInfoListOrThrow(findProject, keyword);
 
-		// 3. DTO 변환 및 응답
 		return findProjectBranchList.stream()
 			.map(ProjectResponse.ProjectBranchInfo::of)
 			.toList();
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProjectResponse.ProjectStraightInfo> getProjectStraightInfo(Long projectId) {
-		// 1. 프로젝트 조회
+	public ProjectResponse.ProjectStraightInfo getProjectStraightInfo(Long projectId, String length) {
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 직선레일 정보 조회
-		List<ProjectStraightEntity> findProjectStraightList = projectReadService.getProjectStraightListOrThrow(
-			findProject);
+		List<ProjectStraightEntity> findProjectStraightList =
+			projectReadService.getProjectStraightListOrThrow(findProject, length);
 
-		// 3. DTO 변환 및 응답
-		return findProjectStraightList.stream()
-			.map(ProjectResponse.ProjectStraightInfo::from)
+		List<ProjectResponse.ProjectLoopStraightInfo> loopStraightList = findProjectStraightList.stream()
+			.filter(ProjectStraightEntity::getIsLoopRail)
+			.map(ProjectResponse.ProjectLoopStraightInfo::of)
 			.toList();
+
+		List<ProjectResponse.ProjectNormalStraightInfo> normalStraightList = findProjectStraightList.stream()
+			.filter(straight -> !straight.getIsLoopRail())
+			.map(ProjectResponse.ProjectNormalStraightInfo::of)
+			.toList();
+
+		return ProjectResponse.ProjectStraightInfo.of(normalStraightList, loopStraightList);
 	}
 
 	@Transactional(readOnly = true)
@@ -217,9 +239,6 @@ public class ProjectFacade {
 	public void deleteProjectStraight(Long projectStraightId, Long userId) {
 		ProjectStraightEntity findProjectStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 
-		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
-		straightWriteService.deleteStraightInfoOrThrow(findProjectStraight.getStraightInfo().getId());
-
 		ProjectStraightDeletedEvent event = new ProjectStraightDeletedEvent(
 			findProjectStraight.getProject().getId(),
 			userId,
@@ -229,6 +248,13 @@ public class ProjectFacade {
 			findProjectStraight.getStraightType().getType(),
 			findProjectStraight.getTotalQuantity()
 		);
+
+		straightSerialWriteService.deleteProjectStraightSerial(findProjectStraight);
+
+		materialWriteService.updateStraightMaterialPlanStock(findProjectStraight, -findProjectStraight.getTotalQuantity());
+
+		projectWriteService.deleteProjectStraightOrThrow(findProjectStraight);
+
 		applicationEventPublisher.publishEvent(event);
 	}
 
@@ -241,10 +267,17 @@ public class ProjectFacade {
 		ProjectStraightEntity findStraight = projectReadService.getProjectStraightOrThrow(projectStraightId);
 		Long oldQuantity = findStraight.getTotalQuantity();
 		Long newQuantity = patchProjectStraightDto.getTotalQuantity();
+		long diffQuantity = newQuantity - oldQuantity;
+
+		if (diffQuantity == 0) {
+			throw new GlobalException(ErrorCode.PATCH_STRAIGHT_COUNT_FAIL_DIFF_ZERO);
+		}
 
 		projectWriteService.patchProjectStraightOrThrow(findStraight, newQuantity);
 
 		straightSerialWriteService.patchProjectStraightSerial(findStraight, oldQuantity, newQuantity);
+
+		materialWriteService.updateStraightMaterialPlanStock(findStraight, diffQuantity);
 
 		ProjectStraightUpdatedEvent event = new ProjectStraightUpdatedEvent(
 			findStraight.getProject().getId(),
@@ -263,16 +296,20 @@ public class ProjectFacade {
 	public void deleteProjectBranch(Long projectBranchId, Long userId) {
 		ProjectBranchEntity findProjectBranch = projectReadService.getProjectBranchOrThrow(projectBranchId);
 
-		projectWriteService.deleteProjectBranch(findProjectBranch);
-
 		ProjectBranchDeletedEvent event = new ProjectBranchDeletedEvent(
 			findProjectBranch.getProject().getId(),
 			userId,
 			findProjectBranch.getId(),
-			findProjectBranch.getBranchType().getId(),
 			findProjectBranch.getTotalQuantity(),
 			findProjectBranch.getBranchType().getCode()
 		);
+
+		deleteProjectBranchBom(findProjectBranch);
+
+		branchSerialWriteService.deleteProjectBranchSerial(findProjectBranch);
+
+		projectWriteService.deleteProjectBranch(findProjectBranch);
+
 		applicationEventPublisher.publishEvent(event);
 	}
 
@@ -283,46 +320,357 @@ public class ProjectFacade {
 
 		Long oldQuantity = findProjectBranch.getTotalQuantity();
 		Long newQuantity = request.getTotalQuantity();
-
-		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, request.getTotalQuantity());
-
-		branchSerialWriteService.patchProjectBranchSerial(findProjectBranch, oldQuantity, newQuantity);
+		long diffQuantity = newQuantity - oldQuantity;
+		if(diffQuantity == 0) throw new GlobalException(ErrorCode.PATCH_BRANCH_COUNT_FAIL_DIFF_ZERO);
 
 		ProjectBranchUpdatedEvent event = new ProjectBranchUpdatedEvent(
 			findProjectBranch.getProject().getId(),
 			userId,
 			findProjectBranch.getId(),
-			findProjectBranch.getBranchType().getId(),
 			oldQuantity,
 			newQuantity,
 			findProjectBranch.getBranchType().getCode()
 		);
+
+		projectWriteService.patchProjectBranchOrThrow(findProjectBranch, request.getTotalQuantity());
+
+		branchSerialWriteService.patchProjectBranchSerial(findProjectBranch, oldQuantity, newQuantity);
+
+		patchProjectBranchBom(findProjectBranch, diffQuantity);
+
 		applicationEventPublisher.publishEvent(event);
 	}
 
 	@Transactional(readOnly = true)
 	public ProjectResponse.ProjectQuantityList getProjectQuantityList(Long projectId) {
-		// 1. 프로젝트 정보 조회
 		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
-
-		// 2. 프로젝트 물량 리스트 생성
 		return projectBomService.getProjectQuantityList(findProject);
 	}
 
 	@Transactional(readOnly = true)
-	public List<ProjectResponse.ProjectBranchCapacity> getProjectBranchCapacity(Long projectId) {
-		// 1. 프로젝트에 입고된 자재 목록 조회 (Map)
-		Map<String, Long> inboundedMaterialMap = materialReadService.getAllProjectMaterial(projectId);
+	public List<ProjectResponse.ProjectBranchCapacity> getProjectBranchCapacity(
+		Long projectId, ProjectBranchCapacitySort sort, Sort.Direction dir
+	) {
+		// 1. 프로젝트 조회
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
 
-		// 2. 프로젝트에 할당된 분기레일 종류 조회 (수량포함 목적 Entity)
-		List<ProjectBranchEntity> projectBranchList = projectReadService.getBranchTypeList(projectId);
+		// 2. 분기레일 목록 조회 (branchType fetch join)
+		List<ProjectBranchEntity> projectBranchList =
+			projectReadService.getProjectBranchListByProject(findProject);
 
-		// 3. 분기레일별로 생산 가능량 조회
-		return branchReadService.getBranchCapacity(inboundedMaterialMap, projectBranchList);
+		if (projectBranchList.isEmpty()) {
+			return List.of();
+		}
+
+		// 3. BOM Map 조회 (branchTypeId → List<BranchBomEntity>)
+		Set<Long> branchTypeIdSet = projectBranchList.stream()
+			.map(pb -> pb.getBranchType().getId())
+			.collect(Collectors.toSet());
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(branchTypeIdSet);
+
+		// 4. 자재 재고 Map 조회 (materialCode → ProjectMaterialStockEntity)
+		Set<String> allDrawingNumbers = branchBomMap.values().stream()
+			.flatMap(List::stream)
+			.map(BranchBomEntity::getDrawingNumber)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findProject, allDrawingNumbers);
+
+		// 5. (entity, capacity) 쌍 생성 → 정렬 → DTO 변환
+		return projectBranchList.stream()
+			.map(pb -> Map.entry(pb, calculateBranchCapacity(pb, branchBomMap, stockMap)))
+			.sorted(buildBranchCapacityComparator(sort, dir))
+			.map(entry -> ProjectResponse.ProjectBranchCapacity.of(entry.getKey(), entry.getValue()))
+			.toList();
+	}
+
+	private long calculateBranchCapacity(
+		ProjectBranchEntity projectBranch,
+		Map<Long, List<BranchBomEntity>> branchBomMap,
+		Map<String, ProjectMaterialStockEntity> stockMap
+	) {
+		List<BranchBomEntity> bomList = branchBomMap.get(projectBranch.getBranchType().getId());
+		if (bomList == null || bomList.isEmpty()) {
+			return 0L;
+		}
+
+		long minCapacity = Long.MAX_VALUE;
+		for (BranchBomEntity bom : bomList) {
+			ProjectMaterialStockEntity stock = stockMap.get(bom.getDrawingNumber());
+			if (stock == null) {
+				return 0L;
+			}
+
+			long remaining = stock.getTotalInboundQuantity() - stock.getTotalUsedQuantity();
+			if (remaining <= 0 || bom.getUnitQuantity() <= 0) {
+				return 0L;
+			}
+
+			minCapacity = Math.min(minCapacity, remaining / bom.getUnitQuantity());
+		}
+		return minCapacity == Long.MAX_VALUE ? 0L : minCapacity;
+	}
+
+	private Comparator<Map.Entry<ProjectBranchEntity, Long>> buildBranchCapacityComparator(
+		ProjectBranchCapacitySort sort,
+		Sort.Direction dir
+	) {
+		Comparator<Map.Entry<ProjectBranchEntity, Long>> comparator = switch (sort) {
+			case CAPACITY -> Comparator.comparingLong(Map.Entry::getValue);
+			case CODE -> Comparator.comparing(entry -> entry.getKey().getBranchType().getCode());
+			case TOTAL_QUANTITY -> Comparator.comparingLong(entry -> entry.getKey().getTotalQuantity());
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
 	}
 
 	@Transactional(readOnly = true)
 	public List<ProjectResponse.OnGoingProjectInfo> getOnGoingProjectInfo() {
 		return projectReadService.getOnGoingProjectInfoList();
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectStraightDetailInfo getProjectStraightDetailInfo(
+		Long projectStraightId
+	) {
+		ProjectStraightEntity findStraight
+			= projectReadService.getProjectStraightOrThrow(projectStraightId);
+
+		List<ProjectStraightSerialEntity> straightSerialList
+			= projectReadService.getStraightSerialList(findStraight);
+
+		List<ProjectResponse.StraightSerialInfo> serialInfoList = straightSerialList.stream()
+			.map(ProjectResponse.StraightSerialInfo::of)
+			.toList();
+
+		return ProjectResponse.ProjectStraightDetailInfo.of(findStraight, serialInfoList);
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectBranchDetailInfo getProjectBranchDetailInfo(Long projectBranchId) {
+		ProjectBranchEntity findBranch = projectReadService.getProjectBranchAndTypeOrThrow(projectBranchId);
+
+		List<ProjectBranchSerialEntity> serialList = projectReadService.getBranchSerialList(findBranch);
+
+		List<ProjectResponse.BranchSerialInfo> serialInfoList = serialList.stream()
+			.map(ProjectResponse.BranchSerialInfo::of)
+			.toList();
+
+		return ProjectResponse.ProjectBranchDetailInfo.of(findBranch, serialInfoList);
+	}
+
+	private void deleteProjectBranchBom(ProjectBranchEntity findProjectBranch) {
+		Long branchTypeId = findProjectBranch.getBranchType().getId();
+		Map<Long, Long> quantityMap = Map.of(branchTypeId, -findProjectBranch.getTotalQuantity());
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
+		materialWriteService.updateBranchMaterialPlanStock(quantityMap, branchBomMap, findProjectBranch.getProject());
+	}
+
+	private void patchProjectBranchBom(ProjectBranchEntity findProjectBranch, long diffQuantity) {
+		Long branchTypeId = findProjectBranch.getBranchType().getId();
+		Map<Long, Long> quantityMap = Map.of(branchTypeId, diffQuantity);
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
+		materialWriteService.updateBranchMaterialPlanStock(quantityMap, branchBomMap, findProjectBranch.getProject());
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getMaterialHistoryTypes() {
+		return Arrays.stream(ProjectBranchCapacitySort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectBranchCapacityAnalyze getProjectBranchCapacityAnalyze(
+		Long projectBranchId, ProjectBranchAnalyzeSort sort, Sort.Direction dir, boolean onlyShortage
+	) {
+		// 1. 분기레일 조회 (branchType fetch join)
+		ProjectBranchEntity findBranch = projectReadService.getProjectBranchAndTypeOrThrow(projectBranchId);
+
+		// 2. BOM 목록 조회
+		Long branchTypeId = findBranch.getBranchType().getId();
+		Map<Long, List<BranchBomEntity>> branchBomMap = branchReadService.getBranchBomMap(Set.of(branchTypeId));
+		List<BranchBomEntity> bomList = branchBomMap.getOrDefault(branchTypeId, List.of());
+
+		// 3. 자재 재고 Map 조회
+		Set<String> drawingNumbers = bomList.stream()
+			.map(BranchBomEntity::getDrawingNumber)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findBranch.getProject(), drawingNumbers);
+
+		// 4. 부족 수량 계산 + 필터링 + 정렬
+		long remainingBranchQty = findBranch.getTotalQuantity() - findBranch.getCompletedQuantity();
+		Stream<ProjectResponse.BomShortageInfo> stream = bomList.stream()
+			.map(bom -> ProjectResponse.BomShortageInfo.of(bom, stockMap.get(bom.getDrawingNumber()), remainingBranchQty));
+
+		if (onlyShortage) {
+			stream = stream.filter(ProjectResponse.BomShortageInfo::getIsShortage);
+		}
+
+		List<ProjectResponse.BomShortageInfo> bomShortageList = stream
+			.sorted(buildAnalyzeComparator(sort, dir))
+			.toList();
+
+		// 5. capacity 계산
+		long capacity = calculateBranchCapacity(findBranch, branchBomMap, stockMap);
+
+		return ProjectResponse.ProjectBranchCapacityAnalyze.of(findBranch, capacity, bomShortageList);
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getAnalyzeTypes() {
+		return Arrays.stream(ProjectBranchAnalyzeSort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	private Comparator<ProjectResponse.BomShortageInfo> buildAnalyzeComparator(
+		ProjectBranchAnalyzeSort sort, Sort.Direction dir
+	) {
+		Comparator<ProjectResponse.BomShortageInfo> comparator = switch (sort) {
+			case SHORTAGE_QUANTITY -> Comparator.comparingLong(ProjectResponse.BomShortageInfo::getShortageQuantity);
+			case DRAWING_NUMBER -> Comparator.comparing(ProjectResponse.BomShortageInfo::getDrawingNumber);
+			case ITEM_NAME -> Comparator.comparing(ProjectResponse.BomShortageInfo::getItemName);
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getStraightCapacityTypes() {
+		return Arrays.stream(ProjectStraightCapacitySort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	public List<ProjectResponse.BranchCapacitySortType> getStraightCapacityAnalyzeTypes() {
+		return Arrays.stream(ProjectStraightAnalyzeSort.values())
+			.map(ProjectResponse.BranchCapacitySortType::from)
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<ProjectResponse.ProjectStraightCapacity> getProjectStraightCapacity(
+		Long projectId, ProjectStraightCapacitySort sort, Sort.Direction dir
+	) {
+		// 1. 프로젝트 조회
+		ProjectEntity findProject = projectReadService.getProjectOrThrow(projectId);
+
+		// 2. 직선레일 목록 조회 (straightType fetch join)
+		List<ProjectStraightEntity> projectStraightList =
+			projectReadService.getProjectStraightListByProject(findProject);
+
+		if (projectStraightList.isEmpty()) {
+			return List.of();
+		}
+
+		// 3. BOM Map 조회 (projectStraightId → List<ProjectStraightBomEntity>)
+		List<Long> projectStraightIds = projectStraightList.stream()
+			.map(ProjectStraightEntity::getId)
+			.toList();
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap =
+			straightReadService.getStraightBomMap(projectStraightIds);
+
+		// 4. 자재 재고 Map 조회 (materialCode → ProjectMaterialStockEntity)
+		Set<String> allMaterialCodes = straightBomMap.values().stream()
+			.flatMap(List::stream)
+			.map(ProjectStraightBomEntity::getMaterialCode)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findProject, allMaterialCodes);
+
+		// 5. (entity, capacity) 쌍 생성 → 정렬 → DTO 변환
+		return projectStraightList.stream()
+			.map(ps -> Map.entry(ps, calculateStraightCapacity(ps, straightBomMap, stockMap)))
+			.sorted(buildStraightCapacityComparator(sort, dir))
+			.map(entry -> ProjectResponse.ProjectStraightCapacity.of(entry.getKey(), entry.getValue()))
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public ProjectResponse.ProjectStraightCapacityAnalyze getProjectStraightCapacityAnalyze(
+		Long projectStraightId, ProjectStraightAnalyzeSort sort, Sort.Direction dir, boolean onlyShortage
+	) {
+		// 1. 직선레일 조회 (straightType fetch join)
+		ProjectStraightEntity findStraight =
+			projectReadService.getProjectStraightWithTypeOrThrow(projectStraightId);
+
+		// 2. BOM 목록 조회
+		List<ProjectStraightBomEntity> bomList =
+			straightReadService.getStraightBomList(projectStraightId);
+
+		// 3. 자재 재고 Map 조회
+		Set<String> materialCodes = bomList.stream()
+			.map(ProjectStraightBomEntity::getMaterialCode)
+			.collect(Collectors.toSet());
+		Map<String, ProjectMaterialStockEntity> stockMap =
+			materialReadService.getMaterialStockMap(findStraight.getProject(), materialCodes);
+
+		// 4. 부족 수량 계산 + 필터링 + 정렬
+		long remainingStraightQty = findStraight.getTotalQuantity() - findStraight.getCompletedQuantity();
+		Stream<ProjectResponse.StraightBomShortageInfo> stream = bomList.stream()
+			.map(bom -> ProjectResponse.StraightBomShortageInfo.of(
+				bom, stockMap.get(bom.getMaterialCode()), remainingStraightQty));
+
+		if (onlyShortage) {
+			stream = stream.filter(ProjectResponse.StraightBomShortageInfo::getIsShortage);
+		}
+
+		List<ProjectResponse.StraightBomShortageInfo> bomShortageList = stream
+			.sorted(buildStraightAnalyzeComparator(sort, dir))
+			.toList();
+
+		// 5. capacity 계산
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap =
+			Map.of(findStraight.getId(), bomList);
+		long capacity = calculateStraightCapacity(findStraight, straightBomMap, stockMap);
+
+		return ProjectResponse.ProjectStraightCapacityAnalyze.of(findStraight, capacity, bomShortageList);
+	}
+
+	private long calculateStraightCapacity(
+		ProjectStraightEntity projectStraight,
+		Map<Long, List<ProjectStraightBomEntity>> straightBomMap,
+		Map<String, ProjectMaterialStockEntity> stockMap
+	) {
+		List<ProjectStraightBomEntity> bomList = straightBomMap.get(projectStraight.getId());
+		if (bomList == null || bomList.isEmpty()) {
+			return 0L;
+		}
+
+		long minCapacity = Long.MAX_VALUE;
+		for (ProjectStraightBomEntity bom : bomList) {
+			ProjectMaterialStockEntity stock = stockMap.get(bom.getMaterialCode());
+			if (stock == null) {
+				return 0L;
+			}
+
+			long remaining = stock.getTotalInboundQuantity() - stock.getTotalUsedQuantity();
+			if (remaining <= 0 || bom.getUnitQuantity() <= 0) {
+				return 0L;
+			}
+
+			minCapacity = Math.min(minCapacity, remaining / bom.getUnitQuantity());
+		}
+		return minCapacity == Long.MAX_VALUE ? 0L : minCapacity;
+	}
+
+	private Comparator<Map.Entry<ProjectStraightEntity, Long>> buildStraightCapacityComparator(
+		ProjectStraightCapacitySort sort, Sort.Direction dir
+	) {
+		Comparator<Map.Entry<ProjectStraightEntity, Long>> comparator = switch (sort) {
+			case CAPACITY -> Comparator.comparingLong(Map.Entry::getValue);
+			case LENGTH -> Comparator.comparingLong(entry -> entry.getKey().getLength());
+			case TOTAL_QUANTITY -> Comparator.comparingLong(entry -> entry.getKey().getTotalQuantity());
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
+	}
+
+	private Comparator<ProjectResponse.StraightBomShortageInfo> buildStraightAnalyzeComparator(
+		ProjectStraightAnalyzeSort sort, Sort.Direction dir
+	) {
+		Comparator<ProjectResponse.StraightBomShortageInfo> comparator = switch (sort) {
+			case SHORTAGE_QUANTITY ->
+				Comparator.comparingLong(ProjectResponse.StraightBomShortageInfo::getShortageQuantity);
+			case MATERIAL_CODE -> Comparator.comparing(ProjectResponse.StraightBomShortageInfo::getMaterialCode);
+			case ITEM_NAME -> Comparator.comparing(ProjectResponse.StraightBomShortageInfo::getItemName);
+		};
+		return dir == Sort.Direction.DESC ? comparator.reversed() : comparator;
 	}
 }
